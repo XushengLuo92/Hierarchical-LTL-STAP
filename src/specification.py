@@ -151,6 +151,10 @@ class Specification():
             level_two['p103'] = '<> (p3_2_1_2 && <> (p7_2_1_2 && <> p0_2_1_2))'
             level_two['p104'] = '<> (p3_3_1_3 && <> (p7_3_1_3 && <> p0_3_1_3))'
             self.hierarchy.append(level_two)
+        elif case == 9:
+            level_one = dict()
+            level_one["p0"] = '<> p1 && <> p2 && <> p3'
+            self.hierarchy.append(level_one)
         return self.hierarchy
     
     def get_manipulation_specification(self, case):
@@ -273,5 +277,7 @@ class Specification():
         
         if vis:
             vis_graph(hierarchy_graph, 'data/spec_hierarchy', latex=False)
+            
+        return hierarchy_graph
     
         
