@@ -1,0 +1,33 @@
+import networkx as nx 
+import subprocess
+import argparse
+
+def vis_graph(graph, title, latex=False):
+    # write dot file to use with graphviz
+    # run "dot -Tpng test.dot >test.png"
+    nx.nx_agraph.write_dot(graph, title+'.dot')
+    # add the following the generated dot file
+    # rankdir=LR;
+	# node [texmode="math"];
+    # dot2tex --preproc --texmode math ./data/task_network.dot | dot2tex > ./data/task_network.tex
+    if not latex:
+        # Run a Linux command
+        command = "dot -Tpng {0}.dot >{0}.png".format(title)
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+    else:
+        command = "dot2tex {0}.dot --preproc > {0}.tex".format(title)
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+        
+def create_parser():
+    """ create parser
+
+    Returns:
+        _type_: _description_
+    """
+    parser = argparse.ArgumentParser(description='FM')
+    parser.add_argument('--task', default="man", type=str)
+    parser.add_argument('--case', default=0, type=int)
+    parser.add_argument('--vis', action='store_true', help='Enable visualization')
+    parser.add_argument('--dot', action='store_true', help='Enable dot graph')
+
+    return parser
