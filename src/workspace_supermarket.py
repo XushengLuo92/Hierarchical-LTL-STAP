@@ -22,10 +22,10 @@ class Workspace(object):
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
         # n = int(sys.argv[2])
-        self.length = 15 # 9   # length
-        self.width = 40 # 9   # width
+        self.length = 1 # 9   # length
+        self.width = 2 # 9   # width
         # n = 4
-        self.type_num = {1: 2, 2: 2, 3: 2}   # single-task robot
+        self.type_num = {1: 1, 2: 0}   # single-task robot
         self.workspace = (self.length, self.width)
         self.num_of_regions = 8
         self.num_of_obstacles = 6
@@ -35,20 +35,18 @@ class Workspace(object):
         self.type_robot_location = self.initialize()
         # customized location
         # self.type_robot_location[(2, 0)]  = (0, 0) # nav task 4
-        # region and corresponding locations
+        # [region and corresponding locations
         self.label_location = {'r{0}'.format(i + 1): j for i, j in enumerate(list(self.type_robot_location.values()))}
-        # region where robots reside
+        # [region where robots reside
         self.type_robot_label = dict(zip(self.type_robot_location.keys(), self.label_location.keys()))
-        # atomic proposition
-        self.atomic_prop = self.get_atomic_prop()
 
         self.graph_workspace = nx.Graph()
         self.build_graph()
 
-        self.p2p = self.point_to_point_path()  # label2label path
+        # self.p2p = self.point_to_point_path()  # label2label path
 
     def reachable(self, location, obstacles):
-        next_location = []
+        next_location = [(location, location)]
         # left
         if location[0]-1 > 0 and (location[0]-1, location[1]) not in obstacles:
             next_location.append((location, (location[0]-1, location[1])))
@@ -124,24 +122,42 @@ class Workspace(object):
         return p2p
 
     def plot_workspace(self):
-        ax = plt.figure(1).gca()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.rc('text', usetex=False)
         ax.set_xlim((0, self.width))
         ax.set_ylim((0, self.length))
-        plt.xticks(np.arange(0, self.width + 1, 1.0))
-        plt.yticks(np.arange(0, self.length + 1, 1.0))
-        # self.plot_workspace_helper(ax, self.regions, 'region')
+        plt.xticks(np.arange(0, self.width + 1, 5))
+        plt.yticks(np.arange(0, self.length + 1, 5))
+        self.plot_workspace_helper(ax, self.regions, 'region')
         self.plot_workspace_helper(ax, self.obstacles, 'obstacle')
-        for index, i in self.type_robot_location.items():
-            plt.plot(i[0] + 0.5, i[1] + 0.5, 'o')
-            ax.text(i[0] + 0.5, i[1] + 0.5, r'${}$'.format(index), fontsize=10)
+        # plt.grid(visible=True, which='major', color='gray', linestyle='--')
+        plt.savefig('./data/supermarket.png', format='png', dpi=300)
+
+        # plt.title(r'$\phi_3$')
+
 
     def plot_workspace_helper(self, ax, obj, obj_label):
-        plt.rc('text', usetex=True)
+        plt.rc('text', usetex=False)
         plt.rc('font', family='serif')
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.grid(which='major', color='k', linestyle='--')
+        # p0 dock
+        # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics 
+        # p7 packing area
+        region = {'p0': 'dock',
+                'p1': 'grocery',
+                'p2': 'health',
+                'p3': 'outdoor',
+                'p4': 'pet supplies',
+                'p5': 'furniture',
+                'p6': 'electronics',
+                'p7': 'packing area'}
         for key in obj:
-            color = 'b' if obj_label != 'region' else 'c'
+            if 'r' in key:
+                continue
+            # color = 'gray' if obj_label != 'region' else 'white'
+            color = 'gray' if obj_label != 'region' or (key == 'p0' or key == 'p7') else 'green'
+            alpha = 0.6 if obj_label != 'region' or (key == 'p0' or key == 'p7') else 0.1
             for grid in obj[key]:
                 x_ = grid[0]
                 y_ = grid[1]
@@ -153,9 +169,15 @@ class Workspace(object):
                     y.append(point[1])
                 polygon = Polygon(np.column_stack((x, y)), True)
                 patches.append(polygon)
-                p = PatchCollection(patches, facecolors=color, edgecolors=color, alpha=0.4)
+                p = PatchCollection(patches, facecolors=color, edgecolors=color, linewidths=0.2, alpha=alpha)
                 ax.add_collection(p)
-            ax.text(np.mean(x) - 0.2, np.mean(y) - 0.2, r'${}_{{{}}}$'.format(key[0], key[1:]), fontsize=8)
+            # ax.text(np.mean(x) - 0.2, np.mean(y) - 0.2, r'${}_{{{}}}$'.format(key[0], key[1:]), fontsize=12)
+            if key == 'p0':
+                ax.text(np.mean(x) + 1, np.mean(y) - 5, r'{}'.format(region[key]), fontsize=6)
+            elif key == 'p7':
+                ax.text(np.mean(x) - 3.5, np.mean(y) + 1, r'{}'.format(region[key]), fontsize=6)
+            elif 'o' in key:
+                ax.text(np.mean(x) - 2, np.mean(y) + 1, r'{}'.format(region['p' + key[1:]]), fontsize=6)
 
     def path_plot(self, robot_path):
         """
@@ -181,64 +203,64 @@ class Workspace(object):
     def allocate_region_dars(self):
         regions = []        
         # ICRA
-        shelf_width_x = 2
-        shelf_length_y = 5
-        start_charging_station_x = 2
-        charging_station_width_x = 4
-        charging_station_length_y = 6
-        first_shelf_to_charging_station_x = 2
-        first_shelf_to_charging_station_y = 2
-        inter_shelf_x = 3
-        depot_to_last_shelf_x = 2
-        depot_width_x = 4
-        depot_length_y = 4
+        shelf_width_x = 1
+        shelf_length_y = 1
+        start_dock_x = 0
+        dock_width_x = 2
+        dock_length_y = 1
+        first_shelf_to_dock_x = 0
+        first_shelf_to_dock_y = 1
+        inter_shelf_x = 2
+        depot_to_last_shelf_x = 1
+        depot_width_x = 2
+        depot_length_y = 2
         
         # p0 dock
         # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics 
         # p7 packing area
         n_shelf = 6
-        regions.append(list(itertools.product(range(start_charging_station_x, start_charging_station_x + charging_station_width_x), range(0, charging_station_length_y)))) 
-        for i in range(n_shelf):
-            regions.append(list(itertools.product([charging_station_width_x + first_shelf_to_charging_station_x + 
-                                                    i * (shelf_width_x + inter_shelf_x) - 1,
-                                                    charging_station_width_x + first_shelf_to_charging_station_x + 
-                                                    i * (shelf_width_x + inter_shelf_x) + shelf_width_x], 
-                                                range(charging_station_length_y + first_shelf_to_charging_station_y,
-                                                    charging_station_length_y + first_shelf_to_charging_station_y + shelf_length_y))))
+        regions.append(list(itertools.product(range(start_dock_x, start_dock_x + dock_width_x), range(0, dock_length_y)))) 
+        # for i in range(n_shelf):
+        #     regions.append(list(itertools.product([dock_width_x + first_shelf_to_dock_x + 
+        #                                             i * (shelf_width_x + inter_shelf_x) - 1,
+        #                                             dock_width_x + first_shelf_to_dock_x + 
+        #                                             i * (shelf_width_x + inter_shelf_x) + shelf_width_x], 
+        #                                         range(dock_length_y + first_shelf_to_dock_y,
+        #                                             dock_length_y + first_shelf_to_dock_y + shelf_length_y))))
             
             
-        regions.append(list(itertools.product(range(charging_station_width_x + first_shelf_to_charging_station_x + 
-                                                    (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x,
-                                                        charging_station_width_x + first_shelf_to_charging_station_x +
-                                                    (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x + depot_width_x),
-                                            range(0, depot_length_y))))
+        # regions.append(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
+        #                                             (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x,
+        #                                                 dock_width_x + first_shelf_to_dock_x +
+        #                                             (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x + depot_width_x),
+        #                                     range(0, depot_length_y))))
 
         return regions
 
     def allocate_obstacle_dars(self):
         obstacles = []
         # ICRA
-        shelf_width_x = 2
-        shelf_length_y = 5
-        charging_station_width_x = 4
-        charging_station_length_y = 6
-        first_shelf_to_charging_station_x = 2
-        first_shelf_to_charging_station_y = 2
-        inter_shelf_x = 3
+        shelf_width_x = 1
+        shelf_length_y = 1
+        dock_width_x = 2
+        dock_length_y = 2
+        first_shelf_to_dock_x = 0
+        first_shelf_to_dock_y = 1
+        inter_shelf_x = 2
         
         # p0 charging station
         # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics
         n_shelf = 6
         for i in range(n_shelf):
-            obstacles.append(list(itertools.product(range(charging_station_width_x + first_shelf_to_charging_station_x + 
+            obstacles.append(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
                                                         i * (shelf_width_x + inter_shelf_x),
-                                                        charging_station_width_x + first_shelf_to_charging_station_x + 
+                                                        dock_width_x + first_shelf_to_dock_x + 
                                                         i * (shelf_width_x + inter_shelf_x) + shelf_width_x), 
-                                                  range(charging_station_length_y + first_shelf_to_charging_station_y,
-                                                        charging_station_length_y + first_shelf_to_charging_station_y + shelf_length_y))))
+                                                  range(dock_length_y + first_shelf_to_dock_y,
+                                                        dock_length_y + first_shelf_to_dock_y + shelf_length_y))))
             
 
-        return obstacles
+        return []
 
     def initialize(self):
         type_robot_location = dict()
@@ -253,3 +275,11 @@ class Workspace(object):
                         x0.remove(candidate)
                         break
         return type_robot_location
+    
+    def get_atomic_prop(self, location):
+        atomic_prop = []
+        for region, cells in self.regions.items():
+            if location in cells:
+                atomic_prop.append(region)
+                break
+        return atomic_prop

@@ -39,7 +39,7 @@ class BuchiConstructor(object):
         # for each state/node, find it transition relations
         for state in state_group:
             # add node
-            buchi_graph.add_node(state, label=to_dnf('0'))
+            buchi_graph.add_node(state, label=to_dnf('0'), name=state)
             # loop over all transitions starting from current state
             state_if_fi = re.findall(state + r':\n\tif(.*?)fi', output, re.DOTALL)
             if state_if_fi:
@@ -329,5 +329,6 @@ class BuchiConstructor(object):
             # print(decomp_sets)
             # print('element_seq_to_path_map')
             # print(element_seq_to_path_map)
-            
+        for node in decomp_sets:
+            buchi_graph.nodes[node]['color'] = 'red'
         return decomp_sets

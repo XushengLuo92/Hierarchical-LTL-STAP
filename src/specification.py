@@ -153,8 +153,12 @@ class Specification():
             self.hierarchy.append(level_two)
         elif case == 9:
             level_one = dict()
-            level_one["p0"] = '<> p1 && <> p2 && <> p3'
+            level_one["p0"] = '<> p100'
             self.hierarchy.append(level_one)
+            level_two = dict()
+            # level_two['p100'] = '<> p2 && <> (p1 && X(p1 U p5))'
+            level_two['p100'] = '<> p0'
+            self.hierarchy.append(level_two)
         return self.hierarchy
     
     def get_manipulation_specification(self, case):

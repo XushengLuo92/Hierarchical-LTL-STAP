@@ -2,10 +2,14 @@ import networkx as nx
 import subprocess
 import argparse
 
-def vis_graph(graph, title, latex=False):
+def vis_graph(graph, title, latex=False, buchi_graph=False):
     # write dot file to use with graphviz
+    graph_copy = graph.copy()
+    if buchi_graph:
+        for node in graph_copy.nodes():
+            graph_copy.nodes[node]['label'] =  graph_copy.nodes[node]['name'] + '  ' + str(graph_copy.nodes[node]['label'])
     # run "dot -Tpng test.dot >test.png"
-    nx.nx_agraph.write_dot(graph, title+'.dot')
+    nx.nx_agraph.write_dot(graph_copy, title+'.dot')
     # add the following the generated dot file
     # rankdir=LR;
 	# node [texmode="math"];
