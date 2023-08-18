@@ -16,13 +16,15 @@ class ProductTs(object):
             node_label = buchi_graph.nodes[q]['label']
             if node_label.subs(aps_true):
                 for next_x in next_xs:
-                    prod_ts.add_edge((x, q), (next_x, q))
+                    weight = 0 if x == next_x else 1
+                    prod_ts.add_edge((x, q), (next_x, q), weight=weight)
             
             next_qs = buchi_graph.succ[q]
             for next_q in next_qs:
                 edge_label = buchi_graph.edges[(q, next_q)]['label']
                 if edge_label.subs(aps_true):    
                     for next_x in next_xs:
-                        prod_ts.add_edge((x, q), (next_x, next_q))
+                        weight = 0 if x == next_x else 1
+                        prod_ts.add_edge((x, q), (next_x, next_q), weight=weight)
                     
         return prod_ts
