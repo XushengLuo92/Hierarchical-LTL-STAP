@@ -5,8 +5,9 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "hierarchical_LTL_stap.py --task=nav --case=9 --vis --dot",
-            "pythonPath": "/home/xusheng/miniconda3/envs/hierarchical_ltl/bin/python",
+            "program": "hierarchical_LTL_stap.py",
+            "args": ["--task=nav", "--case=9", "--vis", "--dot"],
+            "python": "/home/xusheng/miniconda3/envs/hierarchical_ltl/bin/python",
             "console": "integratedTerminal"
         }
     ]

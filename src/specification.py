@@ -157,7 +157,7 @@ class Specification():
             self.hierarchy.append(level_one)
             level_two = dict()
             # level_two['p100'] = '<> p2 && <> (p1 && X(p1 U p5))'
-            level_two['p100'] = '<> p1 && <> p2'
+            level_two['p100'] = '<> (p1 && <> p2) && <> p4 && <> p3'
             self.hierarchy.append(level_two)
         return self.hierarchy
     

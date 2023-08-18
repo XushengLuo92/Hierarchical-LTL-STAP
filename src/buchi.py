@@ -1,7 +1,7 @@
 import os
 import subprocess
 import re
-from sympy.logic.boolalg import to_dnf, And
+from sympy.logic.boolalg import to_dnf, And, Or, Not
 import networkx as nx
 import numpy as np
 
@@ -172,24 +172,33 @@ class BuchiConstructor(object):
             subgraph.remove_edges_from(remove_edge)
             
         # prune the subgraph
-        self.prune_subgraph_automaton(subgraph)
+        removed_edge = self.prune_subgraph_automaton(subgraph)
 
         # get all paths in the pruned subgraph
         paths = []
         if init != accept:
-            paths = list(nx.all_simple_paths(subgraph, source=init, target=accept))
+            if subgraph.out_degree(init) == to_dnf('1') and subgraph.nodes[init]['label'] == to_dnf('0'):
+                source = list(subgraph.succ[init])[0]
+                paths = list(nx.all_simple_paths(subgraph, source=source, target=accept)) 
+            else:
+                paths = list(nx.all_simple_paths(subgraph, source=init, target=accept)) 
         else:
             for s in subgraph.succ[init]:
                 paths = paths + [[init] + p for p in list(nx.all_simple_paths(subgraph, source=s, target=accept))]
 
-        return subgraph, paths
+        return subgraph, paths, removed_edge
     
     def prune_subgraph_automaton(self, subgraph):
         """
         prune the subgraph following ID and ST properties
         """
-        # remove the edge following ID and ST properties
         removed_edge = []
+        for node in subgraph.nodes():
+            if 'init' in node and subgraph.nodes[node]['label'] == to_dnf('0'):
+                for edge in subgraph.edges(node):
+                    if subgraph.edges[edge]['label'] != to_dnf('1'):
+                        removed_edge.append(edge)
+        # remove the edge following ID and ST properties
         for node in subgraph.nodes():
             for succ in subgraph.succ[node]:
                 if subgraph.nodes[node]['label'] == subgraph.nodes[succ]['label']:
@@ -204,6 +213,7 @@ class BuchiConstructor(object):
                             continue
         
         subgraph.remove_edges_from(removed_edge)
+        return removed_edge
         
     def find_all_nodes(self, subgraph, init, accept):
         """
@@ -298,10 +308,12 @@ class BuchiConstructor(object):
     def get_all_decomp_nodes(self, buchi_graph):
         init_acpt = self.get_init_accept(buchi_graph)
         decomp_sets = set()
+        edges_to_be_removed = []
         for pair, _ in init_acpt:
             init_state, accept_state = pair[0], pair[1]
-            pruned_subgraph, paths = self.get_subgraph(init_state, accept_state, buchi_graph)
-            edge2element, element2edge = self.get_element(pruned_subgraph)
+            pruned_subgraph, paths, removed_edge = self.get_subgraph(init_state, accept_state, buchi_graph)
+            edges_to_be_removed.extend(removed_edge)
+            edge2element, _ = self.get_element(pruned_subgraph)
             if not edge2element:
                 continue
             element_sequences, element_seq_to_path_map = self.map_path_to_element_sequence(edge2element, paths)
@@ -309,7 +321,7 @@ class BuchiConstructor(object):
             # [[[1, 2], [2, 1]], [[3]]]
             for sequences in element_sequences: 
                 # [[1, 2], [2, 1]]
-                for seq in sequences:\
+                for seq in sequences:
                     # [1, 2]
                     if len(seq) == 1:
                         break
@@ -331,4 +343,35 @@ class BuchiConstructor(object):
             # print(element_seq_to_path_map)
         for node in decomp_sets:
             buchi_graph.nodes[node]['color'] = 'red'
+        buchi_graph.remove_edges_from(edges_to_be_removed)
+        
+        # remove node with zero indegree
+        nodes_to_be_removed = []
+        for node in buchi_graph.nodes():
+            if 'init' not in node and buchi_graph.in_degree(node) == 0:
+                nodes_to_be_removed.append(node)
+        buchi_graph.remove_nodes_from(nodes_to_be_removed)
+                
         return decomp_sets
+    
+    @staticmethod
+    def get_positive_literals(expr):
+        positive_literals = set()
+        
+        # Helper function to handle individual clauses
+        def handle_clause(clause):
+            if clause.func is not Not:
+                if clause.func is And:
+                    for literal in clause.args:
+                        if literal.func is not Not:
+                            positive_literals.add(str(literal))
+                else:
+                    positive_literals.add(str(clause))
+        
+        if expr.func is Or:
+            for clause in expr.args:
+                handle_clause(clause)
+        else:
+            handle_clause(expr)
+        
+        return positive_literals

@@ -3,8 +3,7 @@
 from random import randint
 import networkx as nx
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
+
 import numpy as np
 import random
 import sys
@@ -23,9 +22,9 @@ class Workspace(object):
         # self.width = int(sys.argv[1])
         # n = int(sys.argv[2])
         self.length = 5 # 9   # length
-        self.width = 10 # 9   # width
+        self.width = 20 # 9   # width
         # n = 4
-        self.type_num = {1: 1, 2: 1}   # single-task robot
+        self.type_num = {1: 2, 2: 2}   # single-task robot
         self.workspace = (self.length, self.width)
         self.num_of_regions = 8
         self.num_of_obstacles = 6
@@ -120,65 +119,7 @@ class Workspace(object):
                 p2p[(key_init[r2], key_init[r1])] = length
 
         return p2p
-
-    def plot_workspace(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        plt.rc('text', usetex=False)
-        ax.set_xlim((0, self.width))
-        ax.set_ylim((0, self.length))
-        plt.xticks(np.arange(0, self.width + 1, 5))
-        plt.yticks(np.arange(0, self.length + 1, 5))
-        self.plot_workspace_helper(ax, self.regions, 'region')
-        self.plot_workspace_helper(ax, self.obstacles, 'obstacle')
-        # plt.grid(visible=True, which='major', color='gray', linestyle='--')
-        plt.savefig('./data/supermarket.png', format='png', dpi=300)
-
-        # plt.title(r'$\phi_3$')
-
-
-    def plot_workspace_helper(self, ax, obj, obj_label):
-        plt.rc('text', usetex=False)
-        plt.rc('font', family='serif')
-        plt.gca().set_aspect('equal', adjustable='box')
-        # p0 dock
-        # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics 
-        # p7 packing area
-        region = {'p0': 'dock',
-                'p1': 'grocery',
-                'p2': 'health',
-                'p3': 'outdoor',
-                'p4': 'pet supplies',
-                'p5': 'furniture',
-                'p6': 'electronics',
-                'p7': 'packing area'}
-        for key in obj:
-            if 'r' in key:
-                continue
-            # color = 'gray' if obj_label != 'region' else 'white'
-            color = 'gray' if obj_label != 'region' or (key == 'p0' or key == 'p7') else 'green'
-            alpha = 0.6 if obj_label != 'region' or (key == 'p0' or key == 'p7') else 0.1
-            for grid in obj[key]:
-                x_ = grid[0]
-                y_ = grid[1]
-                x = []
-                y = []
-                patches = []
-                for point in [(x_, y_), (x_ + 1, y_), (x_ + 1, y_ + 1), (x_, y_ + 1)]:
-                    x.append(point[0])
-                    y.append(point[1])
-                polygon = Polygon(np.column_stack((x, y)), True)
-                patches.append(polygon)
-                p = PatchCollection(patches, facecolors=color, edgecolors=color, linewidths=0.2, alpha=alpha)
-                ax.add_collection(p)
-            # ax.text(np.mean(x) - 0.2, np.mean(y) - 0.2, r'${}_{{{}}}$'.format(key[0], key[1:]), fontsize=12)
-            if key == 'p0':
-                ax.text(np.mean(x) + 1, np.mean(y) - 5, r'{}'.format(region[key]), fontsize=6)
-            elif key == 'p7':
-                ax.text(np.mean(x) - 3.5, np.mean(y) + 1, r'{}'.format(region[key]), fontsize=6)
-            elif 'o' in key:
-                ax.text(np.mean(x) - 2, np.mean(y) + 1, r'{}'.format(region['p' + key[1:]]), fontsize=6)
-
+    
     def path_plot(self, robot_path):
         """
         plot the path
@@ -210,7 +151,7 @@ class Workspace(object):
         dock_length_y = 1
         first_shelf_to_dock_x = 0
         first_shelf_to_dock_y = 1
-        inter_shelf_x = 2
+        inter_shelf_x = 3
         depot_to_last_shelf_x = 1
         depot_width_x = 2
         depot_length_y = 2
@@ -218,7 +159,7 @@ class Workspace(object):
         # p0 dock
         # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics 
         # p7 packing area
-        n_shelf = 2
+        n_shelf = 4
         regions.append(list(itertools.product(range(start_dock_x, start_dock_x + dock_width_x), range(0, dock_length_y)))) 
         for i in range(n_shelf):
             regions.append(list(itertools.product([dock_width_x + first_shelf_to_dock_x + 
@@ -229,11 +170,11 @@ class Workspace(object):
                                                     dock_length_y + first_shelf_to_dock_y + shelf_length_y))))
             
             
-        # regions.append(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
-        #                                             (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x,
-        #                                                 dock_width_x + first_shelf_to_dock_x +
-        #                                             (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x + depot_width_x),
-        #                                     range(0, depot_length_y))))
+        regions[0].extend(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
+                                                    (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x,
+                                                        dock_width_x + first_shelf_to_dock_x +
+                                                    (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x + depot_width_x),
+                                            range(0, depot_length_y))))
 
         return regions
 
@@ -246,11 +187,11 @@ class Workspace(object):
         dock_length_y = 1
         first_shelf_to_dock_x = 0
         first_shelf_to_dock_y = 1
-        inter_shelf_x = 2
+        inter_shelf_x = 3
         
         # p0 charging station
         # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics
-        n_shelf = 2
+        n_shelf = 4
         for i in range(n_shelf):
             obstacles.append(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
                                                         i * (shelf_width_x + inter_shelf_x),

@@ -4,11 +4,13 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from specification import Specification
 from buchi import BuchiConstructor
-from util import create_parser, vis_graph, prGreen, prRed, prYellow
+from util import create_parser, vis_graph, plot_workspace, prGreen, prRed, prYellow
 from workspace_supermarket import Workspace
 from product_ts import ProductTs
 import networkx as nx 
 from itertools import product
+import matplotlib.pyplot as plt
+from vis import vis
 
 import time
 from collections import namedtuple
@@ -40,9 +42,10 @@ def main(args=None):
             task_hierarchy[phi] = Hierarchy(level=index+1, phi=phi, buchi_graph=buchi_graph, decomp_sets=decomp_sets)
     buchi_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to generate buchi graph".format(buchi_time - spec_time))
-    prRed("Buchi graph for {} has {} nodes and {} edges".format(list(task_hierarchy.keys()), 
+    prRed("Buchi graph for {} has {} nodes and {} edges, with decomp sets {}".format(list(task_hierarchy.keys()), 
                                                                 [h.buchi_graph.number_of_nodes() for h in task_hierarchy.values()],
-                                                                [h.buchi_graph.number_of_edges() for h in task_hierarchy.values()]))
+                                                                [h.buchi_graph.number_of_edges() for h in task_hierarchy.values()],
+                                                                [h.decomp_sets for h in task_hierarchy.values()],))
 
     # print(task_hierarchy.items())
     if args.vis:
@@ -52,7 +55,9 @@ def main(args=None):
     # Step 3: workspace
     workspace = Workspace()
     if args.vis:
-        workspace.plot_workspace()
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plot_workspace(workspace, ax)
         vis_graph(workspace.graph_workspace, f'data/workspace', latex=False, buchi_graph=False)
     workspace_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to generate workspace".format(workspace_time - buchi_time))    
@@ -107,10 +112,28 @@ def main(args=None):
 
     # Step 6: connect graphs between different specs for the same agent
     # Step 7: search
-    init_nodes = [(leaf_spec, (1, 0), workspace.type_robot_location[(1, 0)], init) for leaf_spec in leaf_specs for init in task_hierarchy[leaf_spec].buchi_graph.graph['init']]
-    target_nodes = [node for node in team_prod_ts.nodes() if 'accept' in node[-1]]
+    init_nodes = [(leaf_spec, (1, 0), workspace.type_robot_location[(1, 0)], init) \
+        for leaf_spec in leaf_specs for init in task_hierarchy[leaf_spec].buchi_graph.graph['init']]
+    target_nodes = []
+    for phi, h in task_hierarchy.items():
+        if phi not in leaf_specs:
+            continue
+        for accept_node in h.buchi_graph.graph['accept']:
+            target_aps = set() # target ap that enable the transition to accept nodes
+            target_cells = []
+            for prec in h.buchi_graph.pred[accept_node]:
+                # get ap that enable the transition to accept node
+                target_aps.update(BuchiConstructor.get_positive_literals(h.buchi_graph.edges[(prec, accept_node)]['label']))  
+            prYellow(target_aps)
+            for target_ap in target_aps:
+                target_cells.extend(workspace.regions[target_ap])
+            for node in team_prod_ts.nodes():
+                # @TODO consider various capabilities of robots
+                if node[0] == phi and node[-1] == accept_node and node[2] in target_cells:
+                    target_nodes.append(node)
+            
     prRed(f'init nodes:  {init_nodes}')
-    # print(f'target nodes: {target_nodes}')
+    prRed(f'number of target nodes: {len(target_nodes)}')
     # @TODO too many target nodes
     optimal_cost = 1e10
     optimal_path = None
@@ -123,5 +146,23 @@ def main(args=None):
     search_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to search".format(search_time - team_prod_ts_time))
     prRed(f'optimal path {optimal_path}')
+    
+    # Step 8: extract robot path 
+    robot_path = {type_robot: [] for type_robot in workspace.type_robot_location.keys() }
+    for wpt in optimal_path:
+        robot_path[wpt[1]].append(wpt[2])
+    for robot, path in robot_path.items():
+        if not path:
+            path.append(workspace.type_robot_location[robot])
+    horizon = max([len(path) for path in robot_path.values()])
+    for path in robot_path.values():
+        path.extend((horizon - len(path)) * [path[-1]])
+        prRed(path)
+    path_time = time.time() # Record the end time
+    prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
+    if args.vis:
+        vis(args.task, args.case, workspace, robot_path, {robot: [len(path)] * 2 for robot, path in robot_path.items()}, [])
+        vis_time = time.time() # Record the end time
+        prGreen("Take {:.2f} secs to visualize".format(vis_time - search_time))
 if __builtins__:
     main()
