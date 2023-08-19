@@ -9,12 +9,24 @@ from workspace_supermarket import Workspace
 from product_ts import ProductTs
 import networkx as nx 
 from itertools import product
+from dijkstra import multi_source_multi_targets_dijkstra
 import matplotlib.pyplot as plt
 from vis import vis
 
 import time
 from collections import namedtuple
 Hierarchy = namedtuple('Hierarchy', ['level', 'phi', 'buchi_graph', 'decomp_sets'])
+    
+def get_locations_for_buchi_state(workspace, buchi_graph, buchi_state):
+    # @TODO consider various capabilities of robots
+    target_aps = set() # target ap that enable the transition to buchi_state
+    target_cells = []
+    for prec in buchi_graph.pred[buchi_state]:
+        # get ap that enable the transition to accept node
+        target_aps.update(BuchiConstructor.get_positive_literals(buchi_graph.edges[(prec, buchi_state)]['label']))  
+    for target_ap in target_aps:
+        target_cells.extend(workspace.regions[target_ap])
+    return target_cells
 
 def main(args=None):
     parser = create_parser()
@@ -98,11 +110,14 @@ def main(args=None):
             team_prod_ts.add_nodes_from(prod_ts_spec_agent.nodes(data=True))
             team_prod_ts.add_edges_from(prod_ts_spec_agent.edges(data=True)) 
         for idx in range(len(type_robots) - 1):
+            # loop from robot 1 to n
             from_type_robot = type_robots[idx]
             to_type_robot = type_robots[idx + 1]
             to_type_robot_init_location = workspace.type_robot_location[to_type_robot]
             for decomp_state in decomp_set:
-                from_node = [(leaf_spec, from_type_robot) + (location, decomp_state) for location in workspace.graph_workspace.nodes()]
+                # connect target location leading to decomp state to init location of another robot
+                target_locs = get_locations_for_buchi_state(workspace, hierarchy.buchi_graph, decomp_state)
+                from_node = [(leaf_spec, from_type_robot) + (loc, decomp_state) for loc in target_locs]
                 to_node = (leaf_spec, to_type_robot) + (to_type_robot_init_location, decomp_state)
                 team_prod_ts.add_edges_from(product(from_node, [to_node]), weight=0)
     team_prod_ts_time = time.time() # Record the end time
@@ -111,46 +126,59 @@ def main(args=None):
     #     vis_graph(team_prod_ts, f'data/team_prod_ts', latex=False)
 
     # Step 6: connect graphs between different specs for the same agent
+    # 6.1 connect from one init node of a team model to the init node of another team model with init location
+    for type_robot in type_robots:
+        type_robot_init_location = workspace.type_robot_location[type_robot]
+        for from_leaf_spec, to_leaf_spec in product(leaf_specs, leaf_specs): # refine according to temporal order between specs
+            if from_leaf_spec == to_leaf_spec:
+                continue
+            from_buchi_graph = task_hierarchy[from_leaf_spec].buchi_graph
+            to_buchi_graph = task_hierarchy[to_leaf_spec].buchi_graph
+            from_node = [(from_leaf_spec, type_robot) + (type_robot_init_location, init_node) 
+                         for init_node in from_buchi_graph.graph['init']]
+            to_node = [(to_leaf_spec, type_robot) + (type_robot_init_location, init_node) 
+                         for init_node in to_buchi_graph.graph['init']]
+            team_prod_ts.add_edges_from(product(from_node, to_node), weight=0)
+            prYellow(list(product(from_node, to_node)))
+    # 6.2 connect from one accept node of a team model to every init node of another team model with target location
+    for type_robot in type_robots:
+        for from_leaf_spec, to_leaf_spec in product(leaf_specs, leaf_specs):
+            if from_leaf_spec == to_leaf_spec:
+                continue
+            from_buchi_graph = task_hierarchy[from_leaf_spec].buchi_graph
+            to_buchi_graph = task_hierarchy[to_leaf_spec].buchi_graph
+            type_robot_init_location = workspace.type_robot_location[type_robot]
+            for accept_node in from_buchi_graph.graph['accept']:
+                target_locs = get_locations_for_buchi_state(workspace, from_buchi_graph, accept_node)
+                for target_loc in target_locs:
+                    from_node = [(from_leaf_spec, type_robot) + (target_loc, accept_node)]
+                    to_node = [(to_leaf_spec, type_robot) + (target_loc, init_node) for init_node in to_buchi_graph.graph['init']]
+                    team_prod_ts.add_edges_from(product(from_node, to_node), weight=0)
+                    prYellow(list(product(from_node, to_node)))
     # Step 7: search
     init_nodes = [(leaf_spec, (1, 0), workspace.type_robot_location[(1, 0)], init) \
         for leaf_spec in leaf_specs for init in task_hierarchy[leaf_spec].buchi_graph.graph['init']]
-    target_nodes = []
+    
+    phi_target_nodes = {leaf_spec : [] for leaf_spec in leaf_specs}
     for phi, h in task_hierarchy.items():
         if phi not in leaf_specs:
             continue
         for accept_node in h.buchi_graph.graph['accept']:
-            target_aps = set() # target ap that enable the transition to accept nodes
-            target_cells = []
-            for prec in h.buchi_graph.pred[accept_node]:
-                # get ap that enable the transition to accept node
-                target_aps.update(BuchiConstructor.get_positive_literals(h.buchi_graph.edges[(prec, accept_node)]['label']))  
-            prYellow(target_aps)
-            for target_ap in target_aps:
-                target_cells.extend(workspace.regions[target_ap])
-            for node in team_prod_ts.nodes():
-                # @TODO consider various capabilities of robots
-                if node[0] == phi and node[-1] == accept_node and node[2] in target_cells:
-                    target_nodes.append(node)
+            target_locs = get_locations_for_buchi_state(workspace, h.buchi_graph, accept_node)
+            phi_target_nodes[phi] = [(phi, (1, 0), loc, accept_node) for loc in target_locs]
             
     prRed(f'init nodes:  {init_nodes}')
-    prRed(f'number of target nodes: {len(target_nodes)}')
-    # @TODO too many target nodes
-    optimal_cost = 1e10
-    optimal_path = None
-    for target_node in target_nodes:
-        res = nx.algorithms.multi_source_dijkstra(team_prod_ts, init_nodes, target_node, weight='weight')
-        if res[0] < optimal_cost:
-            optimal_cost = res[0]
-            optimal_path = res[1]
-        # prRed(f'target_node: {target_node}, {res}')
+    prRed(f'number of target nodes: {phi_target_nodes}')
+    _, optimal_path = multi_source_multi_targets_dijkstra(team_prod_ts, init_nodes, set(leaf_specs), weight='weight')
     search_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to search".format(search_time - team_prod_ts_time))
-    prRed(f'optimal path {optimal_path}')
+    # prRed(f'optimal path {optimal_path}')
     
     # Step 8: extract robot path 
     robot_path = {type_robot: [] for type_robot in workspace.type_robot_location.keys() }
-    for wpt in optimal_path:
-        robot_path[wpt[1]].append(wpt[2])
+    for wpt, _ in optimal_path:
+        _, type_robot, loc, _ = wpt
+        robot_path[type_robot].append(loc)
     for robot, path in robot_path.items():
         if not path:
             path.append(workspace.type_robot_location[robot])

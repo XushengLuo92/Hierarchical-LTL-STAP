@@ -375,3 +375,29 @@ class BuchiConstructor(object):
             handle_clause(expr)
         
         return positive_literals
+    
+    @staticmethod
+    def get_literals(expr):
+        literals = set()
+        
+        # Helper function to handle individual clauses
+        def handle_clause(clause):
+            if clause.func is And:
+                for literal in clause.args:
+                    if literal.func is Not:
+                        literals.add(str(literal.args[0]))
+                    else:
+                        literals.add(str(literal))
+            else:
+                if clause.func is Not:
+                    literals.add(str(clause.args[0]))
+                else:
+                    literals.add(str(clause))
+        
+        if expr.func is Or:
+            for clause in expr.args:
+                handle_clause(clause)
+        else:
+            handle_clause(expr)
+        
+        return literals

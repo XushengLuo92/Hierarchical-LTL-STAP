@@ -21,16 +21,15 @@ class Workspace(object):
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
         # n = int(sys.argv[2])
-        self.length = 5 # 9   # length
-        self.width = 20 # 9   # width
         # n = 4
-        self.type_num = {1: 2, 2: 2}   # single-task robot
-        self.workspace = (self.length, self.width)
+        self.type_num = {1: 1}   # single-task robot
         self.num_of_regions = 8
         self.num_of_obstacles = 6
         self.occupied = []
         self.regions = {'p{0}'.format(i): j for i, j in enumerate(self.allocate_region_dars())}
         self.obstacles = {'o{0}'.format(i+1): j for i, j in enumerate(self.allocate_obstacle_dars())}
+        self.length = max([cell[1]+1 for region in self.regions.values() for cell in region]) # 9   # length
+        self.width = max([cell[0]+1 for region in self.regions.values() for cell in region]) # 9   # width
         self.type_robot_location = self.initialize()
         # customized location
         # self.type_robot_location[(2, 0)]  = (0, 0) # nav task 4
@@ -159,9 +158,9 @@ class Workspace(object):
         # p0 dock
         # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics 
         # p7 packing area
-        n_shelf = 4
+        self.n_shelf = 4
         regions.append(list(itertools.product(range(start_dock_x, start_dock_x + dock_width_x), range(0, dock_length_y)))) 
-        for i in range(n_shelf):
+        for i in range(self.n_shelf):
             regions.append(list(itertools.product([dock_width_x + first_shelf_to_dock_x + 
                                                     i * (shelf_width_x + inter_shelf_x) - 1,
                                                     dock_width_x + first_shelf_to_dock_x + 
@@ -170,11 +169,11 @@ class Workspace(object):
                                                     dock_length_y + first_shelf_to_dock_y + shelf_length_y))))
             
             
-        regions[0].extend(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
-                                                    (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x,
-                                                        dock_width_x + first_shelf_to_dock_x +
-                                                    (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x + depot_width_x),
-                                            range(0, depot_length_y))))
+        # regions[0].extend(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
+        #                                             (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x,
+        #                                                 dock_width_x + first_shelf_to_dock_x +
+        #                                             (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x + depot_width_x),
+        #                                     range(0, depot_length_y))))
 
         return regions
 
@@ -191,8 +190,7 @@ class Workspace(object):
         
         # p0 charging station
         # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics
-        n_shelf = 4
-        for i in range(n_shelf):
+        for i in range(self.n_shelf):
             obstacles.append(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
                                                         i * (shelf_width_x + inter_shelf_x),
                                                         dock_width_x + first_shelf_to_dock_x + 
