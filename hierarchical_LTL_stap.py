@@ -33,7 +33,9 @@ def main(args=None):
     args = parser.parse_known_args()[0]
     start_time = time.time() # Record the start time
    
+    # ==========================
     # Step 1: spec
+    # ==========================
     specs = Specification()
     specs.get_task_specification(task=args.task, case=args.case)
     hierarchy_graph = specs.build_hierarchy_graph(args.vis)
@@ -42,7 +44,9 @@ def main(args=None):
     spec_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to generate {} specs".format(spec_time - start_time, hierarchy_graph.number_of_nodes()))
     
+    # ==========================
     # Step 2: buichi graph and decomposition sets
+    # ==========================
     buchi_constructor = BuchiConstructor()
     task_hierarchy = dict()
     for index, level in enumerate(specs.hierarchy):
@@ -63,8 +67,10 @@ def main(args=None):
     if args.vis:
         for phi, h in task_hierarchy.items():
             vis_graph(h.buchi_graph, f'data/{phi}', latex=False, buchi_graph=True)
-    
+            
+    # ==========================
     # Step 3: workspace
+    # ==========================
     workspace = Workspace()
     if args.vis:
         fig = plt.figure()
@@ -75,7 +81,9 @@ def main(args=None):
     prGreen("Take {:.2f} secs to generate workspace".format(workspace_time - buchi_time))    
     prRed(f"Worksapce has {workspace.graph_workspace.number_of_nodes()} nodes and {workspace.graph_workspace.number_of_edges()} edges")
     
+    # ==========================
     # Step 4: team model
+    # ==========================
     prod_ts_constructor = ProductTs()
     prod_ts_map = dict()
     for phi, h in task_hierarchy.items():
@@ -98,7 +106,9 @@ def main(args=None):
     #     for phi_type_robot, augmented_prod_ts in prod_ts_map.items():
     #         vis_graph(augmented_prod_ts, f'data/prod_ts_{phi_type_robot[0]}_{phi_type_robot[1][0]}_{phi_type_robot[1][1]}', latex=False, buchi_graph=False)
        
+    # ==========================      
     # Step 5: connect graphs between different agents for the same spec
+    # ==========================
     team_prod_ts = nx.DiGraph()
     type_robots = list(workspace.type_robot_location.keys())
     for leaf_spec in leaf_specs:
@@ -125,8 +135,10 @@ def main(args=None):
     # if args.vis:
     #     vis_graph(team_prod_ts, f'data/team_prod_ts', latex=False)
 
+    # ==========================
     # Step 6: connect graphs between different specs for the same agent
-    # 6.1 connect from one init node of a team model to the init node of another team model with init location
+    # 6.1 for the same robot, connect from one init node of a team model to the init node of another team model with init location
+    # ==========================
     for type_robot in type_robots:
         type_robot_init_location = workspace.type_robot_location[type_robot]
         for from_leaf_spec, to_leaf_spec in product(leaf_specs, leaf_specs): # refine according to temporal order between specs
@@ -140,7 +152,8 @@ def main(args=None):
                          for init_node in to_buchi_graph.graph['init']]
             team_prod_ts.add_edges_from(product(from_node, to_node), weight=0)
             prYellow(list(product(from_node, to_node)))
-    # 6.2 connect from one accept node of a team model to every init node of another team model with target location
+            
+    # 6.2 for the same robot, connect from one accept node of a team model to every init node of another team model with target location
     for type_robot in type_robots:
         for from_leaf_spec, to_leaf_spec in product(leaf_specs, leaf_specs):
             if from_leaf_spec == to_leaf_spec:
@@ -155,7 +168,27 @@ def main(args=None):
                     to_node = [(to_leaf_spec, type_robot) + (target_loc, init_node) for init_node in to_buchi_graph.graph['init']]
                     team_prod_ts.add_edges_from(product(from_node, to_node), weight=0)
                     prYellow(list(product(from_node, to_node)))
+                    
+    # 6.3 for different robots, connect from one accept node of a team model to every init node of another team model with corresponding location                
+    # TO BE IMPLEMENTED
+    # for type_robot in type_robots:
+    #     for from_leaf_spec, to_leaf_spec in product(leaf_specs, leaf_specs):
+    #         if from_leaf_spec == to_leaf_spec:
+    #             continue
+    #         from_buchi_graph = task_hierarchy[from_leaf_spec].buchi_graph
+    #         to_buchi_graph = task_hierarchy[to_leaf_spec].buchi_graph
+    #         type_robot_init_location = workspace.type_robot_location[type_robot]
+    #         for decomp_node in task_hierarchy[from_leaf_spec].decomp_set:
+    #             target_locs = get_locations_for_buchi_state(workspace, from_buchi_graph, decomp_node)
+    #             for target_loc in target_locs:
+    #                 from_node = [(from_leaf_spec, type_robot) + (target_loc, decomp_node)]
+    #                 to_node = [(to_leaf_spec, type_robot) + (target_loc, init_node) for init_node in to_buchi_graph.graph['init']]
+    #                 team_prod_ts.add_edges_from(product(from_node, to_node), weight=0)
+    #                 prYellow(list(product(from_node, to_node)))                
+                    
+    # ==========================
     # Step 7: search
+    # ==========================
     init_nodes = [(leaf_spec, (1, 0), workspace.type_robot_location[(1, 0)], init) \
         for leaf_spec in leaf_specs for init in task_hierarchy[leaf_spec].buchi_graph.graph['init']]
     
@@ -174,7 +207,9 @@ def main(args=None):
     prGreen("Take {:.2f} secs to search".format(search_time - team_prod_ts_time))
     # prRed(f'optimal path {optimal_path}')
     
-    # Step 8: extract robot path 
+    # ==========================
+    # Step 8: extract robot path
+    # ========================== 
     robot_path = {type_robot: [] for type_robot in workspace.type_robot_location.keys() }
     for wpt, _ in optimal_path:
         _, type_robot, loc, _ = wpt
@@ -192,5 +227,7 @@ def main(args=None):
         vis(args.task, args.case, workspace, robot_path, {robot: [len(path)] * 2 for robot, path in robot_path.items()}, [])
         vis_time = time.time() # Record the end time
         prGreen("Take {:.2f} secs to visualize".format(vis_time - search_time))
+        
+        
 if __builtins__:
     main()

@@ -153,12 +153,12 @@ class Specification():
             self.hierarchy.append(level_two)
         elif case == 9:
             level_one = dict()
-            level_one["p0"] = '<> p100 && <>p200'
+            level_one["p0"] = '<> (p100 && <> (p200 && <> p300))'
             self.hierarchy.append(level_one)
             level_two = dict()
-            # level_two['p100'] = '<> p2 && <> (p1 && X(p1 U p5))'
-            level_two['p100'] = '<> (p2 && <> p1) && !p1 U p2'
-            level_two['p200'] = '<> (p4 && <> p3) && !p3 U p4'
+            level_two['p100'] = '<> p1' 
+            level_two['p200'] = '<> p3'
+            level_two['p300'] = '<> p5'
             self.hierarchy.append(level_two)
         return self.hierarchy
     

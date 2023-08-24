@@ -131,8 +131,8 @@ def _dijkstra_multisource(
                     continue
             phi, _, _, buchi = u
             # skip if phi has been reached
-            if phi in phis:
-                continue
+            # if phi in phis:
+            #     continue
             # update phis 
             tmp_phis = phis
             if 'accept' in buchi and phi not in tmp_phis:
