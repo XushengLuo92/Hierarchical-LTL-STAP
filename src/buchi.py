@@ -18,7 +18,7 @@ class BuchiConstructor(object):
         """
         parse the output of the program ltl2ba and build the buchi automaton
         """
-        buchi_graph = nx.DiGraph(name="buchi graph")
+        buchi_graph = nx.DiGraph(name="buchi graph", formula=formula)
 
         # directory of the program ltl2ba
         dirname = os.path.dirname(__file__)
@@ -205,14 +205,34 @@ class BuchiConstructor(object):
                     for next_succ in subgraph.succ[succ]:
                         try:
                             # condition (c)
-                            if subgraph.edges[(node, next_succ)]['label'] == \
-                                            And(subgraph.edges[(node, succ)]['label'],
-                                                subgraph.edges[(succ, next_succ)]['label']):
+                            single_formula = subgraph.edges[(node, next_succ)]['label'] 
+                            merge_formula = And(subgraph.edges[(node, succ)]['label'],
+                                                subgraph.edges[(succ, next_succ)]['label'])
+                            if single_formula.equals(merge_formula):
                                 removed_edge.append((node, next_succ))
                         except KeyError:
                             continue
         
+        for edge in subgraph.edges():
+            if (subgraph.edges[edge]['label'] == to_dnf('1')):
+                continue
+            label = subgraph.edges[edge]['label']
+            if isinstance(label, Or):           
+                remain_clause = []
+                for clause in label.args:
+                    if len(set(BuchiConstructor.get_positive_literals(clause)).intersection(set(subgraph.graph['conflict_aps']))) <= 1:
+                        remain_clause.append(clause)
+                if len(remain_clause) == 0:
+                    removed_edge.append(edge)
+                else:
+                    subgraph.edges[edge]['label'] = Or(*remain_clause)
+            else:
+                if len(set(BuchiConstructor.get_positive_literals(label)).intersection(set(subgraph.graph['conflict_aps']))) > 1:
+                    # print(label, BuchiConstructor.get_positive_literals(label))
+                    removed_edge.append(edge)
+        
         subgraph.remove_edges_from(removed_edge)
+                
         return removed_edge
         
     def find_all_nodes(self, subgraph, init, accept):
@@ -279,6 +299,18 @@ class BuchiConstructor(object):
 
         return edge2element, element2edge
     
+    def prune_subgraph(self, subgraph):
+        """
+        remove the edge as long as there exists another path the connects the vertices
+        """
+        original_edges = list(subgraph.edges)
+        for edge in original_edges:
+            subgraph.remove_edge(edge[0], edge[1])
+            if nx.has_path(subgraph, edge[0], edge[1]):
+                continue
+            else:
+                subgraph.add_edge(edge[0], edge[1])
+                
     def map_path_to_element_sequence(self, edge2element, paths):
         """
         map path to sequence of elements
@@ -302,8 +334,35 @@ class BuchiConstructor(object):
             # create a new set of sequences of integers
             if not is_added:
                 element_sequences.append([element_sequence])
+        
+        # for each set of sequences of integers, find one poset
+        hasse_graphs = {}
+        for index, ele_seq in enumerate(element_sequences):
+            # all pairs of ordered elements from the sequence of elements
+            linear_order = []
+            for i in range(len(ele_seq[0])):
+                for j in range(i + 1, len(ele_seq[0])):
+                    linear_order.append((ele_seq[0][i], ele_seq[0][j]))
+            # remove contradictive pairs by iterating over the remaining sequences of integers
+            for i in range(1, len(ele_seq)):
+                for j in range(len(ele_seq[1]) - 1):
+                    if (ele_seq[i][j + 1], ele_seq[i][j]) in linear_order:
+                        linear_order.remove((ele_seq[i][j + 1], ele_seq[i][j]))
 
-        return element_sequences, element_seq_to_path_map
+            # hasse diagram
+            hasse = nx.DiGraph()
+            hasse.add_nodes_from(ele_seq[0])
+            hasse.add_edges_from(linear_order)
+            self.prune_subgraph(hasse)
+            try:
+                w = max([len(o) for o in nx.antichains(hasse)])
+            except nx.exception.NetworkXUnfeasible:
+                print(hasse.edges)
+            h = nx.dag_longest_path_length(hasse)
+            # h = len([e for e in hasse.nodes if pruned_subgraph.nodes[element2edge[e][0]]['label'] != '1'])
+            hasse_graphs[index] = [(w, h), {edge for edge in hasse.edges()}, list(hasse.nodes), hasse]
+
+        return element_sequences, element_seq_to_path_map, sorted(hasse_graphs.values(), key=lambda x: (x[0][0], -x[0][1]), reverse=True)
     
     def get_all_decomp_nodes(self, buchi_graph):
         init_acpt = self.get_init_accept(buchi_graph)
@@ -316,7 +375,7 @@ class BuchiConstructor(object):
             edge2element, _ = self.get_element(pruned_subgraph)
             if not edge2element:
                 continue
-            element_sequences, element_seq_to_path_map = self.map_path_to_element_sequence(edge2element, paths)
+            element_sequences, element_seq_to_path_map, _ = self.map_path_to_element_sequence(edge2element, paths)
             
             # [[[1, 2], [2, 1]], [[3]]]
             for sequences in element_sequences: 
@@ -354,6 +413,18 @@ class BuchiConstructor(object):
                 
         return decomp_sets
     
+    
+    def get_ordered_subtasks(self, buchi_graph):
+        init_acpt = self.get_init_accept(buchi_graph)
+        for pair, _ in init_acpt:
+            init_state, accept_state = pair[0], pair[1]
+            pruned_subgraph, paths, _ = self.get_subgraph(init_state, accept_state, buchi_graph)
+            edge2element, element2edge = self.get_element(pruned_subgraph)
+            if not edge2element:
+                continue
+            _, _, hasse_graphs = self.map_path_to_element_sequence(edge2element, paths)
+            return pruned_subgraph, hasse_graphs[0], element2edge
+            
     @staticmethod
     def get_positive_literals(expr):
         positive_literals = set()

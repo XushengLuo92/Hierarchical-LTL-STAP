@@ -1,6 +1,9 @@
 from collections import namedtuple
 
-Hierarchy = namedtuple('Hierarchy', ['level', 'phi', 'buchi_graph', 'decomp_sets'])
+Hierarchy = namedtuple('Hierarchy', ['level', 'phi', 'buchi_graph', 'decomp_sets', 'hass_graph', 'element2edge'])
+PrimitiveSubtask = namedtuple('PrimitiveSubtask', ['element_in_poset'])
+CompositeSubtask = namedtuple('CompositeSubtask', ['subtask2element'])
+PrimitiveSubtaskId = namedtuple('PrimitiveSubtaskId', ['parent', 'element'])
 
 class Node:
     def __init__(self, phi, type_robot, x, q, type_robots_x, leaf_phis):

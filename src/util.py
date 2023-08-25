@@ -96,8 +96,6 @@ def plot_workspace_helper(ax, obj, obj_label):
         elif 'o' in key:
             ax.text(np.mean(x) - 2, np.mean(y) + 1, r'{}'.format(region['p' + key[1:]]), fontsize=6)
 
-
-
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
  
  
@@ -120,4 +118,53 @@ def prLightGray(skk): print("\033[97m {}\033[00m" .format(skk))
  
  
 def prBlack(skk): print("\033[98m {}\033[00m" .format(skk))
- 
+
+def print_partial_order(pruned_subgraph, hasse_graph, element2edge):
+    _, poset_relation, _, _ = hasse_graph
+    for order in poset_relation:
+        print("pairwise order: ", pruned_subgraph.edges[element2edge[order[0]]]['label'], ' -> ',
+                pruned_subgraph.edges[element2edge[order[1]]]['label'], "           subtasks: ", element2edge[order[0]],
+                element2edge[order[1]])
+
+def print_primitive_subtasks(pruned_subgraph, element2edge, primitive_subtasks):
+    for primitive_subtask in primitive_subtasks:
+        edge = element2edge[primitive_subtask]
+        print("primitive element {2}, subtask: {0}, label: {1}".format(edge, pruned_subgraph.edges[edge]["label"], primitive_subtask))
+
+def print_composite_subtasks(pruned_subgraph, element2edge, composite_subtasks_dict):
+    for (subtask, elements) in composite_subtasks_dict.items():
+        for element in elements:
+            print("composite subtask {0}, element {1}, label {2}".format(subtask, element, pruned_subgraph.edges[element2edge[element]]["label"]))
+
+def print_subtask_info(task_hierarchy, leaf_specs, primitive_subtasks, composite_subtasks):
+    for (task, hierarchy) in task_hierarchy.items():
+        if task in leaf_specs:
+            continue
+        prCyan(">>>>>> level {0} task {1}, formula {2}".format(hierarchy.level, task, hierarchy.phi))
+        print_partial_order(hierarchy.buchi_graph, hierarchy.hass_graph, hierarchy.element2edge)
+        print_primitive_subtasks(hierarchy.buchi_graph, hierarchy.element2edge, primitive_subtasks[task].element_in_poset)
+        print_composite_subtasks(hierarchy.buchi_graph, hierarchy.element2edge, composite_subtasks[task].subtask2element)
+        
+def print_primitive_subtasks_with_identifer(primitive_subtasks_with_identifer, task_hierarchy):
+     # print all primitive subtasks with identifier
+    print("************* all primitive subtasks **************")
+    for ele in primitive_subtasks_with_identifer:
+        element2edge = task_hierarchy[ele.parent].element2edge
+        buchi_graph = task_hierarchy[ele.parent].buchi_graph
+        print("parent {0}, element {1}, edge {2}, label {3}".format(ele.parent, ele.element, element2edge[ele.element], 
+                                                                    buchi_graph.edges[element2edge[ele.element]]['label']))
+        
+def print_global_partial_order(primitive_subtasks_partial_order, task_hierarchy):
+    print("************* partial order between primitive subtasks **************")
+    for partial_order in primitive_subtasks_partial_order:
+        pre = partial_order[0]
+        suc = partial_order[1]
+        pre_element2edge = task_hierarchy[pre.parent].element2edge
+        pre_buchi_graph = task_hierarchy[pre.parent].buchi_graph
+        suc_element2edge = task_hierarchy[suc.parent].element2edge
+        suc_buchi_graph = task_hierarchy[suc.parent].buchi_graph
+        print("parent {0}, element {1}, edge {2}, label {3} -> parent {4}, element {5}, edge {6}, label {7}".\
+            format(pre.parent, pre.element, pre_element2edge[pre.element], pre_buchi_graph.edges[pre_element2edge[pre.element]]['label'],
+                   suc.parent, suc.element, suc_element2edge[suc.element], suc_buchi_graph.edges[suc_element2edge[suc.element]]['label']))
+      
+            
