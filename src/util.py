@@ -6,6 +6,28 @@ from matplotlib.collections import PatchCollection
 import matplotlib.pyplot as plt
 import numpy as np 
 
+import networkx as nx
+
+def longest_path_to_leaf(G, start_node):
+    """Find the length of the longest path from start_node to any leaf."""
+    
+    # Helper recursive function
+    def dfs(node, visited):
+        visited.add(node)
+        
+        if G.out_degree(node) == 0:  # leaf node
+            return 0
+        
+        max_depth = 0
+        for neighbor in G.successors(node):
+            if neighbor not in visited:
+                depth = dfs(neighbor, visited)
+                max_depth = max(max_depth, depth + 1)
+        
+        return max_depth
+
+    return dfs(start_node, set())
+
 def vis_graph(graph, title, latex=False, buchi_graph=False):
     # write dot file to use with graphviz
     graph_copy = graph.copy()

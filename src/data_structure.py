@@ -6,7 +6,7 @@ CompositeSubtask = namedtuple('CompositeSubtask', ['subtask2element'])
 PrimitiveSubtaskId = namedtuple('PrimitiveSubtaskId', ['parent', 'element'])
 
 class Node:
-    def __init__(self, phi, type_robot, x, q, type_robots_x, leaf_phis):
+    def __init__(self, phi, type_robot, x, q, type_robots_x, phis_progress):
         # specific spec
         self.phi = phi
         # specific type_robot 
@@ -18,29 +18,29 @@ class Node:
         # snapshot of type_robots distribution: dict[type_robot] = x
         self.type_robots_x = type_robots_x
         # progress of leaf specs: dict[spec] = q
-        self.leaf_phis = leaf_phis
+        self.phis_progress = phis_progress
         
     # Implementing __eq__ is necessary to compare objects for equality
     def __eq__(self, other):
         if isinstance(other, Node):
             return self.phi == other.phi and self.type_robot == other.type_robot and self.x == other.x and self.q == other.q and \
                 self.hash_dict(self.type_robots_x) == self.hash_dict(other.type_robots_x) and \
-                    self.hash_dict(self.leaf_phis) == self.hash_dict(other.leaf_phis)
+                    self.hash_dict(self.phis_progress) == self.hash_dict(other.phis_progress)
         return False
     
     def __lt__(self, other):
         if isinstance(other, Node):
-            num_self_accept = len([q for q in self.leaf_phis.values() if 'accept' in q ])
-            num_other_accept = len([q for q in other.leaf_phis.values() if 'accept' in q ])
+            num_self_accept = len([q for q in self.phis_progress.values() if 'accept' in q ])
+            num_other_accept = len([q for q in other.phis_progress.values() if 'accept' in q ])
             return num_self_accept < num_other_accept
         return NotImplemented
     
     # Implementing __hash__ method to make instances usable as keys in dictionaries
     def __hash__(self):
-        return hash((self.phi, self.type_robot, self.x, self.q, self.hash_dict(self.type_robots_x), self.hash_dict(self.leaf_phis)))
+        return hash((self.phi, self.type_robot, self.x, self.q, self.hash_dict(self.type_robots_x), self.hash_dict(self.phis_progress)))
     
     def hash_dict(self, d):
         return hash(tuple(sorted(d.items())))
     
     def __str__(self):
-        return f"{self.phi} {self.type_robot} {self.x} {self.q} {self.type_robots_x} {self.leaf_phis}"
+        return f"{self.phi} {self.type_robot} {self.x} {self.q} {self.type_robots_x} {self.phis_progress}"

@@ -163,8 +163,8 @@ class BuchiConstructor(object):
         # node set
         nodes = self.find_all_nodes(subgraph, init, accept)
         subgraph = subgraph.subgraph(nodes).copy()
-        subgraph.graph['init'] = init
-        subgraph.graph['accept'] = accept
+        subgraph.graph['init'] = (init, )
+        subgraph.graph['accept'] = (accept, )
 
         # remove all outgoing edges of the accepting state from subgraph for the prefix part if head != tail
         if init != accept:
@@ -410,7 +410,8 @@ class BuchiConstructor(object):
             if 'init' not in node and buchi_graph.in_degree(node) == 0:
                 nodes_to_be_removed.append(node)
         buchi_graph.remove_nodes_from(nodes_to_be_removed)
-                
+        buchi_graph.graph['init'] = tuple(buchi_graph.graph['init'])
+        buchi_graph.graph['accept'] = tuple(buchi_graph.graph['accept'])
         return decomp_sets
     
     

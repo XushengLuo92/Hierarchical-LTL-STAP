@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from specification import Specification
 from buchi import BuchiConstructor
-from util import create_parser, vis_graph, plot_workspace, prGreen, prRed, prYellow
+from util import create_parser, vis_graph, plot_workspace, prGreen, prRed, prYellow, longest_path_to_leaf
 from workspace_supermarket import Workspace
 from product_ts import ProductTs
 import networkx as nx 
@@ -16,19 +16,6 @@ from data_structure import Node
 from task_network import construct_task_network
 
 import time
-from collections import namedtuple
-Hierarchy = namedtuple('Hierarchy', ['level', 'phi', 'buchi_graph', 'decomp_sets'])
-    
-def get_locations_for_buchi_state(workspace, buchi_graph, buchi_state):
-    # @TODO consider various capabilities of robots
-    target_aps = set() # target ap that enable the transition to buchi_state
-    target_cells = []
-    for prec in buchi_graph.pred[buchi_state]:
-        # get ap that enable the transition to accept node
-        target_aps.update(BuchiConstructor.get_positive_literals(buchi_graph.edges[(prec, buchi_state)]['label']))  
-    for target_ap in target_aps:
-        target_cells.extend(workspace.regions[target_ap])
-    return target_cells
 
 def main(args=None):
     parser = create_parser()
@@ -42,7 +29,20 @@ def main(args=None):
     specs.get_task_specification(task=args.task, case=args.case)
     hierarchy_graph = specs.build_hierarchy_graph(args.vis)
     leaf_specs = [node for node in hierarchy_graph.nodes() if hierarchy_graph.out_degree(node) == 0]
-    print(specs.hierarchy)
+    non_leaf_specs = [node for node in hierarchy_graph.nodes() if node not in leaf_specs]
+    depth_specs = {}
+    for spec in hierarchy_graph.nodes():
+        depth = longest_path_to_leaf(hierarchy_graph, spec)
+        if depth in depth_specs.keys():
+            depth_specs[depth].append(spec)
+        else:
+            depth_specs[depth] = [spec]
+    depth_specs = {k: depth_specs[k] for k in sorted(depth_specs)}
+    # specs_with_increasing_depth = []
+    # for key in sorted(depth_specs.keys()):
+    #     specs_with_increasing_depth.extend(depth_specs[key])    
+    prRed(f"Specs: {specs.hierarchy}")
+    prRed(f"Depth: {depth_specs}")
     spec_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to generate {} specs".format(spec_time - start_time, hierarchy_graph.number_of_nodes()))
     
@@ -91,17 +91,18 @@ def main(args=None):
     # Step 4: search on the fly
     # ==========================
     sources = []
+    phis_progress = {phi: tuple(task_hierarchy[phi].buchi_graph.graph['init']) for phi in task_hierarchy.keys()}
     for phi in leaf_specs:
         for q in task_hierarchy[phi].buchi_graph.graph['init']:
             type_robots_x = workspace.type_robot_location.copy()
-            leaf_phis = {phi: task_hierarchy[phi].buchi_graph.graph['init'][0] for phi in leaf_specs}
-            leaf_phis[phi] = q
+            phis_progress.copy()
+            phis_progress[phi] = q
             type_robot = list(workspace.type_robot_location.keys())[0]
-            sources.append(Node(phi, type_robot, type_robots_x[type_robot], q, type_robots_x, leaf_phis))         
+            sources.append(Node(phi, type_robot, type_robots_x[type_robot], q, type_robots_x, phis_progress))         
     # prRed(f'init nodes:  {init_nodes}')
     # prRed(f'number of target nodes: {phi_target_nodes}')
     ProductTs.essential_type_robot_x = set([(type_robot, x) for type_robot, x in workspace.type_robot_location.items()])
-    _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, leaf_spec_order)
+    _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, leaf_spec_order, depth_specs)
     search_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to search".format(search_time - buchi_time))
     # prRed(f'optimal path {optimal_path}')
