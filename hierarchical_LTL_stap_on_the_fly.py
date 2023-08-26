@@ -129,8 +129,11 @@ def main(args=None):
         robot_path[type_robot].append(x)
 
     horizon = max([len(path) for path in robot_path.values()])
-    for path in robot_path.values():
-        path.extend((horizon - len(path)) * [path[-1]])
+    for robot, path in robot_path.items():
+        if not path:
+            path.extend((horizon - len(path)) * [workspace.type_robot_location[robot]])
+        else:
+            path.extend((horizon - len(path)) * [path[-1]])
         # prRed(path)
     path_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
