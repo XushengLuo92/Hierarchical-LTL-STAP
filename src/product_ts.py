@@ -122,10 +122,10 @@ class ProductTs(object):
             aps_in_label = BuchiConstructor.get_literals(edge_label)
             aps_sub = {ap: True if ap in aps_true else False for ap in symbols(aps_in_label)}
             if edge_label.subs(aps_sub) == True:    
+                # update progress of leaf phis if accepting state or decomp state is reached
+                updated_phis_progress = node.phis_progress.copy()
+                updated_phis_progress[node.phi] = next_q
                 if next_q in buchi_graph.graph['accept'] or next_q in decomp_set:
-                    # update progress of leaf phis if accepting state or decomp state is reached
-                    updated_phis_progress = node.phis_progress.copy()
-                    updated_phis_progress[node.phi] = next_q
                     # update progress of other specs if accepting state is reached
                     if next_q in buchi_graph.graph['accept']:
                         ProductTs.update_phis_progress(updated_phis_progress, task_hierarchy, depth_specs)
@@ -142,7 +142,7 @@ class ProductTs(object):
                         updated_type_robots_x = node.type_robots_x.copy()
                         updated_type_robots_x[node.type_robot] = next_x
                         weight = 0 if node.x == next_x else 1
-                        succ.append([Node(node.phi, node.type_robot, next_x, next_q, updated_type_robots_x, node.phis_progress), weight])
+                        succ.append([Node(node.phi, node.type_robot, next_x, next_q, updated_type_robots_x, updated_phis_progress), weight])
         return succ
     
     @staticmethod

@@ -90,6 +90,7 @@ def main(args=None):
     # ==========================
     # Step 4: search on the fly
     # ==========================
+    # @TODO sources should be specs that can be the first one to be finished
     sources = []
     phis_progress = {phi: tuple(task_hierarchy[phi].buchi_graph.graph['init']) for phi in task_hierarchy.keys()}
     for phi in leaf_specs:

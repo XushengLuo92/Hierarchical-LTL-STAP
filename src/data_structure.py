@@ -23,8 +23,7 @@ class Node:
     # Implementing __eq__ is necessary to compare objects for equality
     def __eq__(self, other):
         if isinstance(other, Node):
-            return self.phi == other.phi and self.type_robot == other.type_robot and self.x == other.x and self.q == other.q and \
-                self.hash_dict(self.type_robots_x) == self.hash_dict(other.type_robots_x) and \
+            return self.phi == other.phi and self.hash_dict(self.type_robots_x) == self.hash_dict(other.type_robots_x) and \
                     self.hash_dict(self.phis_progress) == self.hash_dict(other.phis_progress)
         return False
     
@@ -37,7 +36,7 @@ class Node:
     
     # Implementing __hash__ method to make instances usable as keys in dictionaries
     def __hash__(self):
-        return hash((self.phi, self.type_robot, self.x, self.q, self.hash_dict(self.type_robots_x), self.hash_dict(self.phis_progress)))
+        return hash((self.phi, self.hash_dict(self.type_robots_x), self.hash_dict(self.phis_progress)))
     
     def hash_dict(self, d):
         return hash(tuple(sorted(d.items())))
