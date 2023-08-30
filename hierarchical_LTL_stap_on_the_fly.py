@@ -99,10 +99,12 @@ def main(args=None):
             phis_progress.copy()
             phis_progress[phi] = q
             type_robot = list(workspace.type_robot_location.keys())[0]
-            sources.append(Node(phi, type_robot, type_robots_x[type_robot], q, type_robots_x, phis_progress))         
+            sources.append(Node(phi, type_robot, type_robots_x, phis_progress))         
     # prRed(f'init nodes:  {init_nodes}')
     # prRed(f'number of target nodes: {phi_target_nodes}')
-    ProductTs.essential_type_robot_x = set([(type_robot, x) for type_robot, x in workspace.type_robot_location.items()])
+    ProductTs.essential_phi_type_robot_x = set([(phi, type_robot, x, init) for phi in leaf_specs 
+                                                for init in task_hierarchy[phi].buchi_graph.graph['init'] 
+                                                for type_robot, x in workspace.type_robot_location.items()])
     _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, leaf_spec_order, depth_specs)
     search_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to search".format(search_time - buchi_time))
@@ -126,7 +128,7 @@ def main(args=None):
         # prYellow(wpt)
         pre_phi = wpt.phi
         type_robot = wpt.type_robot
-        x = wpt.x
+        x = wpt.type_robots_x[type_robot]
         robot_path[type_robot].append(x)
 
     horizon = max([len(path) for path in robot_path.values()])

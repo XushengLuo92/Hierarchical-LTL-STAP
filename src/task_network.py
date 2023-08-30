@@ -52,6 +52,7 @@ def build_buchi_graph_and_poset(task_specification, leaf_specs, workspace: Works
             prCyan(f"{phi}, {spec}")
             # find decomp nodes for leaf specs
             if phi in leaf_specs:
+                # decomp_sets do not include init and accept in the implementation
                 decomp_sets = buchi_constructor.get_all_decomp_nodes(buchi_graph)
                 # buchi_graph has been pruned in get_all_decomp_nodes
                 task_hierarchy[phi] = Hierarchy(level=index+1, phi=spec, buchi_graph=buchi_graph, decomp_sets=decomp_sets,

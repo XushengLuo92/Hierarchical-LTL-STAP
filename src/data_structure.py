@@ -6,15 +6,15 @@ CompositeSubtask = namedtuple('CompositeSubtask', ['subtask2element'])
 PrimitiveSubtaskId = namedtuple('PrimitiveSubtaskId', ['parent', 'element'])
 
 class Node:
-    def __init__(self, phi, type_robot, x, q, type_robots_x, phis_progress):
+    def __init__(self, phi, type_robot, type_robots_x, phis_progress):
         # specific spec
         self.phi = phi
-        # specific type_robot 
+        # # specific type_robot 
         self.type_robot = type_robot
-        # state of type_robot
-        self.x = x
-        # buchi state of the NBA of specific spec
-        self.q = q
+        # # state of type_robot
+        # self.x = x
+        # # buchi state of the NBA of specific spec
+        # self.q = q
         # snapshot of type_robots distribution: dict[type_robot] = x
         self.type_robots_x = type_robots_x
         # progress of leaf specs: dict[spec] = q
@@ -23,7 +23,8 @@ class Node:
     # Implementing __eq__ is necessary to compare objects for equality
     def __eq__(self, other):
         if isinstance(other, Node):
-            return self.phi == other.phi and self.hash_dict(self.type_robots_x) == self.hash_dict(other.type_robots_x) and \
+            return self.phi == other.phi and self.type_robot == other.type_robot and \
+                self.hash_dict(self.type_robots_x) == self.hash_dict(other.type_robots_x) and \
                     self.hash_dict(self.phis_progress) == self.hash_dict(other.phis_progress)
         return False
     
@@ -36,10 +37,10 @@ class Node:
     
     # Implementing __hash__ method to make instances usable as keys in dictionaries
     def __hash__(self):
-        return hash((self.phi, self.hash_dict(self.type_robots_x), self.hash_dict(self.phis_progress)))
+        return hash((self.phi, self.type_robot, self.hash_dict(self.type_robots_x), self.hash_dict(self.phis_progress)))
     
     def hash_dict(self, d):
         return hash(tuple(sorted(d.items())))
     
     def __str__(self):
-        return f"{self.phi} {self.type_robot} {self.x} {self.q} {self.type_robots_x} {self.phis_progress}"
+        return f"{self.phi} {self.type_robot} {self.type_robots_x} {self.phis_progress}"
