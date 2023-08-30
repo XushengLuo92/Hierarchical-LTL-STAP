@@ -102,8 +102,10 @@ def main(args=None):
             sources.append(Node(phi, type_robot, type_robots_x, phis_progress))         
     # prRed(f'init nodes:  {init_nodes}')
     # prRed(f'number of target nodes: {phi_target_nodes}')
-    ProductTs.essential_phi_type_robot_x = set([(phi, type_robot, x, init) for phi in leaf_specs 
-                                                for init in task_hierarchy[phi].buchi_graph.graph['init'] 
+    ProductTs.essential_phi_type_robot_x = set([(phi, type_robot, x, q) for phi in leaf_specs
+                                                for q in set(task_hierarchy[phi].buchi_graph.graph['init']) | \
+                                                    set(task_hierarchy[phi].buchi_graph.graph['accept']) | \
+                                                        set(task_hierarchy[phi].decomp_sets) 
                                                 for type_robot, x in workspace.type_robot_location.items()])
     _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, leaf_spec_order, depth_specs)
     search_time = time.time() # Record the end time

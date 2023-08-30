@@ -96,7 +96,7 @@ class ProductTs(object):
 
     @staticmethod
     # find successors for the same agent and same spec
-    def produce_succ_inside_ps(node: Node, task_hierarchy, workspace: Workspace, depth_specs):
+    def produce_succ_inside_ps(node: Node, task_hierarchy, workspace: Workspace, depth_specs, leaf_specs):
         succ = []
         buchi_graph = task_hierarchy[node.phi].buchi_graph
         x = node.type_robots_x[node.type_robot]
@@ -110,9 +110,12 @@ class ProductTs(object):
         node_label = buchi_graph.nodes[q]['label']
         aps_in_label = BuchiConstructor.get_literals(node_label)
         aps_sub = {ap: True if ap in aps_true else False for ap in symbols(aps_in_label)}
+        type_robots_x = set(node.type_robots_x.values())
         if node_label.subs(aps_sub) == True:
             for next_x in next_xs:
                 # self-loop
+                if x != next_x and next_x in type_robots_x: # collision avoidance
+                    continue
                 updated_type_robots_x = node.type_robots_x.copy()
                 updated_type_robots_x[node.type_robot] = next_x
                 weight = 0 if x == next_x else 1
@@ -132,15 +135,22 @@ class ProductTs(object):
                     if next_q in buchi_graph.graph['accept']:
                         ProductTs.update_phis_progress(updated_phis_progress, task_hierarchy, depth_specs)
                     for next_x in next_xs:
+                        if x != next_x and next_x in type_robots_x:
+                            continue
                         updated_type_robots_x = node.type_robots_x.copy()
                         updated_type_robots_x[node.type_robot] = next_x
                         weight = 0 if x == next_x else 1
                         succ.append([Node(node.phi, node.type_robot, updated_type_robots_x, updated_phis_progress), weight])
                         # update essentail x of type_robot
                         if x == next_x and q != next_q:
-                            ProductTs.essential_phi_type_robot_x.add((node.phi, node.type_robot, x, next_q))
+                            ProductTs.essential_phi_type_robot_x.update({(phi, node.type_robot, x, q) for phi in leaf_specs
+                                                for q in set(task_hierarchy[phi].buchi_graph.graph['init']) | \
+                                                    set(task_hierarchy[phi].buchi_graph.graph['accept']) | \
+                                                        set(task_hierarchy[phi].decomp_sets)})
                 else:
                     for next_x in next_xs:
+                        if x != next_x and next_x in type_robots_x:
+                            continue
                         updated_type_robots_x = node.type_robots_x.copy()
                         updated_type_robots_x[node.type_robot] = next_x
                         weight = 0 if x == next_x else 1
@@ -175,7 +185,7 @@ class ProductTs(object):
         if q not in decomp_set:
             return []
         # x is not in desired areas that lead to decomp state; different from IJRR paper
-        if (node.phi, node.type_robot, node.type_robots_x[node.type_robot], q) not in ProductTs.essential_phi_type_robot_x:
+        if (node.phi, node.type_robot, node.type_robots_x[node.type_robot], node.phis_progress[node.phi]) not in ProductTs.essential_phi_type_robot_x:
             return []
         # if node.q not in hierarchy.buchi_graph.graph['init']:
         #     desired_x = ProductTs.get_locations_for_buchi_state(workspace, hierarchy.buchi_graph, node.q)
@@ -232,8 +242,7 @@ class ProductTs(object):
             
         # for the last robot, connect from its accept node of a team model to every init node of the first robot's team model with corresponding location                
         type_robots = list(workspace.type_robot_location.keys())
-        if q in buchi_graph.graph['accept']:
-            if (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x:
+        if q in buchi_graph.graph['accept'] and (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x:
                 # constrain the set of states that can be accepting product states
                 # update buchi state
                 for leaf_phi in leaf_phis_order[node.phi]:
@@ -242,11 +251,10 @@ class ProductTs(object):
                         updated_phis_progress = node.phis_progress.copy()
                         updated_phis_progress[leaf_phi] = q_init
                         succ.append([Node(leaf_phi, type_robots[0], node.type_robots_x, updated_phis_progress), 0])
-                        
         return succ
     
     @staticmethod
     def produce_succ(node: Node, task_hierarchy, workspace: Workspace, leaf_phis_order, depth_specs):
-        return ProductTs.produce_succ_inside_ps(node, task_hierarchy, workspace, depth_specs)  + \
+        return ProductTs.produce_succ_inside_ps(node, task_hierarchy, workspace, depth_specs, leaf_phis_order.keys())  + \
             ProductTs.produce_succ_between_ps_same_phi(node, task_hierarchy, workspace) + \
                 ProductTs.produce_succ_between_ps_same_robot(node, task_hierarchy, workspace, leaf_phis_order)
