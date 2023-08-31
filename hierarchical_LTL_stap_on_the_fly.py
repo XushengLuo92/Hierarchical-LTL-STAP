@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from vis import vis
 from data_structure import Node
 from task_network import construct_task_network
+from execution import generate_simultaneous_exec
 
 import time
 
@@ -73,13 +74,14 @@ def main(args=None):
     #             init_acpt = buchi_constructor.get_init_accept(buchi_graph)
     #             decomp_sets = buchi_constructor.get_all_decomp_nodes(buchi_graph, init_acpt)
     #         task_hierarchy[phi] = Hierarchy(level=index+1, phi=phi, buchi_graph=buchi_graph, decomp_sets=decomp_sets)
-    task_hierarchy, leaf_spec_order = construct_task_network(specs, leaf_specs, workspace, args)
+    task_hierarchy, leaf_spec_order, first_spec_candidates = construct_task_network(specs, leaf_specs, workspace, args)
     buchi_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to generate buchi graph".format(buchi_time - workspace_time))
     prRed("Buchi graph for {} has {} nodes and {} edges, with decomp sets {}".format(list(task_hierarchy.keys()), 
                                                                 [h.buchi_graph.number_of_nodes() for h in task_hierarchy.values()],
                                                                 [h.buchi_graph.number_of_edges() for h in task_hierarchy.values()],
                                                                 [h.decomp_sets for h in task_hierarchy.values()],))
+    prRed(f"First spec candidates: {first_spec_candidates}")
     prRed(f"Order between leaf specs: {leaf_spec_order}")
 
     # print(task_hierarchy.items())
@@ -90,10 +92,10 @@ def main(args=None):
     # ==========================
     # Step 4: search on the fly
     # ==========================
-    # @TODO sources should be specs that can be the first one to be finished
+    #sources are from specs that can be the first one to be finished
     sources = []
     phis_progress = {phi: tuple(task_hierarchy[phi].buchi_graph.graph['init']) for phi in task_hierarchy.keys()}
-    for phi in leaf_specs:
+    for phi in first_spec_candidates:
         for q in task_hierarchy[phi].buchi_graph.graph['init']:
             type_robots_x = workspace.type_robot_location.copy()
             phis_progress.copy()
@@ -110,36 +112,11 @@ def main(args=None):
     _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, leaf_spec_order, depth_specs)
     search_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to search".format(search_time - buchi_time))
-    # prRed(f'optimal path {optimal_path}')
-    
+
     # ==========================
     # Step 5: extract robot path
     # ========================== 
-    robot_path = {type_robot: [] for type_robot in workspace.type_robot_location.keys() }
-    pre_phi = ''
-    for wpt in optimal_path:
-        if pre_phi and wpt.phi != pre_phi:
-            for robot, path in robot_path.items():
-                if not path:
-                    path.append(workspace.type_robot_location[robot])
-            horizon = max([len(path) for path in robot_path.values()])
-            for path in robot_path.values():
-                path.extend((horizon - len(path)) * [path[-1]])
-                # prRed(path)
-        
-        # prYellow(wpt)
-        pre_phi = wpt.phi
-        type_robot = wpt.type_robot
-        x = wpt.type_robots_x[type_robot]
-        robot_path[type_robot].append(x)
-
-    horizon = max([len(path) for path in robot_path.values()])
-    for robot, path in robot_path.items():
-        if not path:
-            path.extend((horizon - len(path)) * [workspace.type_robot_location[robot]])
-        else:
-            path.extend((horizon - len(path)) * [path[-1]])
-        # prRed(path)
+    robot_path = generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_order)
     path_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
     if args.vis:

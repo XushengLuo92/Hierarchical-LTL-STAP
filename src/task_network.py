@@ -295,15 +295,18 @@ def construct_task_network(task_specification, leaf_specs, workspace: Workspace,
             leaf_spec_network.add_edge(pre_literal, succ_literal)
             
     leaf_spec_order = {leaf_spec: [] for leaf_spec in leaf_specs}
+    first_spec_candidates = []
     for leaf_spec_a in leaf_specs:
         # 1. Nodes reachable from the given node
         reachable_from_node = set(nx.descendants(leaf_spec_network, leaf_spec_a))
         # 2. Nodes from which the given node is reachable
         reachable_to_node = set(nx.ancestors(leaf_spec_network, leaf_spec_a))
+        if not reachable_to_node:
+            first_spec_candidates.append(leaf_spec_a)
         # 3. Combine the two sets
         all_connected_nodes = reachable_from_node.union(reachable_to_node)
         # 4. Subtract from the set of all nodes to get non-reachable nodes
         non_reachable_nodes = set(leaf_spec_network.nodes()) - all_connected_nodes - {leaf_spec_a}
         leaf_spec_order[leaf_spec_a] = reachable_from_node.union(non_reachable_nodes)
                 
-    return task_hierarchy, leaf_spec_order
+    return task_hierarchy, leaf_spec_order, first_spec_candidates
