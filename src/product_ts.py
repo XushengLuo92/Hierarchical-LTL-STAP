@@ -37,32 +37,6 @@ class ProductTs(object):
                     
         return prod_ts
     
-    def agent_based_construct_ts(self, type_robot, buchi_graph, workspace):
-        # AP based on the capability of type_robot
-        prod_ts = nx.DiGraph()
-        for x, q in list(product(workspace.graph_workspace.nodes(), buchi_graph.nodes())):
-            aps_true = symbols(workspace.get_atomic_prop(x))
-            next_xs = list(workspace.graph_workspace.neighbors(x))  # next_xs includes x
-            node_label = buchi_graph.nodes[q]['label']
-            aps_in_label = BuchiConstructor.get_literals(node_label)
-            aps_sub = {ap: True if ap in aps_true else False for ap in symbols(aps_in_label)}
-            if node_label.subs(aps_sub) == True:
-                for next_x in next_xs:
-                    weight = 0 if x == next_x else 1
-                    prod_ts.add_edge((x, q), (next_x, q), weight=weight)
-            
-            next_qs = buchi_graph.succ[q]
-            for next_q in next_qs:
-                edge_label = buchi_graph.edges[(q, next_q)]['label']
-                aps_in_label = BuchiConstructor.get_literals(edge_label)
-                aps_sub = {ap: True if ap in aps_true else False for ap in symbols(aps_in_label)}
-                if edge_label.subs(aps_sub) == True:    
-                    for next_x in next_xs:
-                        weight = 0 if x == next_x else 1
-                        prod_ts.add_edge((x, q), (next_x, next_q), weight=weight)
-                    
-        return prod_ts
-    
     @staticmethod
     def update_phis_progress(phis_progress, task_hierarchy, depth_specs):
         # print(phis_progress)
@@ -101,9 +75,6 @@ class ProductTs(object):
         buchi_graph = task_hierarchy[node.phi].buchi_graph
         x = node.type_robots_x[node.type_robot]
         q = node.phis_progress[node.phi]
-        # return if the accepting state has been reached, no need to search inside the ps for the same robot
-        if node.phis_progress[node.phi] in buchi_graph.graph['accept']:
-            return succ
         decomp_set = task_hierarchy[node.phi].decomp_sets
         aps_true = symbols(workspace.get_atomic_prop(x))
         next_xs = list(workspace.graph_workspace.neighbors(x))  # next_xs includes x
@@ -112,6 +83,10 @@ class ProductTs(object):
         aps_sub = {ap: True if ap in aps_true else False for ap in symbols(aps_in_label)}
         type_robots_x = set(node.type_robots_x.values())
         if node_label.subs(aps_sub) == True:
+            # return if the accepting state has been reached, no need to search inside the ps for the same robot
+            # unless accepting state is violated
+            if node.phis_progress[node.phi] in buchi_graph.graph['accept']:
+                return []
             for next_x in next_xs:
                 # self-loop
                 if x != next_x and next_x in type_robots_x: # collision avoidance

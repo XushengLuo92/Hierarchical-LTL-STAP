@@ -17,7 +17,7 @@ class Node:
         # self.q = q
         # snapshot of type_robots distribution: dict[type_robot] = x
         self.type_robots_x = type_robots_x
-        # progress of leaf specs: dict[spec] = q
+        # progress of all specs: dict[spec] = q
         self.phis_progress = phis_progress
         
     # Implementing __eq__ is necessary to compare objects for equality

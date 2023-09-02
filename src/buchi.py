@@ -208,7 +208,7 @@ class BuchiConstructor(object):
                             single_formula = subgraph.edges[(node, next_succ)]['label'] 
                             merge_formula = And(subgraph.edges[(node, succ)]['label'],
                                                 subgraph.edges[(succ, next_succ)]['label'])
-                            if single_formula.equals(merge_formula):
+                            if merge_formula.equals(single_formula):
                                 removed_edge.append((node, next_succ))
                         except KeyError:
                             continue
