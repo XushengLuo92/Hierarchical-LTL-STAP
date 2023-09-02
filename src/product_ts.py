@@ -206,7 +206,8 @@ class ProductTs(object):
 
         # for the same robot, if two phis are independent, connect from one decomp node of a team model to the current decomp node (if so) of another team model
         hierarchy = task_hierarchy[node.phi]   
-        if q in hierarchy.decomp_sets and (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x:
+        if (q in hierarchy.decomp_sets or q in buchi_graph.graph['accept'] ) and \
+            (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x:
             for leaf_phi in leaf_phis_order[node.phi]:
                 if node.phi in leaf_phis_order[leaf_phi]:
                     leaf_buchi_graph = task_hierarchy[leaf_phi].buchi_graph
@@ -215,7 +216,7 @@ class ProductTs(object):
                     if leaf_q in leaf_hierarchy.decomp_sets | set(leaf_hierarchy.buchi_graph.graph['init']):
                         succ.append([Node(leaf_phi, node.type_robot, node.type_robots_x, node.phis_progress), 0])
             
-        # for the last robot, connect from its accept node of a team model to every init node of the first robot's team model with corresponding location                
+        # connect from its accept node of a team model to every init node of the first robot's team model with corresponding location                
         type_robots = list(workspace.type_robot_location.keys())
         if q in buchi_graph.graph['accept'] and (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x:
                 # constrain the set of states that can be accepting product states

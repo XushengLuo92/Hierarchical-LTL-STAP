@@ -6,6 +6,7 @@ from data_structure import Node
 from product_ts import ProductTs
 from sympy import symbols
 
+import sys
 """Modified from function multi_source_multi_targets_dijkstra in nx.algorithms
 """
 
@@ -16,7 +17,7 @@ def reach_target(v: Node):
     return False
 
 def _dijkstra_multisource(
-   sources, task_hierarchy, workspace, leaf_phis_order, depth_specs, paths=None, vis=False
+   sources, task_hierarchy, workspace, leaf_phis_order, depth_specs, paths=None, vis=True
 ):
     """Uses Dijkstra's algorithm to find shortest weighted paths
 
@@ -68,6 +69,10 @@ def _dijkstra_multisource(
     as arguments. No need to explicitly return pred or paths.
 
     """
+    with open('log.txt', 'w') as f:
+        f.write('')
+    original_stdout = sys.stdout
+    
     push = heappush
     pop = heappop
     dist = {}  # dictionary of final distances
@@ -82,7 +87,10 @@ def _dijkstra_multisource(
     while fringe:
         (d, v) = pop(fringe)
         if vis:
-            prYellow(f'pop {d}, {v}')
+            with open('log.txt', 'a') as f:
+                sys.stdout = f
+                prYellow(f'pop {d}, {v}')
+            # prYellow(f'pop {d}, {v}')
         # put phis into v
         # print(d, v)
         if v in dist:
@@ -94,7 +102,10 @@ def _dijkstra_multisource(
         succ = ProductTs.produce_succ(v, task_hierarchy, workspace, leaf_phis_order, depth_specs)
         for u, cost in succ:
             if vis:
-                print(f'succ {u}')
+                with open('log.txt', 'a') as f:
+                    sys.stdout = f
+                    print(f'succ {u}')
+                # print(f'succ {u}')
             if cost is None:
                 continue
             vu_dist = dist[v] + cost
@@ -109,13 +120,16 @@ def _dijkstra_multisource(
                 seen[u] = vu_dist
                 push(fringe, (vu_dist, u))
                 if vis:
-                    prCyan(f"push {vu_dist}, {u}")
+                    with open('log.txt', 'a') as f:
+                        sys.stdout = f
+                        prCyan(f"push {vu_dist}, {u}")
+                    # prCyan(f"push {vu_dist}, {u}")
                 if paths is not None:
                     paths[u] = paths[v] + [u]
             # elif vu_dist == seen[u_phis]:
             #     if pred is not None:
             #         pred[u].append(v)
-
+    sys.stdout = original_stdout
     # The optional predecessor and path dictionaries can be accessed
     # by the caller via the pred and paths objects passed as arguments.
     return dist, target
