@@ -6,8 +6,8 @@
             "type": "python",
             "request": "launch",
             "program": "hierarchical_LTL_stap_on_the_fly.py",
-            "args": ["--task=nav", "--case=9", "--vis", "--dot"],
-            "python": "/home/xusheng/miniconda3/envs/hierarchical_ltl/bin/python",
+            "args": ["--task=nav", "--case=9", "--simul", "--vis", "--dot"],
+            "python": "/Users/xushengluo/miniconda3/envs/hierarchical_ltl/bin/python",
             "console": "integratedTerminal"
         }
     ]

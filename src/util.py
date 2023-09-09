@@ -60,6 +60,7 @@ def create_parser():
     parser.add_argument('--vis', action='store_true', help='Enable visualization')
     parser.add_argument('--dot', action='store_true', help='Enable dot graph')
     parser.add_argument('--simul', action='store_true', help='Enable simultaneous execution')
+    parser.add_argument('--event', action='store_true', help='Enable event based execution')
     return parser
 
 def plot_workspace(workspace, ax):

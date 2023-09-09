@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from vis import vis
 from data_structure import Node
 from task_network import construct_task_network
-from execution import generate_simultaneous_exec
+from execution import generate_simultaneous_exec, event_based_execution
 
 import time
 
@@ -116,9 +116,11 @@ def main(args=None):
     # ==========================
     # Step 5: extract robot path
     # ========================== 
-    robot_path = generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_order)
+    robot_path, robot_phi = generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_order)
     path_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
+    if args.event:
+        event_based_execution(robot_path, robot_phi, leaf_spec_order, first_spec_candidates)
     if args.vis:
         vis(args.task, args.case, workspace, robot_path, {robot: [len(path)] * 2 for robot, path in robot_path.items()}, [])
         vis_time = time.time() # Record the end time
