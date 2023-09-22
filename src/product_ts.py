@@ -73,6 +73,10 @@ class ProductTs(object):
     def produce_succ_inside_ps(node: Node, task_hierarchy, workspace: Workspace, depth_specs, leaf_specs):
         succ = []
         buchi_graph = task_hierarchy[node.phi].buchi_graph
+        # return if the accepting state has been reached, no need to search inside the ps for the same robot
+        # unless accepting state is violated
+        if node.phis_progress[node.phi] in buchi_graph.graph['accept']:
+            return []
         x = node.type_robots_x[node.type_robot]
         q = node.phis_progress[node.phi]
         decomp_set = task_hierarchy[node.phi].decomp_sets
@@ -83,10 +87,6 @@ class ProductTs(object):
         aps_sub = {ap: True if ap in aps_true else False for ap in symbols(aps_in_label)}
         type_robots_x = set(node.type_robots_x.values())
         if node_label.subs(aps_sub) == True:
-            # return if the accepting state has been reached, no need to search inside the ps for the same robot
-            # unless accepting state is violated
-            if node.phis_progress[node.phi] in buchi_graph.graph['accept']:
-                return []
             for next_x in next_xs:
                 # self-loop
                 if x != next_x and next_x in type_robots_x: # collision avoidance
@@ -105,10 +105,9 @@ class ProductTs(object):
                 # update progress of leaf phis if accepting state or decomp state is reached
                 updated_phis_progress = node.phis_progress.copy()
                 updated_phis_progress[node.phi] = next_q
+                # update progress of other parent specs 
+                ProductTs.update_phis_progress(updated_phis_progress, task_hierarchy, depth_specs)
                 if next_q in buchi_graph.graph['accept'] or next_q in decomp_set:
-                    # update progress of other specs if accepting state is reached
-                    if next_q in buchi_graph.graph['accept']:
-                        ProductTs.update_phis_progress(updated_phis_progress, task_hierarchy, depth_specs)
                     for next_x in next_xs:
                         if x != next_x and next_x in type_robots_x:
                             continue
@@ -199,10 +198,9 @@ class ProductTs(object):
             # update buchi state
             for leaf_phi in leaf_phis_order[node.phi]: # only connect when precedence relation exists
                 leaf_buchi_graph = task_hierarchy[leaf_phi].buchi_graph
-                for q_init in leaf_buchi_graph.graph['init']:
-                    updated_phis_progress = node.phis_progress.copy()
-                    updated_phis_progress[leaf_phi] = q_init
-                    succ.append([Node(leaf_phi, node.type_robot, node.type_robots_x, updated_phis_progress), 0])
+                leaf_q = node.phis_progress[leaf_phi]
+                if leaf_q in leaf_buchi_graph.graph['init']:
+                    succ.append([Node(leaf_phi, node.type_robot, node.type_robots_x, node.phis_progress), 0])
 
         # for the same robot, if two phis are independent, connect from one decomp node of a team model to the current decomp node (if so) of another team model
         hierarchy = task_hierarchy[node.phi]   
@@ -223,10 +221,9 @@ class ProductTs(object):
                 # update buchi state
                 for leaf_phi in leaf_phis_order[node.phi]:
                     leaf_buchi_graph = task_hierarchy[leaf_phi].buchi_graph
-                    for q_init in leaf_buchi_graph.graph['init']:
-                        updated_phis_progress = node.phis_progress.copy()
-                        updated_phis_progress[leaf_phi] = q_init
-                        succ.append([Node(leaf_phi, type_robots[0], node.type_robots_x, updated_phis_progress), 0])
+                    leaf_q = node.phis_progress[leaf_phi]
+                    if leaf_q in leaf_buchi_graph.graph['init']:
+                        succ.append([Node(leaf_phi, type_robots[0], node.type_robots_x, node.phis_progress), 0])
         return succ
     
     @staticmethod
