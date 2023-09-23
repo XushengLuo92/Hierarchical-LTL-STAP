@@ -2,7 +2,7 @@ import networkx as nx
 from heapq import heappush, heappop
 from itertools import count
 from util import prCyan, prYellow
-from data_structure import Node
+from data_structure import Node, SpecInfo
 from product_ts import ProductTs
 from sympy import symbols
 
@@ -17,7 +17,7 @@ def reach_target(v: Node):
     return False
 
 def _dijkstra_multisource(
-   sources, task_hierarchy, workspace, leaf_phis_order, depth_specs, paths=None, vis=True
+   sources, task_hierarchy, workspace, spec_info, paths=None, vis=True
 ):
     """Uses Dijkstra's algorithm to find shortest weighted paths
 
@@ -99,12 +99,12 @@ def _dijkstra_multisource(
         if reach_target(v):
             target = v
             break
-        succ = ProductTs.produce_succ(v, task_hierarchy, workspace, leaf_phis_order, depth_specs)
+        succ = ProductTs.produce_succ(v, task_hierarchy, workspace, spec_info)
         for u, cost in succ:
-            if vis:
-                with open('log.txt', 'a') as f:
-                    sys.stdout = f
-                    print(f'succ {u}')
+            # if vis:
+            #     with open('log.txt', 'a') as f:
+            #         sys.stdout = f
+            #         print(f'succ {u}')
                 # print(f'succ {u}')
             if cost is None:
                 continue
@@ -134,7 +134,7 @@ def _dijkstra_multisource(
     # by the caller via the pred and paths objects passed as arguments.
     return dist, target
 
-def multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, leaf_spec_order, depth_specs):
+def multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec_info):
     """Find shortest weighted paths and lengths from a given set of
     source nodes.
 
@@ -146,7 +146,7 @@ def multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, leaf
         raise ValueError("sources must not be empty")
     paths = {source: [source] for source in sources}  # dictionary of paths
     dist, target = _dijkstra_multisource(
-        sources, task_hierarchy, workspace, leaf_spec_order, depth_specs, paths=paths, 
+        sources, task_hierarchy, workspace, spec_info, paths=paths, 
     )
     try: 
         return (dist[target], paths[target])

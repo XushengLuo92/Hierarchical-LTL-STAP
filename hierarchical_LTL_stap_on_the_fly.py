@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from specification import Specification
 from buchi import BuchiConstructor
-from util import create_parser, vis_graph, plot_workspace, prGreen, prRed, prYellow, longest_path_to_leaf
+from util import create_parser, vis_graph, plot_workspace, prGreen, prRed, prYellow, depth_to_leaf
 from workspace_supermarket import Workspace
 from product_ts import ProductTs
 import networkx as nx 
@@ -12,7 +12,7 @@ from itertools import product
 from dijkstra_on_the_fly import multi_source_multi_targets_dijkstra
 import matplotlib.pyplot as plt
 from vis import vis
-from data_structure import Node
+from data_structure import Node, SpecInfo
 from task_network import construct_task_network
 from execution import generate_simultaneous_exec, event_based_execution
 
@@ -33,17 +33,21 @@ def main(args=None):
     non_leaf_specs = [node for node in hierarchy_graph.nodes() if node not in leaf_specs]
     depth_specs = {}
     for spec in hierarchy_graph.nodes():
-        depth = longest_path_to_leaf(hierarchy_graph, spec)
+        depth = depth_to_leaf(hierarchy_graph, spec)
         if depth in depth_specs.keys():
             depth_specs[depth].append(spec)
         else:
             depth_specs[depth] = [spec]
     depth_specs = {k: depth_specs[k] for k in sorted(depth_specs)}
+    path_to_root = dict()
+    for spec in leaf_specs:
+        path_to_root[spec] = nx.shortest_path(hierarchy_graph, source="p0", target=spec)[::-1]
     # specs_with_increasing_depth = []
     # for key in sorted(depth_specs.keys()):
     #     specs_with_increasing_depth.extend(depth_specs[key])    
     prRed(f"Specs: {specs.hierarchy}")
     prRed(f"Depth: {depth_specs}")
+    prRed(f"Path to root: {path_to_root}")
     spec_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to generate {} specs".format(spec_time - start_time, hierarchy_graph.number_of_nodes()))
     
@@ -83,6 +87,9 @@ def main(args=None):
                                                                 [h.decomp_sets for h in task_hierarchy.values()],))
     prRed(f"First spec candidates: {first_spec_candidates}")
     prRed(f"Order between leaf specs: {leaf_spec_order}")
+    
+    spec_info = SpecInfo(depth_specs=depth_specs, path_to_root=path_to_root,
+                         leaf_spec_order=leaf_spec_order)
 
     # print(task_hierarchy.items())
     if args.vis:
@@ -109,7 +116,7 @@ def main(args=None):
                                                     set(task_hierarchy[phi].buchi_graph.graph['accept']) | \
                                                         set(task_hierarchy[phi].decomp_sets) 
                                                 for type_robot, x in workspace.type_robot_location.items()])
-    _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, leaf_spec_order, depth_specs)
+    _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec_info)
     search_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to search".format(search_time - buchi_time))
 

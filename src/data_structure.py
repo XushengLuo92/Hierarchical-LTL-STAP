@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 Hierarchy = namedtuple('Hierarchy', ['level', 'phi', 'buchi_graph', 'decomp_sets', 'hass_graph', 'element2edge'])
+SpecInfo = namedtuple("SpecInfo", ['depth_specs', 'path_to_root', 'leaf_spec_order'])
 PrimitiveSubtask = namedtuple('PrimitiveSubtask', ['element_in_poset'])
 CompositeSubtask = namedtuple('CompositeSubtask', ['subtask2element'])
 PrimitiveSubtaskId = namedtuple('PrimitiveSubtaskId', ['parent', 'element'])

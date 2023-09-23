@@ -8,7 +8,7 @@ import numpy as np
 
 import networkx as nx
 
-def longest_path_to_leaf(G, start_node):
+def depth_to_leaf(G, start_node):
     """Find the length of the longest path from start_node to any leaf."""
     
     # Helper recursive function
