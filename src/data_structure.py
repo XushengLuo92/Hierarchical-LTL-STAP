@@ -7,19 +7,17 @@ CompositeSubtask = namedtuple('CompositeSubtask', ['subtask2element'])
 PrimitiveSubtaskId = namedtuple('PrimitiveSubtaskId', ['parent', 'element'])
 
 class Node:
-    def __init__(self, phi, type_robot, type_robots_x, phis_progress):
+    def __init__(self, phi, type_robot, type_robots_x, phis_progress, world_state=tuple()):
         # specific spec
         self.phi = phi
         # # specific type_robot 
         self.type_robot = type_robot
-        # # state of type_robot
-        # self.x = x
-        # # buchi state of the NBA of specific spec
-        # self.q = q
         # snapshot of type_robots distribution: dict[type_robot] = x
         self.type_robots_x = type_robots_x
         # progress of all specs: dict[spec] = q
         self.phis_progress = phis_progress
+        # snapshot of world state
+        self.world_state = world_state
         
     # Implementing __eq__ is necessary to compare objects for equality
     def __eq__(self, other):

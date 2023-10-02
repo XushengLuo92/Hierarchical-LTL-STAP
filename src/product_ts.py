@@ -112,10 +112,18 @@ class ProductTs(object):
                         phis_truth[symbols(spec)] = False
 
     @staticmethod
-    # find successors for the same agent and same spec
     def produce_succ_inside_ps(node: Node, task_hierarchy, workspace: Workspace, spec_info):
-        leaf_specs = spec_info.leaf_spec_order.keys()
-        depth_specs = spec_info.depth_specs
+        """find successors for the same agent and same spec
+
+        Args:
+            node (Node): _description_
+            task_hierarchy (_type_): _description_
+            workspace (Workspace): _description_
+            spec_info (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         path_to_root = spec_info.path_to_root
         
         # return if the accepting state has been reached, no need to search inside the ps for the same robot
@@ -125,14 +133,35 @@ class ProductTs(object):
             if node.phis_progress[parent] in parent_buchi_graph.graph['accept']:
                 return []
             
-        succ = []
+        x = node.type_robots_x[node.type_robot]
+        aps_true = symbols(workspace.get_world_state_based_observations(node.world_state, x))
+        actions = workspace.get_obsevation_based_actions(aps_true)
+        if 'navigate' in actions:
+            return ProductTs.produce_succ_inside_ps_via_nav(node, task_hierarchy, workspace, spec_info, aps_true)
+    
+    @staticmethod
+    def produce_succ_inside_ps_via_nav(node: Node, task_hierarchy, workspace: Workspace, spec_info, aps_true):
+        """find successors for the same agent and same spec via navigation
+
+        Args:
+            node (Node): _description_
+            task_hierarchy (_type_): _description_
+            workspace (Workspace): _description_
+            spec_info (_type_): _description_
+            aps_true (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        leaf_specs = spec_info.leaf_spec_order.keys()
+        path_to_root = spec_info.path_to_root
         buchi_graph = task_hierarchy[node.phi].buchi_graph
         x = node.type_robots_x[node.type_robot]
         q = node.phis_progress[node.phi]
         decomp_set = task_hierarchy[node.phi].decomp_sets
-        aps_true = symbols(workspace.get_atomic_prop(x))
-        next_xs = list(workspace.graph_workspace.neighbors(x))  # next_xs includes x
-        
+        next_xs = workspace.update_robot_state(x)  # next_xs includes x
+        succ = []
+
         # check the edge label
         next_qs = buchi_graph.succ[q]
         for next_q in next_qs:
@@ -201,8 +230,18 @@ class ProductTs(object):
         return target_cells
 
     @staticmethod
-    # find successor with decomp sets for the same spec between consecutive robots
     def produce_succ_between_ps_same_phi(node:Node, task_hierarchy, workspace: Workspace, path_to_root):
+        """find successor with decomp sets for the same spec between consecutive robots
+
+        Args:
+            node (Node): _description_
+            task_hierarchy (_type_): _description_
+            workspace (Workspace): _description_
+            path_to_root (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         # return if the accepting state has been reached, no need to search inside the ps for the same robot
         for parent in path_to_root[node.phi]:
             parent_buchi_graph = task_hierarchy[parent].buchi_graph

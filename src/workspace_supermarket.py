@@ -10,7 +10,7 @@ import sys
 import itertools
 import pickle
 import copy
-
+import json
 
 class Workspace(object):
     """
@@ -41,6 +41,7 @@ class Workspace(object):
 
         self.graph_workspace = nx.Graph()
         self.build_graph()
+        self.domain = self.get_domain()
 
         # self.p2p = self.point_to_point_path()  # label2label path
 
@@ -214,10 +215,71 @@ class Workspace(object):
                         break
         return type_robot_location
     
-    def get_atomic_prop(self, location):
-        atomic_prop = []
+    def get_domain(self):
+        with open('./src/domain.json', 'r') as f:
+            return json.load(f)
+        
+    def get_world_state_based_observations(self, world_state, location):
+        """generate observations
+
+        Args:
+            world_state (_type_): _description_
+            location (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        observations = []
         for region, cells in self.regions.items():
             if location in cells:
-                atomic_prop.append(region)
+                observations.append(region)
                 break
-        return atomic_prop
+        for action, preconds in self.domain.get('env_actions').items():
+            if all(element in observations for element in preconds if "!" not in element) and \
+                all(element[1:] not in world_state for element in preconds if "!" in element):
+                observations.append(action)
+        return observations
+            
+    def get_obsevation_based_actions(self, aps):
+        """get actions based on observations
+
+        Args:
+            aps (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        actions = []
+        for action, precond_eff in self.domain.get('robot_actions').items():
+            for preconds in precond_eff['preconditions']:
+                if all(element in aps for element in preconds if "!" not in element) and \
+                    all(element[1:] not in aps for element in preconds if "!" in element):
+                    actions.append(action)
+        if not actions:
+            actions.append('navigate')
+        return actions
+    
+    def update_world_state(self, world_state, action):
+        """update world state base on action
+
+        Args:
+            world_state (_type_): _description_
+            action (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        new_world_state = list(world_state)
+        new_world_state = new_world_state + self.domain.get("robot_actions")[action].effects
+        return new_world_state
+    
+    def update_robot_state(self, robot_state):
+        """update robot loc state in navigate action
+
+        Args:
+            robot_state (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        return list(self.graph_workspace.neighbors(robot_state))
