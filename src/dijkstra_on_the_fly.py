@@ -11,14 +11,26 @@ import sys
 """
 
 def reach_target(v: Node):
-    for q in v.phis_progress['p0']:
-        if 'accept' in q:
-            return True
+    if 'accept' in v.phis_progress['p0']:
+        return True
     return False
 
+def at_most_one_non_decomp_states(phis_progress, leaf_specs, task_hierarchy):
+    count_not_decomp_state = 0
+    for spec in leaf_specs:
+        q = phis_progress[spec]
+        hierarchy = task_hierarchy[spec]
+        decomp_set = hierarchy.decomp_sets | set(hierarchy.buchi_graph.graph['init']) | set(hierarchy.buchi_graph.graph['accept'])
+        if q not in decomp_set:
+            count_not_decomp_state += 1
+        if count_not_decomp_state > 1:
+            return False
+    return True 
+
+    
+
 def _dijkstra_multisource(
-   sources, task_hierarchy, workspace, spec_info, paths=None, vis=True
-):
+   sources, task_hierarchy, workspace, spec_info, args, paths=None):
     """Uses Dijkstra's algorithm to find shortest weighted paths
 
     Parameters
@@ -69,9 +81,10 @@ def _dijkstra_multisource(
     as arguments. No need to explicitly return pred or paths.
 
     """
-    with open('log.txt', 'w') as f:
-        f.write('')
-    original_stdout = sys.stdout
+    if args.log:
+        with open('log.txt', 'w') as f:
+            f.write('')
+        original_stdout = sys.stdout
     
     push = heappush
     pop = heappop
@@ -86,11 +99,12 @@ def _dijkstra_multisource(
     target = None
     while fringe:
         (d, v) = pop(fringe)
-        if vis:
+        if args.print:
+            prYellow(f'pop {d}, {v}')
+        if args.log:
             with open('log.txt', 'a') as f:
                 sys.stdout = f
                 prYellow(f'pop {d}, {v}')
-            # prYellow(f'pop {d}, {v}')
         # put phis into v
         # print(d, v)
         if v in dist:
@@ -101,11 +115,17 @@ def _dijkstra_multisource(
             break
         succ = ProductTs.produce_succ(v, task_hierarchy, workspace, spec_info)
         for u, cost in succ:
-            # if vis:
-            #     with open('log.txt', 'a') as f:
-            #         sys.stdout = f
-            #         print(f'succ {u}')
-                # print(f'succ {u}')
+            if not at_most_one_non_decomp_states(u.phis_progress, spec_info.leaf_spec_order.keys(), task_hierarchy):
+                raise AssertionError("More than one automaton states are not decompoistion states.")
+
+            if args.print:
+                print(f'succ {u}')
+            # print(f'succ {u}')
+
+            if args.log:
+                with open('log.txt', 'a') as f:
+                    sys.stdout = f
+                    print(f'succ {u}')
             if cost is None:
                 continue
             vu_dist = dist[v] + cost
@@ -119,22 +139,21 @@ def _dijkstra_multisource(
             elif u not in seen or vu_dist < seen[u]:
                 seen[u] = vu_dist
                 push(fringe, (vu_dist, u))
-                if vis:
+                if args.print:
+                    prCyan(f"push {vu_dist}, {u}")
+                if args.log:
                     with open('log.txt', 'a') as f:
                         sys.stdout = f
                         prCyan(f"push {vu_dist}, {u}")
-                    # prCyan(f"push {vu_dist}, {u}")
                 if paths is not None:
                     paths[u] = paths[v] + [u]
-            # elif vu_dist == seen[u_phis]:
-            #     if pred is not None:
-            #         pred[u].append(v)
-    sys.stdout = original_stdout
+    if args.log:
+        sys.stdout = original_stdout
     # The optional predecessor and path dictionaries can be accessed
     # by the caller via the pred and paths objects passed as arguments.
     return dist, target
 
-def multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec_info):
+def multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec_info, args):
     """Find shortest weighted paths and lengths from a given set of
     source nodes.
 
@@ -146,7 +165,7 @@ def multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec
         raise ValueError("sources must not be empty")
     paths = {source: [source] for source in sources}  # dictionary of paths
     dist, target = _dijkstra_multisource(
-        sources, task_hierarchy, workspace, spec_info, paths=paths, 
+        sources, task_hierarchy, workspace, spec_info, args, paths=paths,
     )
     try: 
         return (dist[target], paths[target])

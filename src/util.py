@@ -58,6 +58,8 @@ def create_parser():
     parser.add_argument('--task', default="man", type=str)
     parser.add_argument('--case', default=0, type=int)
     parser.add_argument('--vis', action='store_true', help='Enable visualization')
+    parser.add_argument('--print', action='store_true', help='Enable print to terminal')
+    parser.add_argument('--log', action='store_true', help='Enable save log')
     parser.add_argument('--dot', action='store_true', help='Enable dot graph')
     parser.add_argument('--simul', action='store_true', help='Enable simultaneous execution')
     parser.add_argument('--event', action='store_true', help='Enable event based execution')

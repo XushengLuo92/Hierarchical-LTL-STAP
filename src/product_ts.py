@@ -5,6 +5,7 @@ from sympy import symbols
 from buchi import BuchiConstructor
 from data_structure import Node
 from workspace_supermarket import Workspace
+import copy
 
 class ProductTs(object):
     essential_phi_type_robot_x = set()
@@ -36,6 +37,48 @@ class ProductTs(object):
                         prod_ts.add_edge((x, q), (next_x, next_q), weight=weight)
                     
         return prod_ts
+    
+    @staticmethod
+    def update_non_leaf_specs(last_predicate, node, task_hierarchy, path_to_root, weight, succ):
+        tmp_path_to_root = path_to_root.copy()
+        parent = tmp_path_to_root.pop(0)
+        buchi_graph = task_hierarchy[parent].buchi_graph
+        parent_q = node.phis_progress[parent]
+        proceed_to_next_q = False
+        for next_q in set(buchi_graph.succ[parent_q]): 
+            tmp_node = Node(node.phi, node.type_robot, node.type_robots_x, node.phis_progress.copy())
+            edge_label = buchi_graph.edges[(parent_q, next_q)]['label']
+            aps_in_label = BuchiConstructor.get_literals(edge_label)
+            aps_sub = {ap: True if ap in last_predicate else False for ap in symbols(aps_in_label)}
+            if edge_label.subs(aps_sub):
+                tmp_node.phis_progress[parent] = next_q
+                proceed_to_next_q = True
+            else:
+                continue
+            if parent == 'p0':
+                succ.append([tmp_node, weight])
+            else:
+                cur_predicate = []
+                if next_q in buchi_graph.graph['accept']:
+                    cur_predicate.append(symbols(parent))
+                ProductTs.update_non_leaf_specs(cur_predicate, tmp_node, task_hierarchy, tmp_path_to_root, weight, succ)
+        
+        # do not check self-transition if it can move to next node
+        if not proceed_to_next_q:
+            tmp_node = Node(node.phi, node.type_robot, node.type_robots_x, node.phis_progress.copy())
+            node_label = buchi_graph.nodes[parent_q]['label']
+            aps_in_label = BuchiConstructor.get_literals(node_label)
+            aps_sub = {ap: True if ap in last_predicate else False for ap in symbols(aps_in_label)}
+            if node_label.subs(aps_sub):
+                tmp_node.phis_progress[parent] = parent_q
+            else:
+                return
+            if parent == 'p0':
+                succ.append([tmp_node, weight])
+            else:
+                cur_predicate = []
+                ProductTs.update_non_leaf_specs(cur_predicate, tmp_node, task_hierarchy, tmp_path_to_root, weight, succ)
+            
     
     @staticmethod
     def update_phis_progress(phis_progress, task_hierarchy, depth_specs):
@@ -89,20 +132,8 @@ class ProductTs(object):
         decomp_set = task_hierarchy[node.phi].decomp_sets
         aps_true = symbols(workspace.get_atomic_prop(x))
         next_xs = list(workspace.graph_workspace.neighbors(x))  # next_xs includes x
-        node_label = buchi_graph.nodes[q]['label']
-        aps_in_label = BuchiConstructor.get_literals(node_label)
-        aps_sub = {ap: True if ap in aps_true else False for ap in symbols(aps_in_label)}
-        type_robots_x = set(node.type_robots_x.values())
-        if node_label.subs(aps_sub) == True:
-            for next_x in next_xs:
-                # self-loop
-                if x != next_x and next_x in type_robots_x: # collision avoidance
-                    continue
-                updated_type_robots_x = node.type_robots_x.copy()
-                updated_type_robots_x[node.type_robot] = next_x
-                weight = 0 if x == next_x else 1
-                succ.append([Node(node.phi, node.type_robot, updated_type_robots_x, node.phis_progress), weight])
-               
+        
+        # check the edge label
         next_qs = buchi_graph.succ[q]
         for next_q in next_qs:
             edge_label = buchi_graph.edges[(q, next_q)]['label']
@@ -112,31 +143,49 @@ class ProductTs(object):
                 # update progress of leaf phis if accepting state or decomp state is reached
                 updated_phis_progress = node.phis_progress.copy()
                 updated_phis_progress[node.phi] = next_q
-                # update progress of other parent specs 
-                ProductTs.update_phis_progress(updated_phis_progress, task_hierarchy, depth_specs)
+                cur_predicate = []
+                if next_q in buchi_graph.graph['accept']:
+                    cur_predicate.append(symbols(node.phi))
                 if next_q in buchi_graph.graph['accept'] or next_q in decomp_set:
                     for next_x in next_xs:
-                        if x != next_x and next_x in type_robots_x:
-                            continue
                         updated_type_robots_x = node.type_robots_x.copy()
                         updated_type_robots_x[node.type_robot] = next_x
                         weight = 0 if x == next_x else 1
-                        succ.append([Node(node.phi, node.type_robot, updated_type_robots_x, updated_phis_progress), weight])
+                        # update progress of other parent specs 
+                        ProductTs.update_non_leaf_specs(cur_predicate, 
+                                                        Node(node.phi, node.type_robot, updated_type_robots_x, updated_phis_progress), 
+                                                        task_hierarchy, path_to_root[node.phi][1:], weight, succ)
                         # update essentail x of type_robot
                         if x == next_x and q != next_q:
                             # NOTE consider transition (phi_1, r, x, q_1) -> (phi_2, r, x, q_2) -> (phi_2, r', x', q_2)
-                            ProductTs.essential_phi_type_robot_x.update({(phi, node.type_robot, x, q) for phi in leaf_specs
-                                                for q in set(task_hierarchy[phi].buchi_graph.graph['init']) | \
-                                                    set(task_hierarchy[phi].buchi_graph.graph['accept']) | \
-                                                        set(task_hierarchy[phi].decomp_sets)})
+                            ProductTs.essential_phi_type_robot_x.update({(other_phi, node.type_robot, x, other_q) for other_phi in leaf_specs
+                                                for other_q in set(task_hierarchy[other_phi].buchi_graph.graph['init']) | \
+                                                    set(task_hierarchy[other_phi].buchi_graph.graph['accept']) | \
+                                                        set(task_hierarchy[other_phi].decomp_sets)})
                 else:
                     for next_x in next_xs:
-                        if x != next_x and next_x in type_robots_x:
-                            continue
                         updated_type_robots_x = node.type_robots_x.copy()
                         updated_type_robots_x[node.type_robot] = next_x
                         weight = 0 if x == next_x else 1
-                        succ.append([Node(node.phi, node.type_robot, updated_type_robots_x, updated_phis_progress), weight])
+                        ProductTs.update_non_leaf_specs(cur_predicate, 
+                                                        Node(node.phi, node.type_robot, updated_type_robots_x, updated_phis_progress), 
+                                                        task_hierarchy, path_to_root[node.phi][1:], weight, succ)
+        # check the node label if no succ found
+        if not succ:
+            node_label = buchi_graph.nodes[q]['label']
+            aps_in_label = BuchiConstructor.get_literals(node_label)
+            aps_sub = {ap: True if ap in aps_true else False for ap in symbols(aps_in_label)}
+            if node_label.subs(aps_sub) == True:
+                for next_x in next_xs:
+                    # self-loop
+                    updated_type_robots_x = node.type_robots_x.copy()
+                    updated_type_robots_x[node.type_robot] = next_x
+                    weight = 0 if x == next_x else 1
+                    # update progress of other parent specs 
+                    ProductTs.update_non_leaf_specs([], 
+                                                    Node(node.phi, node.type_robot, updated_type_robots_x, node.phis_progress), 
+                                                    task_hierarchy, path_to_root[node.phi][1:], weight, succ)
+                    # succ.append([Node(node.phi, node.type_robot, updated_type_robots_x, node.phis_progress), weight])
         return succ
     
     @staticmethod
@@ -226,15 +275,17 @@ class ProductTs(object):
                         (leaf_phi, node.type_robot, node.type_robots_x[node.type_robot], node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x:
                         succ.append([Node(leaf_phi, node.type_robot, node.type_robots_x, node.phis_progress), 0])
             
-        # connect from its accept node of a team model to every init node of the first robot's team model with corresponding location                
+        # connect from its accept node of a team model to every decomp node of the first robot's team model with corresponding location                
         type_robots = list(workspace.type_robot_location.keys())
         if q in buchi_graph.graph['accept'] and (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x:
                 # constrain the set of states that can be accepting product states
                 # update buchi state
                 for leaf_phi in leaf_phis_order[node.phi]:
                     leaf_buchi_graph = task_hierarchy[leaf_phi].buchi_graph
+                    hierarchy = task_hierarchy[leaf_phi]
+                    decomp_set = hierarchy.decomp_sets | set(leaf_buchi_graph.graph['init']) | set(leaf_buchi_graph.graph['accept'])
                     leaf_q = node.phis_progress[leaf_phi]
-                    if leaf_q in leaf_buchi_graph.graph['init'] and \
+                    if leaf_q in decomp_set and \
                         (leaf_phi, type_robots[0], node.type_robots_x[type_robots[0]], node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x:
                         succ.append([Node(leaf_phi, type_robots[0], node.type_robots_x, node.phis_progress), 0])
         return succ

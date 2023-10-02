@@ -101,14 +101,23 @@ def main(args=None):
     # ==========================
     #sources are from specs that can be the first one to be finished
     sources = []
-    phis_progress = {phi: tuple(task_hierarchy[phi].buchi_graph.graph['init']) for phi in task_hierarchy.keys()}
-    for phi in first_spec_candidates:
-        for q in task_hierarchy[phi].buchi_graph.graph['init']:
+    all_inits = [list(task_hierarchy[phi].buchi_graph.graph['init']) for phi in task_hierarchy.keys()]
+    prod_inits = [list(item) for item in product(*all_inits)]
+    for first_phi in first_spec_candidates:
+        for init in prod_inits:
+            phis_progress = {phi: init[idx] for idx, phi in enumerate(task_hierarchy.keys())}
             type_robots_x = workspace.type_robot_location.copy()
-            phis_progress.copy()
-            phis_progress[phi] = q
             type_robot = list(workspace.type_robot_location.keys())[0]
-            sources.append(Node(phi, type_robot, type_robots_x, phis_progress))         
+            sources.append(Node(first_phi, type_robot, type_robots_x, phis_progress))  
+        
+    # phis_progress = {phi: tuple(task_hierarchy[phi].buchi_graph.graph['init']) for phi in task_hierarchy.keys()}
+    # for phi in first_spec_candidates:
+    #     for q in task_hierarchy[phi].buchi_graph.graph['init']:
+    #         type_robots_x = workspace.type_robot_location.copy()
+    #         phis_progress.copy()
+    #         phis_progress[phi] = q
+    #         type_robot = list(workspace.type_robot_location.keys())[0]
+    #         sources.append(Node(phi, type_robot, type_robots_x, phis_progress))         
     # prRed(f'init nodes:  {init_nodes}')
     # prRed(f'number of target nodes: {phi_target_nodes}')
     ProductTs.essential_phi_type_robot_x = set([(phi, type_robot, x, q) for phi in leaf_specs
@@ -116,7 +125,7 @@ def main(args=None):
                                                     set(task_hierarchy[phi].buchi_graph.graph['accept']) | \
                                                         set(task_hierarchy[phi].decomp_sets) 
                                                 for type_robot, x in workspace.type_robot_location.items()])
-    _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec_info)
+    _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec_info, args)
     search_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to search".format(search_time - buchi_time))
 
