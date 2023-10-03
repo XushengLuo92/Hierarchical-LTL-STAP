@@ -3,33 +3,33 @@
   "initialState": ["state1"],
   "goalState": ["state6"],
   "robot_actions": {
-    "navigate": {
-      "preconditions": [[]],
-      "effects": []
-    },
     "rescue": {
       "preconditions": [["injury"]],
-      "effects": ["injury_handled"]
+      "effects": ["help", "!injury"]
     },
     "photo": {
       "preconditions": [["damage"]],
-      "effects": ["photo_taken"]
+      "effects": ["photo", "!damage"]
     },
     "measure": {
       "preconditions": [["pump"]],
-      "effects": ["measure_taken"]
+      "effects": ["measure", "pump"]
     }
   },
   "env_actions": {
       "injury": {
-        "preconditions": [["p1", "!injury_handled"]]
+        "preconditions": [["p1", "!help"]]
       },
       "damage": {
-        "preconditions": [["p2", "!photo_taken"]]
+        "preconditions": [["p6", "!photo"]]
       },
       "pump": {
-        "preconditions": [["p3", "!measure_taken"]]
+        "preconditions": [["p3", "!measure"]]
       }
+  },
+  "robot_group": {
+    "1" : ["navigate", "rescue", "measure"],
+    "2" : ["navigate", "photo", "measure"]
   }
 }
   
