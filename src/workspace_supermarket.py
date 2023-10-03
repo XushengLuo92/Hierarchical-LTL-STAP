@@ -16,7 +16,7 @@ class Workspace(object):
     """
     define the workspace where robots reside
     """
-    def __init__(self):
+    def __init__(self, domain_file='./src/default_domain.json'):
         # dimension of the workspace
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
@@ -32,6 +32,11 @@ class Workspace(object):
         self.length = max([cell[1]+1 for region in self.regions.values() for cell in region]) # 9   # length
         self.width = max([cell[0]+1 for region in self.regions.values() for cell in region]) # 9   # width
         self.type_robot_location = self.initialize()
+        # print(self.type_robot_location.keys())
+        # self.type_robot_location[(1, 0)] = (0, 0)
+        # self.type_robot_location[(1, 1)] = (24, 0)
+        # self.type_robot_location[(2, 0)] = (1, 0)
+        # self.type_robot_location[(2, 1)] = (25, 0)
         # customized location
         # self.type_robot_location[(2, 0)]  = (0, 0) # nav task 4
         # [region and corresponding locations
@@ -41,7 +46,7 @@ class Workspace(object):
 
         self.graph_workspace = nx.Graph()
         self.build_graph()
-        self.domain = self.get_domain()
+        self.domain = self.get_domain(domain_file)
 
         # self.p2p = self.point_to_point_path()  # label2label path
 
@@ -215,11 +220,11 @@ class Workspace(object):
                         break
         return type_robot_location
     
-    def get_domain(self):
-        with open('./src/domain.json', 'r') as f:
+    def get_domain(self, domain_file):
+        with open(domain_file, 'r') as f:
             return json.load(f)
         
-    def get_world_state_based_observations(self, world_state, location):
+    def get_state_based_world_state(self, location, world_state):
         """generate observations
 
         Args:
@@ -229,18 +234,37 @@ class Workspace(object):
         Returns:
             _type_: _description_
         """
-        observations = []
+        observations = world_state.copy()
         for region, cells in self.regions.items():
             if location in cells:
-                observations.append(region)
+                observations.add(region)
                 break
-        for action, preconds in self.domain.get('env_actions').items():
-            if all(element in observations for element in preconds if "!" not in element) and \
-                all(element[1:] not in world_state for element in preconds if "!" in element):
-                observations.append(action)
+        for action, preconds_effs in self.domain.get('env_actions').items():
+            for preconds in preconds_effs['preconditions']:
+                if all(element in observations for element in preconds if "!" not in element) and \
+                    all(element[1:] not in world_state for element in preconds if "!" in element):
+                    observations.add(action)
+        return observations
+    
+        
+    def get_robot_state_based_observations(self, location):
+        """generate observations, only involves location
+
+        Args:
+            world_state (_type_): _description_
+            location (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        observations = set()
+        for region, cells in self.regions.items():
+            if location in cells:
+                observations.add(region)
+                break
         return observations
             
-    def get_obsevation_based_actions(self, aps):
+    def get_obsevation_based_actions(self, robot_type, aps):
         """get actions based on observations
 
         Args:
@@ -250,16 +274,17 @@ class Workspace(object):
             _type_: _description_
         """
         actions = []
-        for action, precond_eff in self.domain.get('robot_actions').items():
-            for preconds in precond_eff['preconditions']:
+        for action, preconds_effs in self.domain.get('robot_actions').items():
+            for preconds in preconds_effs['preconditions']:
                 if all(element in aps for element in preconds if "!" not in element) and \
                     all(element[1:] not in aps for element in preconds if "!" in element):
                     actions.append(action)
         if not actions:
             actions.append('navigate')
-        return actions
+        
+        return [action for action in actions if action == 'navigate' or action in self.domain.get('robot_group')[str(robot_type)]]
     
-    def update_world_state(self, world_state, action):
+    def update_world_state(self, robot_state, robot_action, world_state):
         """update world state base on action
 
         Args:
@@ -269,8 +294,28 @@ class Workspace(object):
         Returns:
             _type_: _description_
         """
-        new_world_state = list(world_state)
-        new_world_state = new_world_state + self.domain.get("robot_actions")[action].effects
+        
+        new_world_state = world_state.copy()
+        # update based on environment action
+        robot_state_observ = []
+        for region, cells in self.regions.items():
+            if robot_state in cells:
+                robot_state_observ = [region]
+                break
+        for env_action, preconds_effs in self.domain.get('env_actions').items():
+            for preconds in preconds_effs['preconditions']:
+                if all(element in robot_state_observ for element in preconds if "!" not in element) and \
+                    all(element[1:] not in world_state for element in preconds if "!" in element):
+                    new_world_state.add(env_action)
+        # update based on robot action            
+        if robot_action == 'navigate':
+            return new_world_state
+        for effect in self.domain.get("robot_actions")[robot_action]["effects"]:
+            if "!" not in effect:
+                new_world_state.add(effect)
+            else:
+                new_world_state.discard(effect[1:])
+
         return new_world_state
     
     def update_robot_state(self, robot_state):

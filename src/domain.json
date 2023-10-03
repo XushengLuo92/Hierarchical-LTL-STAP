@@ -1,7 +1,4 @@
 {
-  "objects": ["state1"],
-  "initialState": ["state1"],
-  "goalState": ["state6"],
   "robot_actions": {
     "rescue": {
       "preconditions": [["injury"]],

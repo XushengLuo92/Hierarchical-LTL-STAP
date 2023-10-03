@@ -63,6 +63,7 @@ def create_parser():
     parser.add_argument('--dot', action='store_true', help='Enable dot graph')
     parser.add_argument('--simul', action='store_true', help='Enable simultaneous execution')
     parser.add_argument('--event', action='store_true', help='Enable event based execution')
+    parser.add_argument('--domain_file', default="./src/default_domain.json")
     return parser
 
 def plot_workspace(workspace, ax):

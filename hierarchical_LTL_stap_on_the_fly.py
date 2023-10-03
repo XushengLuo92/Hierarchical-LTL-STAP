@@ -54,7 +54,7 @@ def main(args=None):
     # ==========================
     # Step 2: workspace
     # ==========================
-    workspace = Workspace()
+    workspace = Workspace(args.domain_file)
     if args.vis:
         fig = plt.figure()
         ax = fig.add_subplot(111)
