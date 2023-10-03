@@ -94,22 +94,25 @@ def _dijkstra_multisource(
     # use the count c to avoid comparing nodes (may not be able to)
     fringe = []
     for source in sources:
-        seen[source] = 0
-        push(fringe, (0, source))
+        seen[source] = (0, 0)
+        push(fringe, (0, 0, source))
     target = None
+    expand_count = 0
     while fringe:
-        (d, v) = pop(fringe)
+        expand_count += 1
+        (total_d, state_d, v) = pop(fringe)
         if args.print:
-            prYellow(f'pop {d}, {v}')
+            prYellow(f'pop {total_d}, {v}')
         if args.log:
             with open('log.txt', 'a') as f:
                 sys.stdout = f
-                prYellow(f'pop {d}, {v}')
+                print("----------------------------------------")
+                print(f'pop {total_d}, {v}')
         # put phis into v
         # print(d, v)
         if v in dist:
             continue  # already searched this node.
-        dist[v] = d
+        dist[v] = (total_d, state_d)
         if reach_target(v):
             target = v
             break
@@ -128,27 +131,29 @@ def _dijkstra_multisource(
                     print(f'succ {u}')
             if cost is None:
                 continue
-            vu_dist = dist[v] + cost
+            vu_state_dist = dist[v][1] + cost
+            vu_total_dist = vu_state_dist - args.heuristic_weight * u.progress_metric
             # skip if phi has been reached
             # if phi in phis:
             #     continue
-            if u in dist:
-                u_dist = dist[u]
-                if vu_dist < u_dist:
-                    raise ValueError("Contradictory paths found:", "negative weights?")
-            elif u not in seen or vu_dist < seen[u]:
-                seen[u] = vu_dist
-                push(fringe, (vu_dist, u))
+            # if u in dist:
+            #     u_dist = dist[u][0]
+            #     if vu_dist < u_dist:
+            #         raise ValueError("Contradictory paths found:", "negative weights?")
+            if u not in seen or vu_total_dist < seen[u][0]:
+                seen[u] = (vu_total_dist, vu_state_dist)
+                push(fringe, (vu_total_dist, vu_state_dist, u))
                 if args.print:
-                    prCyan(f"push {vu_dist}, {u}")
+                    prCyan(f"push {vu_total_dist}, {u}")
                 if args.log:
                     with open('log.txt', 'a') as f:
                         sys.stdout = f
-                        prCyan(f"push {vu_dist}, {u}")
+                        print(f"push {vu_total_dist}, {u}")
                 if paths is not None:
                     paths[u] = paths[v] + [u]
     if args.log:
         sys.stdout = original_stdout
+    prYellow(f"Expand node count {expand_count}")
     # The optional predecessor and path dictionaries can be accessed
     # by the caller via the pred and paths objects passed as arguments.
     return dist, target
@@ -168,6 +173,6 @@ def multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec
         sources, task_hierarchy, workspace, spec_info, args, paths=paths,
     )
     try: 
-        return (dist[target], paths[target])
+        return (dist[target][1], paths[target])
     except KeyError as err:
         raise nx.NetworkXNoPath(f"No path to {target}.") from err

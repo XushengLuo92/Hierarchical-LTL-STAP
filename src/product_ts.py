@@ -46,7 +46,9 @@ class ProductTs(object):
         parent_q = node.phis_progress[parent]
         proceed_to_next_q = False
         for next_q in set(buchi_graph.succ[parent_q]): 
-            tmp_node = Node(node.phi, node.type_robot, node.action, node.type_robots_x, node.phis_progress.copy(), node.world_state)
+            tmp_node = Node(node.phi, node.type_robot, node.action, node.type_robots_x, 
+                            node.phis_progress.copy(), node.world_state, 
+                            ProductTs.update_progress_metric(task_hierarchy, node.phis_progress))
             edge_label = buchi_graph.edges[(parent_q, next_q)]['label']
             aps_in_label = BuchiConstructor.get_literals(edge_label)
             aps_sub = {ap: True if ap in last_predicate else False for ap in symbols(aps_in_label)}
@@ -65,7 +67,9 @@ class ProductTs(object):
         
         # do not check self-transition if it can move to next node
         if not proceed_to_next_q:
-            tmp_node = Node(node.phi, node.type_robot, node.action, node.type_robots_x, node.phis_progress.copy(), node.world_state)
+            tmp_node = Node(node.phi, node.type_robot, node.action, node.type_robots_x, 
+                            node.phis_progress.copy(), node.world_state, 
+                            ProductTs.update_progress_metric(task_hierarchy, node.phis_progress))
             node_label = buchi_graph.nodes[parent_q]['label']
             aps_in_label = BuchiConstructor.get_literals(node_label)
             aps_sub = {ap: True if ap in last_predicate else False for ap in symbols(aps_in_label)}
@@ -110,6 +114,18 @@ class ProductTs(object):
                         break
                     else:
                         phis_truth[symbols(spec)] = False
+                        
+    @staticmethod
+    def update_progress_metric(task_hierarchy, phis_progress):
+        progress_metric = 0
+        for phi, state in phis_progress.items():
+            progress_metric_per_phi = 0
+            buchi_graph = task_hierarchy[phi].buchi_graph
+            for init in buchi_graph.graph['init']:
+                progress_metric_per_phi = max(progress_metric_per_phi, 
+                                              buchi_graph.graph['dist'][init][state])
+            progress_metric += progress_metric_per_phi
+        return progress_metric
 
     @staticmethod
     def produce_succ_inside_ps(node: Node, task_hierarchy, workspace: Workspace, spec_info):
@@ -187,7 +203,8 @@ class ProductTs(object):
                         # update progress of other parent specs 
                         ProductTs.update_non_leaf_specs(cur_predicate, 
                                                         Node(node.phi, node.type_robot, action, updated_type_robots_x, 
-                                                             updated_phis_progress, updated_world_state), 
+                                                             updated_phis_progress, updated_world_state,
+                                                             ProductTs.update_progress_metric(task_hierarchy, updated_phis_progress)), 
                                                         task_hierarchy, path_to_root[node.phi][1:], weight, succ)
                         # update essentail x of type_robot
                         if x == next_x and q != next_q:
@@ -204,7 +221,8 @@ class ProductTs(object):
                         weight = 0 if x == next_x else 1
                         ProductTs.update_non_leaf_specs(cur_predicate, 
                                                         Node(node.phi, node.type_robot, action, updated_type_robots_x, 
-                                                             updated_phis_progress, updated_world_state), 
+                                                             updated_phis_progress, updated_world_state,
+                                                             ProductTs.update_progress_metric(task_hierarchy, updated_phis_progress)), 
                                                         task_hierarchy, path_to_root[node.phi][1:], weight, succ)
         # check the node label if no succ found
         if not succ:
@@ -221,7 +239,8 @@ class ProductTs(object):
                     # update progress of other parent specs 
                     ProductTs.update_non_leaf_specs([], 
                                                     Node(node.phi, node.type_robot, action, updated_type_robots_x, 
-                                                         node.phis_progress, updated_world_state), 
+                                                         node.phis_progress, updated_world_state,
+                                                         ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 
                                                     task_hierarchy, path_to_root[node.phi][1:], weight, succ)
         return succ
     
@@ -267,7 +286,8 @@ class ProductTs(object):
                         # update progress of other parent specs 
                         ProductTs.update_non_leaf_specs(cur_predicate, 
                                                         Node(node.phi, node.type_robot, action, node.type_robots_x, 
-                                                             updated_phis_progress, updated_world_state), 
+                                                             updated_phis_progress, updated_world_state,
+                                                             ProductTs.update_progress_metric(task_hierarchy, updated_phis_progress)), 
                                                         task_hierarchy, path_to_root[node.phi][1:], weight, succ)
                         # update essentail x of type_robot
                         if q != next_q:
@@ -282,7 +302,8 @@ class ProductTs(object):
                         weight = 1
                         ProductTs.update_non_leaf_specs(cur_predicate, 
                                                         Node(node.phi, node.type_robot, action, node.type_robots_x, 
-                                                             updated_phis_progress, updated_world_state), 
+                                                             updated_phis_progress, updated_world_state,
+                                                             ProductTs.update_progress_metric(task_hierarchy, updated_phis_progress)), 
                                                         task_hierarchy, path_to_root[node.phi][1:], weight, succ)
         # check the node label if no succ found
         if not succ:
@@ -296,7 +317,9 @@ class ProductTs(object):
                     weight = 1
                     # update progress of other parent specs 
                     ProductTs.update_non_leaf_specs([], 
-                                                    Node(node.phi, node.type_robot, action, node.type_robots_x, node.phis_progress, updated_world_state), 
+                                                    Node(node.phi, node.type_robot, action, node.type_robots_x, 
+                                                         node.phis_progress, updated_world_state,
+                                                         ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 
                                                     task_hierarchy, path_to_root[node.phi][1:], weight, succ)
         return succ
     
@@ -353,7 +376,8 @@ class ProductTs(object):
         #     if node.x not in desired_x and node.x != node.type_robots_x[node.type_robot]:
         #         return []
         action = 'in-spec-switch'
-        succ = [Node(node.phi, next_type_robot, action, node.type_robots_x, node.phis_progress, node.world_state), 0]
+        succ = [Node(node.phi, next_type_robot, action, node.type_robots_x, node.phis_progress, node.world_state, 
+                     ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0]
         return [succ]
     
     def produce_succ_between_ps_same_robot(node: Node, task_hierarchy, workspace: Workspace, leaf_phis_order):
@@ -384,7 +408,9 @@ class ProductTs(object):
                 leaf_q = node.phis_progress[leaf_phi]
                 if leaf_q in leaf_buchi_graph.graph['init'] and \
                     (leaf_phi, node.type_robot, x, node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x:
-                    succ.append([Node(leaf_phi, node.type_robot, action, node.type_robots_x, node.phis_progress, node.world_state), 0])
+                    succ.append([Node(leaf_phi, node.type_robot, action, node.type_robots_x, 
+                                      node.phis_progress, node.world_state, 
+                                      ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0])
 
         # for the same robot, if two phis are independent, connect from one decomp node of a team model to the current decomp node (if so) of another team model
         hierarchy = task_hierarchy[node.phi]   
@@ -397,7 +423,9 @@ class ProductTs(object):
                     leaf_hierarchy = task_hierarchy[leaf_phi]
                     if leaf_q in (leaf_hierarchy.decomp_sets | set(leaf_hierarchy.buchi_graph.graph['init'])) and \
                         (leaf_phi, node.type_robot, node.type_robots_x[node.type_robot], node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x:
-                        succ.append([Node(leaf_phi, node.type_robot, action, node.type_robots_x, node.phis_progress, node.world_state), 0])
+                        succ.append([Node(leaf_phi, node.type_robot, action, node.type_robots_x, 
+                                          node.phis_progress, node.world_state, 
+                                          ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0])
             
         # connect from its accept node of a team model to every decomp node of the first robot's team model with corresponding location                
         action = 'inter-spec-ii'
@@ -412,7 +440,9 @@ class ProductTs(object):
                     leaf_q = node.phis_progress[leaf_phi]
                     if leaf_q in decomp_set and \
                         (leaf_phi, type_robots[0], node.type_robots_x[type_robots[0]], node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x:
-                        succ.append([Node(leaf_phi, type_robots[0], action, node.type_robots_x, node.phis_progress, node.world_state), 0])
+                        succ.append([Node(leaf_phi, type_robots[0], action, node.type_robots_x, 
+                                          node.phis_progress, node.world_state,
+                                          ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0])
         return succ
     
     @staticmethod

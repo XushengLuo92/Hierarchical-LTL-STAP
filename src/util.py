@@ -64,6 +64,7 @@ def create_parser():
     parser.add_argument('--simul', action='store_true', help='Enable simultaneous execution')
     parser.add_argument('--event', action='store_true', help='Enable event based execution')
     parser.add_argument('--domain_file', default="./src/default_domain.json")
+    parser.add_argument('--heuristic_weight', default=0, type=int)
     return parser
 
 def plot_workspace(workspace, ax):

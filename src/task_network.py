@@ -54,11 +54,13 @@ def build_buchi_graph_and_poset(task_specification, leaf_specs, workspace: Works
             if phi in leaf_specs:
                 # decomp_sets do not include init and accept in the implementation
                 decomp_sets = buchi_constructor.get_all_decomp_nodes(buchi_graph)
+                buchi_constructor.get_dist_to_init_states(buchi_graph)
                 # buchi_graph has been pruned in get_all_decomp_nodes
                 task_hierarchy[phi] = Hierarchy(level=index+1, phi=spec, buchi_graph=buchi_graph, decomp_sets=decomp_sets,
                                                  hass_graph=hasse_graph, element2edge=element2edge)
             else:
                 pruned_subgraph, hasse_graph, element2edge = buchi_constructor.get_ordered_subtasks(buchi_graph)
+                buchi_constructor.get_dist_to_init_states(pruned_subgraph)
                 task_hierarchy[phi] = Hierarchy(level=index+1, phi=spec, buchi_graph=pruned_subgraph, decomp_sets=decomp_sets,
                                                 hass_graph=hasse_graph, element2edge=element2edge)
                 primitive_elements, composite_element, composite_subtask_element_dict = \
@@ -308,5 +310,7 @@ def construct_task_network(task_specification, leaf_specs, workspace: Workspace,
         # 4. Subtract from the set of all nodes to get non-reachable nodes
         non_reachable_nodes = set(leaf_spec_network.nodes()) - all_connected_nodes - {leaf_spec_a}
         leaf_spec_order[leaf_spec_a] = reachable_from_node.union(non_reachable_nodes)
-                
+
+    # leaf_spec_order = {leaf_spec: set(leaf_specs) - {leaf_spec} for leaf_spec in leaf_specs}
+    # first_spec_candidates = leaf_specs
     return task_hierarchy, leaf_spec_order, first_spec_candidates

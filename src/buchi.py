@@ -414,6 +414,21 @@ class BuchiConstructor(object):
         buchi_graph.graph['accept'] = tuple(buchi_graph.graph['accept'])
         return decomp_sets
     
+    def get_dist_to_init_states(self, buchi_graph):
+        """calculate the distance to initial states
+
+        Args:
+            buchi_graph (_type_): _description_
+        """
+        init_state_dists = dict()
+        init_state_dist = dict()
+        for init in buchi_graph.graph['init']:
+            for state in buchi_graph.nodes():
+                dist = nx.algorithms.shortest_path_length(buchi_graph, init, state)
+                init_state_dist[state] = dist
+            init_state_dists[init] = init_state_dist
+        print(buchi_graph.graph['formula'], init_state_dists)
+        buchi_graph.graph['dist'] = init_state_dists    
     
     def get_ordered_subtasks(self, buchi_graph):
         init_acpt = self.get_init_accept(buchi_graph)
