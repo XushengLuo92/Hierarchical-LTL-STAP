@@ -123,8 +123,14 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_or
             path.extend((horizon - path_len) * [path[-1]])
             robot_phi[robot].extend((horizon - path_len) * [robot_phi[robot][-1]])
         # prRed(path)
-        
-    return robot_path, robot_phi
+    
+    
+    robot_loc_action = {robot: [] for robot in workspace.type_robot_location.keys()}
+    for wpt in optimal_path:
+        if wpt.action not in ['navigate', 'null', 'inter-spec-i', 'inter-spec-ii', 'in-spec']:
+            robot_loc_action[wpt.type_robot].append((wpt.type_robots_x[wpt.type_robot], wpt.action))
+    # prRed(robot_loc_action)
+    return robot_path, robot_phi, robot_loc_action
         
 def event_based_execution(robot_path_ori, robot_phi, leaf_spec_order, first_spec_candidates):
     current_exec_subtasks = []
