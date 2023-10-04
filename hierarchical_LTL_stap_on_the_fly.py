@@ -126,16 +126,16 @@ def main(args=None):
                                                     set(task_hierarchy[phi].buchi_graph.graph['accept']) | \
                                                         set(task_hierarchy[phi].decomp_sets) 
                                                 for type_robot, x in workspace.type_robot_location.items()])
-    _, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec_info, args)
+    cost, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec_info, args)
     search_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to search".format(search_time - buchi_time))
 
     # ==========================
     # Step 5: extract robot path
     # ========================== 
-    robot_path, robot_phi = generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_order)
+    robot_path, robot_phi, robot_loc_action = generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_order)
     path_time = time.time() # Record the end time
-    prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
+    prGreen("Take {:.2f} secs to extract path of cost {:.2f}".format(path_time - search_time, cost))
     if args.event:
         event_based_execution(robot_path, robot_phi, leaf_spec_order, first_spec_candidates)
     if args.vis:

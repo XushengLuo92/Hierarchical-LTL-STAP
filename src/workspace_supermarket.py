@@ -221,8 +221,14 @@ class Workspace(object):
         return type_robot_location
     
     def get_domain(self, domain_file):
+        def remove_comments(json_str):
+            return '\n'.join([line for line in json_str.split('\n') if not line.strip().startswith('//')])
+
         with open(domain_file, 'r') as f:
-            return json.load(f)
+            data = f.read()
+
+        cleaned_data = remove_comments(data)
+        return json.loads(cleaned_data)
         
     def get_state_based_world_state(self, location, world_state):
         """generate observations

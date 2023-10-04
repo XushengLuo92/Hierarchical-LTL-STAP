@@ -375,7 +375,7 @@ class ProductTs(object):
         #     desired_x = ProductTs.get_locations_for_buchi_state(workspace, hierarchy.buchi_graph, node.q)
         #     if node.x not in desired_x and node.x != node.type_robots_x[node.type_robot]:
         #         return []
-        action = 'in-spec-switch'
+        action = 'in-spec'
         succ = [Node(node.phi, next_type_robot, action, node.type_robots_x, node.phis_progress, node.world_state, 
                      ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0]
         return [succ]

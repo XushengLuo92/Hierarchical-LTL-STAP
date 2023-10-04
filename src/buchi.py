@@ -4,6 +4,7 @@ import re
 from sympy.logic.boolalg import to_dnf, And, Or, Not
 import networkx as nx
 import numpy as np
+from util import prRed
 
 class BuchiConstructor(object):
     """_summary_
@@ -424,10 +425,16 @@ class BuchiConstructor(object):
         init_state_dist = dict()
         for init in buchi_graph.graph['init']:
             for state in buchi_graph.nodes():
-                dist = nx.algorithms.shortest_path_length(buchi_graph, init, state)
-                init_state_dist[state] = dist
+                path = nx.algorithms.shortest_path(buchi_graph, init, state)
+                # only count edges with essntial transitions
+                pruned_path = []
+                for idx in range(len(path) - 1):
+                    edge_label = buchi_graph.edges[(path[idx], path[idx+1])]['label']
+                    if edge_label != to_dnf('1') and BuchiConstructor.get_positive_literals(edge_label):
+                        pruned_path.append(path[idx])
+                init_state_dist[state] = len(pruned_path)
             init_state_dists[init] = init_state_dist
-        print(buchi_graph.graph['formula'], init_state_dists)
+        prRed(f"{buchi_graph.graph['formula']}, {init_state_dists}")
         buchi_graph.graph['dist'] = init_state_dists    
     
     def get_ordered_subtasks(self, buchi_graph):

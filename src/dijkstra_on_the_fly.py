@@ -102,12 +102,12 @@ def _dijkstra_multisource(
         expand_count += 1
         (total_d, state_d, v) = pop(fringe)
         if args.print:
-            prYellow(f'pop {total_d}, {v}')
+            prYellow(f'pop ({total_d}, {state_d}), {v}')
         if args.log:
             with open('log.txt', 'a') as f:
                 sys.stdout = f
                 print("----------------------------------------")
-                print(f'pop {total_d}, {v}')
+                print(f'pop ({total_d}, {state_d}), {v}')
         # put phis into v
         # print(d, v)
         if v in dist:
@@ -144,11 +144,11 @@ def _dijkstra_multisource(
                 seen[u] = (vu_total_dist, vu_state_dist)
                 push(fringe, (vu_total_dist, vu_state_dist, u))
                 if args.print:
-                    prCyan(f"push {vu_total_dist}, {u}")
+                    prCyan(f"push ({vu_total_dist}, {vu_state_dist}), {u}")
                 if args.log:
                     with open('log.txt', 'a') as f:
                         sys.stdout = f
-                        print(f"push {vu_total_dist}, {u}")
+                        print(f"push ({vu_total_dist}, {vu_state_dist}), {u}")
                 if paths is not None:
                     paths[u] = paths[v] + [u]
     if args.log:
