@@ -7,28 +7,28 @@
       "effects": []
     },
     "rescue": {
-      "preconditions": [["injury"]],
-      "effects": ["help", "!injury"]
+      "preconditions": [[]],
+      "effects": ["help", "no_injury"]
     },
     "photo": {
-      "preconditions": [["damage"]],
-      "effects": ["photo", "!damage"]
+      "preconditions": [[]],
+      "effects": ["photo", "no_damage"]
     },
     "measure": {
-      "preconditions": [["pump"]],
-      "effects": ["measure", "!pump"] 
+      "preconditions": [[]],
+      "effects": ["measure", "no_pump"] 
     }
   },  
   // action is admissible as long as one set of preconditions is satisfied
   "env_actions": {
       "injury": {
-        "preconditions": [["p1", "!help"]]
+        "preconditions": [["p1", "!no_injury"]]
       },
       "damage": {
-        "preconditions": [["p6", "!photo"]]
+        "preconditions": [["p6", "!no_damage"]]
 },
       "pump": {
-        "preconditions": [["p3", "!measure"]]
+        "preconditions": [["p3", "!no_pump"]]
       }
   },
   // heteregeneous robots

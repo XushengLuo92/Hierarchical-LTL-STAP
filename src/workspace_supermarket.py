@@ -303,6 +303,13 @@ class Workspace(object):
         """
         
         new_world_state = world_state.copy()
+        discard_state = set()
+        for state in new_world_state:
+            if state in self.domain.get("robot_actions") or \
+                'no_' + state in new_world_state:
+                # delete last robot action and counter effect env observation
+                discard_state.add(state)
+        new_world_state.difference_update(discard_state)
         # update based on environment action
         robot_state_observ = []
         for region, cells in self.regions.items():
