@@ -7,13 +7,14 @@ import matplotlib.patches as mpatches
 from util import plot_workspace
 
 class RobotPath:
-    def __init__(self, x, color, robot_path, robot_pre_suf_time, workspace, ap):
+    def __init__(self, x, color, robot_path, robot_act, robot_pre_suf_time, workspace, ap):
         self.robot_path = robot_path
+        self.robot_act = robot_act
         self.robot_pre_suf_time = robot_pre_suf_time
         self.i_x = np.asarray(x, dtype=float)
         self.color = np.asarray(color, dtype=float)
         self.x = self.i_x.copy()
-        self.elapse_time = -4  # adjust this number to display time recorder from 0s
+        self.elapse_time = -3  # adjust this number to display time recorder from 0s
         self.dt = 1
         self.workspace = workspace
         self.ap = ap
@@ -24,11 +25,14 @@ class RobotPath:
         self.elapse_time += self.dt
         elapse_time = self.elapse_time
         x = []
+        act = []
+        non_essential_actions = ['default', 'in-spec', 'inter-spec-i', 'inter-spec-ii']
         for type_robot, path in self.robot_path.items():
             if elapse_time >= len(path) - 1:
                 # robot stays put
                 if round(self.robot_pre_suf_time[type_robot][0]) == round(self.robot_pre_suf_time[type_robot][1]):
                     x.append((path[-1][0]+0.5, path[-1][1]+0.5))
+                    a = self.robot_act[type_robot][-1]
                 else:
                     t = (int(np.floor(elapse_time)) - self.robot_pre_suf_time[type_robot][0]) % \
                     (self.robot_pre_suf_time[type_robot][1] - self.robot_pre_suf_time[type_robot][0])
@@ -36,15 +40,21 @@ class RobotPath:
                     second = self.robot_path[type_robot][self.robot_pre_suf_time[type_robot][0]+t+1]
                     x.append((first[0]+(second[0]-first[0]) * (elapse_time - np.floor(elapse_time)) + 0.5,
                               first[1]+(second[1]-first[1]) * (elapse_time - np.floor(elapse_time)) + 0.5))
+                    a = self.robot_act[type_robot][int(np.floor(elapse_time))]
             else:
                 first = self.robot_path[type_robot][int(np.floor(elapse_time))]
                 second = self.robot_path[type_robot][int(np.floor(elapse_time)+1)]
                 x.append((first[0] + (second[0] - first[0]) * (elapse_time - np.floor(elapse_time)) + 0.5,
                           first[1] + (second[1] - first[1]) * (elapse_time - np.floor(elapse_time)) + 0.5))
+                a = self.robot_act[type_robot][int(np.floor(elapse_time))]
+            
+            if a not in non_essential_actions:
+                act.append(f'{type_robot} {a}')
 
             robot_point[type_robot] = x[-1]
         self.x = np.array(x)
-        self.label(robot_point)
+        return act
+        # self.label(robot_point)
 
     def label(self, robot_point):
         true_ap = dict()
@@ -69,7 +79,7 @@ class RobotPath:
             self.sat = true_ap
 
 def animate(i, ax, particles, annots, cls_robot_path, time_template, time_text, ap_template, ap_text):
-    cls_robot_path.iterate()
+    act = cls_robot_path.iterate()
     time_text.set_text(time_template % cls_robot_path.elapse_time)
     # ap_text.set_text(ap_template % cls_robot_path.)
     for t, new_x_i, new_y_i in zip(annots, cls_robot_path.x[:, 0], cls_robot_path.x[:, 1]):
@@ -78,23 +88,23 @@ def animate(i, ax, particles, annots, cls_robot_path, time_template, time_text, 
     particles.set_offsets(cls_robot_path.x)
     particles.set_array(cls_robot_path.color)
 
-    for ap, location_type, robot in zip(ap_text[:len(cls_robot_path.sat.keys())], cls_robot_path.sat.keys(),
-                                        cls_robot_path.sat.values()):
-        ap.set_text(ap_template.format(robot, 'of type {0}'.format(location_type[1]),
-                                       'visit {0}'.format(location_type[0][1:])))
-    for ap in ap_text[len(cls_robot_path.sat.keys()):]:
-        ap.set_text(ap_template.format('{0}'.format("."), '{0}'.format("."), '{0}'.format(".")))
-
-    return [particles]+annots+[time_text]+ap_text
+    # for ap, location_type, robot in zip(ap_text[:len(cls_robot_path.sat.keys())], cls_robot_path.sat.keys(),
+    #                                     cls_robot_path.sat.values()):
+    #     ap.set_text(ap_template.format(robot, 'of type {0}'.format(location_type[1]),
+    #                                    'visit {0}'.format(location_type[0][1:])))
+    # for ap in ap_text[len(cls_robot_path.sat.keys()):]:
+    #     ap.set_text(ap_template.format('{0}'.format("."), '{0}'.format("."), '{0}'.format(".")))
+    ap_text.set_text(ap_template.format('{0}'.format('; '.join(act))))
+    return [particles]+annots+[time_text]+[ap_text]
             
-def vis(task, case, workspace, robot_path, robot_pre_suf_time, ap):
+def vis(task, case, workspace, robot_path, robot_pre_suf_time, ap, robot_act):
     num_type = len(workspace.type_num.keys())
     colors_type = np.linspace(0.9, 0.1, num_type)
     # color = [0.4, 0.6]
     x = list((value[0]+0.5, value[1]+0.5) for value in workspace.type_robot_location.values())
     colors = [colors_type[i[0]-1] for i in robot_path.keys()]
 
-    cls_robot_path = RobotPath(x, colors, robot_path, robot_pre_suf_time, workspace, ap)
+    cls_robot_path = RobotPath(x, colors, robot_path, robot_act, robot_pre_suf_time, workspace, ap)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -102,12 +112,10 @@ def vis(task, case, workspace, robot_path, robot_pre_suf_time, ap):
     plot_workspace(workspace, ax)
 
     time_template = 'time = %.1fs'
-    time_text = ax.text(0.01, 1.05, time_template % cls_robot_path.elapse_time, transform=ax.transAxes)
-
-    ap_template = '{0} {1} {2}'
-    # ap_text = [ax.text(-3.5, 9.5 - k*0.5, ap_template.format('{0}'.format("."), '{0}'.format("."), '{0}'.format(".")),
-    #                    color='red', weight='bold') for k in range(10)]
-    ap_text = []
+    time_text = ax.text(0.01, 1.4, time_template % cls_robot_path.elapse_time, transform=ax.transAxes)
+    
+    ap_template = '{0}'
+    ap_text = ax.text(0.8, 1.4, ap_template.format('{0}'.format(".")), color='red', weight='bold',  transform=ax.transAxes)
     cls_robot_path.label(workspace.type_robot_location)
     groups = ["type1", "type2", "type3"]
     particles = ax.scatter([], [], c=[], s=30, cmap="hsv", vmin=0, vmax=1)

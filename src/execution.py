@@ -5,7 +5,7 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_or
     if simultaneous:
         # only include active robots per phi
         # it is possible that the path for a phi is interrupted 
-        non_essential_actions = ['navigate', 'null', 'in-spec', 'inter-spec-i', 'inter-spec-ii']
+        non_essential_actions = ['default', 'in-spec', 'inter-spec-i', 'inter-spec-ii']
         robot_path_act_per_phi = [] 
         temp_robot_path_act = dict()
         pre_phi = ''
@@ -30,7 +30,7 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_or
             prYellow(f"{phi}, {robot_path_act}")
         
         ordered_phis = [phi for phi, _ in robot_path_act_per_phi]
-        robot_path_act = {type_robot: [(workspace.type_robot_location[type_robot], 'null')] for type_robot in workspace.type_robot_location.keys()}
+        robot_path_act = {type_robot: [(workspace.type_robot_location[type_robot], 'default')] for type_robot in workspace.type_robot_location.keys()}
         robot_phi = {type_robot: [''] for type_robot in workspace.type_robot_location.keys()}
         phi_horizon = [0] * len(ordered_phis)
         # robot_horizon = {type_robot: 1 for type_robot in workspace.type_robot_location.keys()}
@@ -70,7 +70,7 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_or
                     if not is_independent and ordered_phis[pre_phi_idx] != phi:
                         horizon_including_pre_phi = phi_horizon[pre_phi_idx]
                         # align
-                        tmp_x_act = (robot_path_act[robot][-1][0], 'null')
+                        tmp_x_act = (robot_path_act[robot][-1][0], 'default')
                         robot_path_act[robot].extend([tmp_x_act] * (horizon_including_pre_phi - len(robot_path_act[robot])))
                         robot_phi[robot].extend([robot_phi[robot][-1]] * (horizon_including_pre_phi - len(robot_phi[robot])))
                         # concatenate
@@ -120,10 +120,10 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_or
     for robot, path in robot_path_act.items():
         path_len = len(path)
         if not path:
-            path.extend((horizon - path_len) * [(workspace.type_robot_location[robot], 'null')])
+            path.extend((horizon - path_len) * [(workspace.type_robot_location[robot], 'default')])
             robot_phi[robot].extend((horizon - path_len) * [robot_phi[robot]])
         else:
-            tmp_x_act = (path[-1][0], 'null')
+            tmp_x_act = (path[-1][0], 'default')
             path.extend((horizon - path_len) * [tmp_x_act])
             robot_phi[robot].extend((horizon - path_len) * [robot_phi[robot][-1]])
         # prRed(path)

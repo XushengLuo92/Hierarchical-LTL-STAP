@@ -2,6 +2,10 @@
   // effects cancel out preconditions
   // action is admissible as long as one set of preconditions is satisfied
   "robot_actions": {
+    "default": {
+      "preconditions": [[]],
+      "effects": []
+    },
     "rescue": {
       "preconditions": [["injury"]],
       "effects": ["help", "!injury"]
@@ -29,8 +33,8 @@
   },
   // heteregeneous robots
   "robot_group": {
-    "1" : ["navigate", "rescue", "measure"],
-    "2" : ["navigate", "photo", "measure"]
+    "1" : ["default", "rescue", "measure"],
+    "2" : ["default", "photo", "measure"]
   }
 }
   

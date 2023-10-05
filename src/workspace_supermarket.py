@@ -279,16 +279,17 @@ class Workspace(object):
         Returns:
             _type_: _description_
         """
-        actions = []
+        man_actions = []
         for action, preconds_effs in self.domain.get('robot_actions').items():
             for preconds in preconds_effs['preconditions']:
                 if all(element in aps for element in preconds if "!" not in element) and \
                     all(element[1:] not in aps for element in preconds if "!" in element):
-                    actions.append(action)
-        if not actions:
-            actions.append('navigate')
+                    man_actions.append(action)
         
-        return [action for action in actions if action == 'navigate' or action in self.domain.get('robot_group')[str(robot_type)]]
+        if not man_actions:
+            man_actions.append('default')
+        
+        return [action for action in man_actions if action in self.domain.get('robot_group')[str(robot_type)]]
     
     def update_world_state(self, robot_state, robot_action, world_state):
         """update world state base on action
@@ -314,8 +315,6 @@ class Workspace(object):
                     all(element[1:] not in world_state for element in preconds if "!" in element):
                     new_world_state.add(env_action)
         # update based on robot action            
-        if robot_action == 'navigate':
-            return new_world_state
         for effect in self.domain.get("robot_actions")[robot_action]["effects"]:
             if "!" not in effect:
                 new_world_state.add(effect)
@@ -325,7 +324,7 @@ class Workspace(object):
         return new_world_state
     
     def update_robot_state(self, robot_state):
-        """update robot loc state in navigate action
+        """update robot loc state in navigate mode
 
         Args:
             robot_state (_type_): _description_

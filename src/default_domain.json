@@ -1,6 +1,15 @@
 {
-  "robot_actions": {},
+  "robot_actions": {
+    "default": {
+      "preconditions": [[]],
+      "effects": []
+    }
+  },
   "env_actions": {},
-  "robot_group": {}
+  // heteregeneous robots
+  "robot_group": {
+    "1" : ["default"],
+    "2" : ["default"]
+  }
 }
   
