@@ -70,9 +70,9 @@ def create_parser():
 def plot_workspace(workspace, ax):
     plt.rc('text', usetex=False)
     ax.set_xlim((0, workspace.width))
-    ax.set_ylim((0, workspace.length))
+    ax.set_ylim((0, workspace.height))
     plt.xticks(np.arange(0, workspace.width + 1, 5))
-    plt.yticks(np.arange(0, workspace.length + 1, 5))
+    plt.yticks(np.arange(0, workspace.height + 1, 5))
     plot_workspace_helper(ax, workspace.regions, 'region')
     plot_workspace_helper(ax, workspace.obstacles, 'obstacle')
     # plt.grid(visible=True, which='major', color='gray', linestyle='--')

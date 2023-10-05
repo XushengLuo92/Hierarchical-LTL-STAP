@@ -29,7 +29,7 @@ class Workspace(object):
         self.n_shelf = 6
         self.regions = {'p{0}'.format(i): j for i, j in enumerate(self.allocate_region_dars())}
         self.obstacles = {'o{0}'.format(i+1): j for i, j in enumerate(self.allocate_obstacle_dars())}
-        self.length = max([cell[1]+1 for region in self.regions.values() for cell in region]) # 9   # length
+        self.height = max([cell[1]+1 for region in self.regions.values() for cell in region]) # 9   # length
         self.width = max([cell[0]+1 for region in self.regions.values() for cell in region]) # 9   # width
         self.type_robot_location = self.initialize()
         # print(self.type_robot_location.keys())
@@ -59,7 +59,7 @@ class Workspace(object):
         if location[0]+1 < self.width and (location[0]+1, location[1]) not in obstacles:
             next_location.append((location, (location[0]+1, location[1])))
         # up
-        if location[1]+1 < self.length and (location[0], location[1]+1) not in obstacles:
+        if location[1]+1 < self.height and (location[0], location[1]+1) not in obstacles:
             next_location.append((location, (location[0], location[1]+1)))
         # down
         if location[1]-1 > 0 and (location[0], location[1]-1) not in obstacles:
@@ -69,7 +69,7 @@ class Workspace(object):
     def build_graph(self):
         obstacles = list(itertools.chain(*self.obstacles.values()))
         for i in range(self.width):
-            for j in range(self.length):
+            for j in range(self.height):
                 if (i, j) not in obstacles:
                     self.graph_workspace.add_edges_from(self.reachable((i, j), obstacles))
 
