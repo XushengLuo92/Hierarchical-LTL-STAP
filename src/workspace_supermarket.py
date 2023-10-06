@@ -285,10 +285,6 @@ class Workspace(object):
                 if all(element in aps for element in preconds if "!" not in element) and \
                     all(element[1:] not in aps for element in preconds if "!" in element):
                     man_actions.append(action)
-        
-        if not man_actions:
-            man_actions.append('default')
-        
         return [action for action in man_actions if action in self.domain.get('robot_group')[str(robot_type)]]
     
     def update_world_state(self, robot_state, robot_action, world_state):

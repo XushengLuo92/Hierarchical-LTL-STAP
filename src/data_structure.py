@@ -8,6 +8,8 @@ PrimitiveSubtaskId = namedtuple('PrimitiveSubtaskId', ['parent', 'element'])
 
 class Node:
     def __init__(self, phi, type_robot, action, type_robots_x, phis_progress, world_state, progress_metric):
+        # rescue {(1, 0): (1, 0), (1, 1): (23, 0), (2, 0): (25, 1), (2, 1): (24, 1)} {'p0': 'T0_init', 'p200': 'T0_S2'} {'help', 'no_injury'}
+        # action          robot state after taking action                      buchi state due to last action     world state after taking action
         # specific spec
         self.phi = phi
         # # specific type_robot 
