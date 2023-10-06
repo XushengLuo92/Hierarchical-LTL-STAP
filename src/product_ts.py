@@ -176,7 +176,7 @@ class ProductTs(object):
         decomp_set = task_hierarchy[node.phi].decomp_sets
         next_xs = workspace.update_robot_state(x)  # next_xs includes x
         succ = []
-
+        action_weight = 10
         # check the edge label
         next_qs = buchi_graph.succ[q]
         for next_q in next_qs:
@@ -197,7 +197,8 @@ class ProductTs(object):
                         weight = 0 if x == next_x else 1
                         for action in actions:
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
-                            weight += 0 if action == 'default' else 1
+                            man_weight = 0 if action == 'default' else action_weight
+                            weight += man_weight
                             # update progress of other parent specs 
                             ProductTs.update_non_leaf_specs(cur_predicate, 
                                                             Node(node.phi, node.type_robot, action, updated_type_robots_x, 
@@ -218,7 +219,8 @@ class ProductTs(object):
                         weight = 0 if x == next_x else 1
                         for action in actions:
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
-                            weight += 0 if action == 'default' else 1
+                            man_weight = 0 if action == 'default' else action_weight
+                            weight += man_weight
                             ProductTs.update_non_leaf_specs(cur_predicate, 
                                                             Node(node.phi, node.type_robot, action, updated_type_robots_x, 
                                                                 updated_phis_progress, updated_world_state,
@@ -237,7 +239,8 @@ class ProductTs(object):
                     for action in actions:
                         # self-loop
                         updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
-                        weight += 0 if action == 'default' else 1
+                        man_weight = 0 if action == 'default' else action_weight
+                        weight += man_weight
                         # update progress of other parent specs 
                         ProductTs.update_non_leaf_specs([], 
                                                         Node(node.phi, node.type_robot, action, updated_type_robots_x, 
