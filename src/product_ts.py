@@ -40,9 +40,6 @@ class ProductTs(object):
     
     @staticmethod
     def update_non_leaf_specs(last_predicate, node, task_hierarchy, path_to_root, weight, succ):
-        predicate = {symbols(phi): True for phi in task_hierarchy.keys() 
-                     if node.phis_progress[phi] in task_hierarchy[phi].buchi_graph.graph['accept'] }
-        # print(node.phis_progress, predicate)
         tmp_path_to_root = path_to_root.copy()
         parent = tmp_path_to_root.pop(0)
         buchi_graph = task_hierarchy[parent].buchi_graph
@@ -54,7 +51,7 @@ class ProductTs(object):
                             ProductTs.update_progress_metric(task_hierarchy, node.phis_progress))
             edge_label = buchi_graph.edges[(parent_q, next_q)]['label']
             aps_in_label = BuchiConstructor.get_literals(edge_label)
-            aps_sub = {ap: True if ap in predicate else False for ap in symbols(aps_in_label)}
+            aps_sub = {ap: True if ap in last_predicate else False for ap in symbols(aps_in_label)}
             if edge_label.subs(aps_sub):
                 tmp_node.phis_progress[parent] = next_q
                 proceed_to_next_q = True
@@ -75,7 +72,7 @@ class ProductTs(object):
                             ProductTs.update_progress_metric(task_hierarchy, node.phis_progress))
             node_label = buchi_graph.nodes[parent_q]['label']
             aps_in_label = BuchiConstructor.get_literals(node_label)
-            aps_sub = {ap: True if ap in predicate else False for ap in symbols(aps_in_label)}
+            aps_sub = {ap: True if ap in last_predicate else False for ap in symbols(aps_in_label)}
             if node_label.subs(aps_sub):
                 tmp_node.phis_progress[parent] = parent_q
             else:
