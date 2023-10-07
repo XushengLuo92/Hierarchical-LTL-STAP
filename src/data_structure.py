@@ -7,7 +7,7 @@ CompositeSubtask = namedtuple('CompositeSubtask', ['subtask2element'])
 PrimitiveSubtaskId = namedtuple('PrimitiveSubtaskId', ['parent', 'element'])
 
 class Node:
-    def __init__(self, phi, type_robot, action, type_robots_x, phis_progress, world_state, progress_metric):
+    def __init__(self, phi, type_robot, action, action_state, type_robots_x, phis_progress, world_state, progress_metric):
         # rescue {(1, 0): (1, 0), (1, 1): (23, 0), (2, 0): (25, 1), (2, 1): (24, 1)} {'p0': 'T0_init', 'p200': 'T0_S2'} {'help', 'no_injury'}
         # action          robot state after taking action                      buchi state due to last action     world state after taking action
         # specific spec
@@ -17,6 +17,8 @@ class Node:
         # snapshot of type_robots distribution: dict[type_robot] = x
         self.type_robots_x = type_robots_x
         self.action = action
+        # state in action model
+        self.action_state = action_state
         # progress of all specs: dict[spec] = q
         self.phis_progress = phis_progress
         # snapshot of world state set()
@@ -28,8 +30,7 @@ class Node:
         if isinstance(other, Node):
             return self.phi == other.phi and self.type_robot == other.type_robot and \
                 self.hash_dict(self.type_robots_x) == self.hash_dict(other.type_robots_x) and \
-                    self.hash_dict(self.phis_progress) == self.hash_dict(other.phis_progress) and \
-                        self.world_state == other.world_state
+                    self.hash_dict(self.phis_progress) == self.hash_dict(other.phis_progress)
         return False
     
     def __lt__(self, other):
@@ -51,4 +52,4 @@ class Node:
         return hash(tuple(d))
     
     def __str__(self):
-        return f"{self.phi} {self.type_robot} {self.action} {self.type_robots_x} {self.phis_progress} {self.world_state}"
+        return f"{self.phi} {self.type_robot} ({self.action}, {self.action_state}) {self.type_robots_x} {self.phis_progress} {self.world_state}"

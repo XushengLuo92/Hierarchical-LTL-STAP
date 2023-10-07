@@ -164,17 +164,92 @@ class Specification():
             self.hierarchy.append(level_two)
         elif case == 10:
             level_one = dict()
-            # level_one["p0"] = '<> p100'
-            level_one["p0"] = '<> p100 && <> p300 && <> p200'
+            level_one["p0"] = '<> p200'
+            # level_one["p0"] = '<> p100 && <> p300 && <> p200'
             self.hierarchy.append(level_one)
             level_two = dict()
-            level_two["p100"] = '<> p1 && [] (injury -> <> help)' 
-            # level_two['p200'] = '<> p6 && [] (damage -> <> photo)'
+            # level_two["p100"] = '<> p1 && [] (injury -> X help)' 
+            level_two['p200'] = '<> p6 && [] (damage -> <> photo)'
             # level_two['p300'] = '<> p2 && <> p5 && <> p3'
-            level_two['p300'] = '<> p3'
-            level_two['p200'] = '<> p5'
+            # level_two['p300'] = '<> p3'
+            # level_two['p200'] = '<> (p6 && X(photo U p4))'
             # level_two["p200"] = '<> p5 && <> p6 && !p6 U p5'
             self.hierarchy.append(level_two)
+        elif case == 11:
+            level_one = dict()
+            level_one["p0"] = '!p200 U p100'
+            # level_one["p0"] = '<> p100 && <> p300 && <> p200'
+            self.hierarchy.append(level_one)
+            level_two = dict()
+            level_two["p100"] = '<> p4' 
+            level_two['p200'] = '<> p3'
+            self.hierarchy.append(level_two)
+        
+        elif case == 12:
+            # case 1 in IJRR STAP
+            level_one = dict()
+            level_one["p0"] = '<> p100 && <> p200'
+            self.hierarchy.append(level_one)
+            level_two = dict()
+            level_two["p100"] = "<> (desk && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !pub)"
+            level_two["p200"] = "<> (desk && emptybin && X (desk && default))"
+            self.hierarchy.append(level_two)
+            
+        elif case == 13:
+            # case 3 in IJRR STAP
+            level_one = dict()
+            level_one["p0"] = '<> p100'
+            self.hierarchy.append(level_one)
+            level_two = dict()
+            level_two["p100"] = "<> (printt && carry U (p3 && X !carry)) && [] (carry -> !pub)"
+            # level_two["p200"] = "<> (desk && emptybin && X (desk && default))"
+            self.hierarchy.append(level_two)
+            
+        elif case == 14:
+            # case 4 in IJRR STAP
+            level_one = dict()
+            level_one["p0"] = '<> p100 && <> p200 && <> p300 && <> p400'
+            self.hierarchy.append(level_one)
+            level_two = dict()
+            level_two["p100"] = "<> (p6 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
+            level_two["p200"] = "<> (p2 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
+            level_two["p300"] = "<> (p3 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
+            level_two["p400"] = "<> (d5 && carry U (d3 && X !carry))"
+            self.hierarchy.append(level_two) 
+        
+        elif case == 15:
+            # deeper version of case 4 in IJRR STAP
+            # which is more computionally efficient than the shallower version
+            level_one = dict()
+            level_one["p0"] = "<> p100 && <> p200"
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two['p100'] = '<> p101 && <> p102 && <> p103'
+            level_two['p200'] = '<> p201'
+            self.hierarchy.append(level_two)
+            
+            level_three = dict()
+            # level_three["p101"] = "<> p3"
+            level_three["p101"] = "<> (p6 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
+            level_three["p102"] = "<> (p2 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
+            level_three["p103"] = "<> (p3 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
+            level_three["p201"] = "<> (d5 && carry U (d3 && X !carry))"
+            # level_three["p201"] = "<> (p1 && carry U p5)"
+            # p4 work but p5 not
+            self.hierarchy.append(level_three)
+            
+        elif case == 16:
+            # deeper version of case 4 in IJRR STAP
+            # which is more computionally efficient than the shallower version
+            level_one = dict()
+            level_one["p0"] = "<> p100"
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two['p100'] = "<> (d5 && carry U (d3 && X !carry))"
+            self.hierarchy.append(level_two)
+            
         return self.hierarchy
     
     def get_manipulation_specification(self, case):

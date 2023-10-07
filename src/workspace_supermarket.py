@@ -11,6 +11,7 @@ import itertools
 import pickle
 import copy
 import json
+import subprocess
 
 class Workspace(object):
     """
@@ -47,7 +48,7 @@ class Workspace(object):
         self.graph_workspace = nx.Graph()
         self.build_graph()
         self.domain = self.get_domain(domain_file)
-
+        self.load_action_model()
         # self.p2p = self.point_to_point_path()  # label2label path
 
     def reachable(self, location, obstacles):
@@ -270,7 +271,7 @@ class Workspace(object):
                 break
         return observations
             
-    def get_obsevation_based_actions(self, robot_type, aps):
+    def get_obsevation_based_actions(self, robot_type, action_state, aps):
         """get actions based on observations
 
         Args:
@@ -280,12 +281,14 @@ class Workspace(object):
             _type_: _description_
         """
         man_actions = []
-        for action, preconds_effs in self.domain.get('robot_actions').items():
-            for preconds in preconds_effs['preconditions']:
-                if all(element in aps for element in preconds if "!" not in element) and \
-                    all(element[1:] not in aps for element in preconds if "!" in element):
-                    man_actions.append(action)
-        return [action for action in man_actions if action in self.domain.get('robot_group')[str(robot_type)]]
+        # for action, preconds_effs in self.domain.get('robot_actions').items():
+        #     for preconds in preconds_effs['preconditions']:
+        #         if all(element in aps for element in preconds if "!" not in element) and \
+        #             all(element[1:] not in aps for element in preconds if "!" in element):
+        #             man_actions.append(action)
+        for succ in self.action_model.succ[action_state]:
+            man_actions.append((self.action_model.edges[(action_state, succ)]['label'], succ))
+        return [action for action in man_actions if action[0] in self.domain.get('robot_group')[str(robot_type)]]
     
     def update_world_state(self, robot_state, robot_action, world_state):
         """update world state base on action
@@ -298,14 +301,7 @@ class Workspace(object):
             _type_: _description_
         """
         
-        new_world_state = world_state.copy()
-        discard_state = set()
-        for state in new_world_state:
-            if state in self.domain.get("robot_actions") or \
-                'no_' + state in new_world_state:
-                # delete last robot action and counter effect env observation
-                discard_state.add(state)
-        new_world_state.difference_update(discard_state)
+        new_world_state = set(state for state in world_state if 'no_' in state)
         # update based on environment action
         robot_state_observ = []
         for region, cells in self.regions.items():
@@ -336,3 +332,22 @@ class Workspace(object):
             _type_: _description_
         """
         return list(self.graph_workspace.neighbors(robot_state))
+    
+    def load_action_model(self):
+        # Create an empty directed graph
+        self.action_model = nx.DiGraph()
+
+        # Add nodes to the graph
+        self.action_model.add_nodes_from(self.domain['action_model']['nodes'])
+
+        # Add edges to the graph
+        for edge in self.domain['action_model']['edges']:
+            from_node = edge['from']
+            to_node = edge['to']
+            label = edge['label']
+            self.action_model.add_edge(from_node, to_node, label=label)
+        
+        title = "./data/action_model"
+        nx.nx_agraph.write_dot(self.action_model, title+'.dot')
+        command = "dot -Tpng {0}.dot >{0}.png".format(title)
+        subprocess.run(command, shell=True, capture_output=True, text=True)

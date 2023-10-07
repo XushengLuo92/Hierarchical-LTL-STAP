@@ -10,6 +10,12 @@
   "robot_group": {
     "1" : ["default"],
     "2" : ["default"]
+  },
+  "action_model": {
+    "nodes": ["x"],
+    "edges": [
+      {"from": "x", "to": "x", "label": "default"}
+    ]
   }
 }
   
