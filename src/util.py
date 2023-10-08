@@ -65,23 +65,38 @@ def create_parser():
     parser.add_argument('--event', action='store_true', help='Enable event based execution')
     parser.add_argument('--domain_file', default="./src/domain_default.json")
     parser.add_argument('--heuristic_weight', default=0, type=int)
+    parser.add_argument('--domain', default="supermarket", type=str)
     return parser
 
 def plot_workspace(workspace, ax):
+    if workspace.name() == "supermarket":
+        plot_supermarket(workspace, ax)
+    elif workspace.name() == "bosch":
+        plot_bosch(workspace, ax)
+        
+def plot_supermarket(workspace, ax):
     plt.rc('text', usetex=False)
     ax.set_xlim((0, workspace.width))
     ax.set_ylim((0, workspace.height))
     plt.xticks(np.arange(0, workspace.width + 1, 5))
     plt.yticks(np.arange(0, workspace.height + 1, 5))
-    plot_workspace_helper(ax, workspace.regions, 'region')
-    plot_workspace_helper(ax, workspace.obstacles, 'obstacle')
+    plot_supermarket_helper(ax, workspace.regions, 'region')
+    plot_supermarket_helper(ax, workspace.obstacles, 'obstacle')
     # plt.grid(visible=True, which='major', color='gray', linestyle='--')
     plt.savefig('./data/supermarket.png', format='png', dpi=300)
 
-    # plt.title(r'$\phi_3$')
+def plot_bosch(workspace, ax):
+    plt.rc('text', usetex=False)
+    ax.set_xlim((1, workspace.width))
+    ax.set_ylim((1, workspace.height))
+    plt.xticks(np.arange(1, workspace.width + 1, 5))
+    plt.yticks(np.arange(1, workspace.height + 1, 5))
+    plot_bosch_helper(ax, workspace.regions, 'region')
+    plot_bosch_helper(ax, workspace.obstacles, 'obstacle')
+    # plt.grid(visible=True, which='major', color='gray', linestyle='--')
+    plt.savefig('./data/bosch_building.png', format='png', dpi=300)
 
-
-def plot_workspace_helper(ax, obj, obj_label):
+def plot_supermarket_helper(ax, obj, obj_label):
     plt.rc('text', usetex=False)
     plt.rc('font', family='serif')
     plt.gca().set_aspect('equal', adjustable='box')
@@ -122,6 +137,35 @@ def plot_workspace_helper(ax, obj, obj_label):
             ax.text(np.mean(x) - 3.5, np.mean(y) + 1, r'{}'.format(region[key]), fontsize=6)
         elif 'o' in key:
             ax.text(np.mean(x) - 2, np.mean(y) + 1, r'{}'.format(region['p' + key[1:]]), fontsize=6)
+            
+def plot_bosch_helper(ax, obj, obj_label):
+    plt.rc('text', usetex=False)
+    plt.rc('font', family='serif')
+    plt.gca().set_aspect('equal', adjustable='box')
+ 
+    for key in obj:
+        # color = 'gray' if obj_label != 'region' else 'white'
+        color = 'gray' if obj_label != 'region' or (key == 'p0' or key == 'p7') else 'green'
+        alpha = 0.6 if obj_label != 'region' or (key == 'p0' or key == 'p7') else 0.1
+        for grid in obj[key]:
+            x_ = grid[0]
+            y_ = grid[1]
+            x = []
+            y = []
+            patches = []
+            for point in [(x_, y_), (x_ + 1, y_), (x_ + 1, y_ + 1), (x_, y_ + 1)]:
+                x.append(point[0])
+                y.append(point[1])
+            polygon = Polygon(np.column_stack((x, y)), True)
+            patches.append(polygon)
+            p = PatchCollection(patches, facecolors=color, edgecolors=color, linewidths=0.2, alpha=alpha)
+            ax.add_collection(p)
+        # ax.text(np.mean(x) - 0.2, np.mean(y) - 0.2, r'${}_{{{}}}$'.format(key[0], key[1:]), fontsize=12)
+        if 'obs' not in key and 'r' not in key:
+            ax.text(np.mean(x)-0.4, np.mean(y)-0.2, key, fontsize=6)
+        # if 'obs' not in key and 'r' in key:
+        #     ax.text(np.mean(x)-0.4, np.mean(y)-0.2, key, fontsize=12)
+        
 
 def prRed(skk): print("\033[91m {}\033[00m" .format(skk))
  

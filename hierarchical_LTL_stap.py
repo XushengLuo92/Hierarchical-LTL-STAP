@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from specification import Specification
 from buchi import BuchiConstructor
-from util import create_parser, vis_graph, plot_workspace, prGreen, prRed, prYellow
+from util import create_parser, vis_graph, plot_supermarket, prGreen, prRed, prYellow
 from workspace_supermarket import Workspace
 from product_ts import ProductTs
 import networkx as nx 
@@ -75,7 +75,7 @@ def main(args=None):
     if args.vis:
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        plot_workspace(workspace, ax)
+        plot_supermarket(workspace, ax)
         vis_graph(workspace.graph_workspace, f'data/workspace', latex=False, buchi_graph=False)
     workspace_time = time.time() # Record the end time
     prGreen("Take {:.2f} secs to generate workspace".format(workspace_time - buchi_time))    

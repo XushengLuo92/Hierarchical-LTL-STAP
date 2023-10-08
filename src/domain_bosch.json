@@ -27,7 +27,7 @@
       "effects": ["carrybin"]
     },
     "dispose": {
-      "preconditions": [[]],
+      "preconditions": [["g"]],
       "effects": ["dispose"]
     },
     "emptybin": {
@@ -45,24 +45,24 @@
   },
   // action is admissible as long as one set of preconditions is satisfied
   "env_actions": {
-      "desk": {
-        "preconditions": [["p2"]]
-      },
-      "dispose": {
-        "preconditions": [["p4"]]
-      },
-      "pub": {
-        "preconditions": [["p3"]]
-      },
-      "printt": {
-        "preconditions": [["p5"]]
-      },
-      "d5": {
-        "preconditions": [["p1"]]
-      },
-      "d3": {
-        "preconditions": [["p6"]]
-      }
+      // "desk": {
+      //   "preconditions": [["p2"]]
+      // },
+      // "dispose": {
+      //   "preconditions": [["p4"]]
+      // },
+      // "publicc": {
+      //   "preconditions": [["p3"]]
+      // },
+      // "printt": {
+      //   "preconditions": [["p5"]]
+      // },
+      // "d5": {
+      //   "preconditions": [["p1"]]
+      // },
+      // "d3": {
+      //   "preconditions": [["p6"]]
+      // }
   },
   // heteregeneous robots
   "robot_group": {

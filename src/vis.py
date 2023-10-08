@@ -120,12 +120,13 @@ def vis(task, case, workspace, robot_path, robot_pre_suf_time, ap, robot_act):
     groups = ["type1", "type2", "type3"]
     particles = ax.scatter([], [], c=[], s=30, cmap="hsv", vmin=0, vmax=1)
     # Create a legend patch for each group
-    legend_patches = [mpatches.Patch(color=plt.cm.hsv(color), label=group) for group, color in zip(groups, colors_type)]
+    # legend_patches = [mpatches.Patch(color=plt.cm.hsv(color), label=group) for group, color in zip(groups, colors_type)]
+    legend_patches = []
     # Add the legend patches to the plot
     ax.legend(handles=legend_patches, fontsize=6)
     # annots = [ax.text(100, 100, r"[{0},{1}]".format(type_robot[1]+1, type_robot[0]), weight='bold', fontsize=8)
     #           for type_robot in robot_path.keys()]
-    annots = [ax.text(100, 100, r"{0}".format(type_robot[1]+1), weight='bold', fontsize=8)
+    annots = [ax.text(100, 100, r"{0}".format(type_robot[1]), weight='bold', fontsize=8)
               for type_robot in robot_path.keys()]
 
     max_frame = max(2 * time[1] - time[0] for time in robot_pre_suf_time.values())/cls_robot_path.dt + 1

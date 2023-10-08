@@ -23,25 +23,19 @@ class Workspace(object):
         # self.width = int(sys.argv[1])
         # n = int(sys.argv[2])
         # n = 4
-        self.type_num = {1: 2, 2: 2}   # single-task robot
-        self.num_of_regions = 8
-        self.num_of_obstacles = 6
+        self.type_num = {1: 6}  # single-task robot
+        # self.num_of_regions = 8
+        # self.num_of_obstacles = 6
         self.occupied = []
         self.n_shelf = 6
-        self.regions = {'p{0}'.format(i): j for i, j in enumerate(self.allocate_region_dars())}
-        self.obstacles = {'o{0}'.format(i+1): j for i, j in enumerate(self.allocate_obstacle_dars())}
-        self.height = max([cell[1]+1 for region in self.regions.values() for cell in region]) # 9   # length
-        self.width = max([cell[0]+1 for region in self.regions.values() for cell in region]) # 9   # width
-        self.type_robot_location = self.initialize()
-        # print(self.type_robot_location.keys())
-        # self.type_robot_location[(1, 0)] = (0, 0)
-        # self.type_robot_location[(1, 1)] = (24, 0)
-        # self.type_robot_location[(2, 0)] = (1, 0)
-        # self.type_robot_location[(2, 1)] = (25, 0)
-        # customized location
-        # self.type_robot_location[(2, 0)]  = (0, 0) # nav task 4
+        self.regions = self.allocate_regions()
+        self.obstacles = self.allocate_obstacles()
+        self.height = 8
+        self.width = 31
+        robots_of_interest = {1, 2, 3, 4, 5, 6}
+        self.type_robot_location = {(1, r): self.regions['r'+str(r)][0] for r in robots_of_interest}
         # [region and corresponding locations
-        self.label_location = {'r{0}'.format(i + 1): j for i, j in enumerate(list(self.type_robot_location.values()))}
+        self.label_location = {'r{0}'.format(r): self.type_robot_location[(1, r)] for r in robots_of_interest}
         # [region where robots reside
         self.type_robot_label = dict(zip(self.type_robot_location.keys(), self.label_location.keys()))
 
@@ -49,7 +43,6 @@ class Workspace(object):
         self.build_graph()
         self.domain = self.get_domain(domain_file)
         self.load_action_model()
-        # self.p2p = self.point_to_point_path()  # label2label path
 
     def reachable(self, location, obstacles):
         next_location = [(location, location)]
@@ -69,8 +62,8 @@ class Workspace(object):
 
     def build_graph(self):
         obstacles = list(itertools.chain(*self.obstacles.values()))
-        for i in range(self.width):
-            for j in range(self.height):
+        for i in range(1, self.width):
+            for j in range(1, self.height):
                 if (i, j) not in obstacles:
                     self.graph_workspace.add_edges_from(self.reachable((i, j), obstacles))
 
@@ -85,48 +78,6 @@ class Workspace(object):
                         atomic_prop[(region, type_robot[0])] += 1
         return atomic_prop
 
-    def point_to_point_path(self):
-        key_region = list(self.regions.keys())
-        key_init = list(self.label_location.keys())
-
-        p2p = dict()
-        for l1 in range(len(self.regions)):
-            for l2 in range(l1, len(self.regions)):
-                min_length = np.inf
-                for source in self.regions[key_region[l1]]:
-                    for target in self.regions[key_region[l2]]:
-                        length, _ = nx.algorithms.single_source_dijkstra(self.graph_workspace, source=source,
-                                                                         target=target)
-                        if length < min_length:
-                            min_length = length
-                p2p[(key_region[l1], key_region[l2])] = min_length
-                p2p[(key_region[l2], key_region[l1])] = min_length
-        # with open('data/p2p_large_workspace', 'wb') as filehandle:
-        #     pickle.dump(p2p, filehandle)
-        # with open('data/p2p_large_workspace', 'rb') as filehandle:
-        #     p2p = pickle.load(filehandle)
-        for r1 in range(len(self.label_location)):
-            for l1 in range(len(self.regions)):
-                min_length = np.inf
-                for target in self.regions[key_region[l1]]:
-                    length, _ = nx.algorithms.single_source_dijkstra(self.graph_workspace,
-                                                                    source=self.label_location[key_init[r1]],
-                                                                    target=target)
-                    if length < min_length:
-                        min_length = length
-                p2p[(key_init[r1], key_region[l1])] = min_length
-                p2p[(key_region[l1], key_init[r1])] = min_length
-
-        for r1 in range(len(self.label_location)):
-            for r2 in range(r1, len(self.label_location)):
-                length, path = nx.algorithms.single_source_dijkstra(self.graph_workspace,
-                                                                    source=self.label_location[key_init[r1]],
-                                                                    target=self.label_location[key_init[r2]])
-                p2p[(key_init[r1], key_init[r2])] = length
-                p2p[(key_init[r2], key_init[r1])] = length
-
-        return p2p
-    
     def path_plot(self, robot_path):
         """
         plot the path
@@ -148,63 +99,59 @@ class Workspace(object):
 
             plt.savefig('img/path.png', bbox_inches='tight', dpi=600)
 
-    def allocate_region_dars(self):
-        regions = []        
-        # ICRA
-        shelf_width_x = 1
-        shelf_length_y = 1
-        start_dock_x = 0
-        dock_width_x = 2
-        dock_length_y = 1
-        first_shelf_to_dock_x = 0
-        first_shelf_to_dock_y = 1
-        inter_shelf_x = 3
-        depot_to_last_shelf_x = 1
-        depot_width_x = 2
-        depot_length_y = 2
+    def allocate_regions(self):
+        regions = {
+            'd1': [(2, 7)],
+            'd2': [(5, 7)],
+            'd3': [(14, 7)],
+            'd4': [(17, 7)],
+            'd5': [(27, 7)],
+            'd6': [(30, 7)],
+            'd7': [(30, 2)],
+            'd8': [(20, 1)],
+            'd9': [(17, 1)],
+            'd10': [(14, 1)],
+            'd11': [(11, 1)],
+            'd12': [(8, 1)],
+            'd13': [(4, 1)],
+            'd14': [(2, 1)],
+            'm1': [(8, 7)],
+            'm2': [(24, 7)],
+            'm3': [(28, 5)],
+            'm4': [(28, 3)],
+            'm5': [(6, 1)],
+            'm6': [(4, 5)],
+            'r1': [(5, 7)],
+            'r2': [(7, 6)],
+            'r3': [(7, 2)],
+            'r4': [(25, 2)],
+            'r5': [(30, 7)],
+            'r6': [(20, 1)],
+            'publicc': [(21, 6), (22, 6), (23, 6)],
+            'e': [(21, 7)],
+            'p': [(17, 3)],
+            'k': [(11, 3)],
+            'g': [(11, 7)],
+        }  
         
-        # p0 dock
-        # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics 
-        # p7 packing area
-        regions.append(list(itertools.product(range(start_dock_x, start_dock_x + dock_width_x), range(0, dock_length_y)))) 
-        for i in range(self.n_shelf):
-            regions.append(list(itertools.product([dock_width_x + first_shelf_to_dock_x + 
-                                                    i * (shelf_width_x + inter_shelf_x) - 1,
-                                                    dock_width_x + first_shelf_to_dock_x + 
-                                                    i * (shelf_width_x + inter_shelf_x) + shelf_width_x], 
-                                                range(dock_length_y + first_shelf_to_dock_y,
-                                                    dock_length_y + first_shelf_to_dock_y + shelf_length_y))))
-            
-            
-        regions[0].extend(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
-                                                    (self.n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x,
-                                                        dock_width_x + first_shelf_to_dock_x +
-                                                    (self.n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x + depot_width_x),
-                                            range(0, depot_length_y))))
         return regions
 
-    def allocate_obstacle_dars(self):
-        obstacles = []
-        # ICRA
-        shelf_width_x = 1
-        shelf_length_y = 1
-        dock_width_x = 2
-        dock_length_y = 1
-        first_shelf_to_dock_x = 0
-        first_shelf_to_dock_y = 1
-        inter_shelf_x = 3
+    def allocate_obstacles(self):
+        obstacles = {
+            'obs': [(5, 1), (7, 1), (9, 1), (10, 1), (12, 1), (13, 1), (15, 1), (16, 1),
+                    (18, 1), (19, 1)] + list(itertools.product(range(21, 31), [1]))
+            + [(4, 7), (6, 7), (7, 7), (9, 7), (10, 7), (12, 7), (13, 7), (15, 7), (16, 7), 
+               (18, 7), (19, 7), (20, 7), (22, 7), (23, 7), (25, 7), (26, 7), (28, 7), (29, 7)]
+            + list(itertools.product(range(4, 8), range(3, 5))) + list(itertools.product(range(5, 8), [5]))
+            + list(itertools.product(range(9, 11), [3])) + list(itertools.product(range(9, 12), range(4, 6)))
+            + list(itertools.product(range(14, 17), [3])) + list(itertools.product(range(14, 18), range(4, 6)))
+            + list(itertools.product(range(20, 25), range(3, 6)))
+            + list(itertools.product([27], range(3, 6))) + [(28, 4)]
+            + list(itertools.product([30], range(3, 6))) 
+            + list(itertools.product([1], range(1, 8))) 
+            + [(3, 1)]
+        }
         
-        # p0 charging station
-        # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics
-        for i in range(self.n_shelf):
-            obstacles.append(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
-                                                        i * (shelf_width_x + inter_shelf_x),
-                                                        dock_width_x + first_shelf_to_dock_x + 
-                                                        i * (shelf_width_x + inter_shelf_x) + shelf_width_x), 
-                                                  range(dock_length_y + first_shelf_to_dock_y,
-                                                        dock_length_y + first_shelf_to_dock_y + shelf_length_y))))
-            
-
         return obstacles
 
     def initialize(self):
@@ -212,7 +159,7 @@ class Workspace(object):
         x0 = copy.deepcopy(self.regions['p0'])
         # random.seed(1)
         for robot_type in self.type_num.keys():
-            for num in range(1, 1 + self.type_num[robot_type]):
+            for num in range(self.type_num[robot_type]):
                 while True:
                     candidate = random.sample(x0, 1)[0]
                     if candidate not in type_robot_location.values():
@@ -281,13 +228,13 @@ class Workspace(object):
             _type_: _description_
         """
         man_actions = []
-        # for action, preconds_effs in self.domain.get('robot_actions').items():
-        #     for preconds in preconds_effs['preconditions']:
-        #         if all(element in aps for element in preconds if "!" not in element) and \
-        #             all(element[1:] not in aps for element in preconds if "!" in element):
-        #             man_actions.append(action)
         for succ in self.action_model.succ[action_state]:
-            man_actions.append((self.action_model.edges[(action_state, succ)]['label'], succ))
+            action = self.action_model.edges[(action_state, succ)]['label']
+            for preconds in self.domain.get('robot_actions')[action]['preconditions']:
+                if all(element in aps for element in preconds if "!" not in element) and \
+                    all(element[1:] not in aps for element in preconds if "!" in element):
+                    man_actions.append((action, succ))
+                    break
         return [action for action in man_actions if action[0] in self.domain.get('robot_group')[str(robot_type)]]
     
     def update_world_state(self, robot_state, robot_action, world_state):
@@ -308,6 +255,7 @@ class Workspace(object):
             if robot_state in cells:
                 robot_state_observ = [region]
                 break
+        new_world_state.update(set(robot_state_observ))
         for env_action, preconds_effs in self.domain.get('env_actions').items():
             for preconds in preconds_effs['preconditions']:
                 if all(element in robot_state_observ for element in preconds if "!" not in element) and \
@@ -353,4 +301,4 @@ class Workspace(object):
         subprocess.run(command, shell=True, capture_output=True, text=True)
         
     def name(self):
-        return "supermarket"
+        return "bosch"

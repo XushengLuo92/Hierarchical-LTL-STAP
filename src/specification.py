@@ -191,18 +191,19 @@ class Specification():
             level_one["p0"] = '<> p100 && <> p200'
             self.hierarchy.append(level_one)
             level_two = dict()
-            level_two["p100"] = "<> (desk && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !pub)"
-            level_two["p200"] = "<> (desk && emptybin && X (desk && default))"
+            level_two["p100"] = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)"
+            level_two["p200"] = "<> (d5 && emptybin && X (d5 && default))"
             self.hierarchy.append(level_two)
             
         elif case == 13:
             # case 3 in IJRR STAP
             level_one = dict()
-            level_one["p0"] = '<> p100'
+            level_one["p0"] = '<> p100 && <> p200 && <> p300'
             self.hierarchy.append(level_one)
             level_two = dict()
-            level_two["p100"] = "<> (printt && carry U (p3 && X !carry)) && [] (carry -> !pub)"
-            # level_two["p200"] = "<> (desk && emptybin && X (desk && default))"
+            level_two["p100"] = "<> (p && carry U (d10 && X !carry)) && [] (carry -> !publicc)"
+            level_two["p200"] = "<> (p && carry U (d7 && X !carry)) && [] (carry -> !publicc)"
+            level_two["p300"] = "<> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
             self.hierarchy.append(level_two)
             
         elif case == 14:
@@ -211,32 +212,30 @@ class Specification():
             level_one["p0"] = '<> p100 && <> p200 && <> p300 && <> p400'
             self.hierarchy.append(level_one)
             level_two = dict()
-            level_two["p100"] = "<> (p6 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
-            level_two["p200"] = "<> (p2 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
-            level_two["p300"] = "<> (p3 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
-            level_two["p400"] = "<> (d5 && carry U (d3 && X !carry))"
+            level_two["p100"] = "<> (m1 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_two["p200"] = "<> (m4 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_two["p300"] = "<> (m6 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_two["p400"] = "<> (d5 && carry U (d3 && X !carry)) && [] (carry -> !publicc)"
+            level_two['p500'] = "<>(d11 && guide U (m6 && X !guide))"
             self.hierarchy.append(level_two) 
         
         elif case == 15:
             # deeper version of case 4 in IJRR STAP
-            # which is more computionally efficient than the shallower version
             level_one = dict()
-            level_one["p0"] = "<> p100 && <> p200"
+            level_one["p0"] = "<> p100 && <> p200 && <> p300"
             self.hierarchy.append(level_one)
             
             level_two = dict()
-            level_two['p100'] = '<> p101 && <> p102 && <> p103'
-            level_two['p200'] = '<> p201'
+            level_two['p100'] = "<> p101 && <> p102 && <> p103"
+            level_two['p200'] = "<> (d5 && carry U (d3 && X !carry)) && [] (carry -> !publicc)"
+            level_two['p300'] = "<>(d11 && guide U (m6 && X !guide))"
             self.hierarchy.append(level_two)
             
             level_three = dict()
             # level_three["p101"] = "<> p3"
-            level_three["p101"] = "<> (p6 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
-            level_three["p102"] = "<> (p2 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
-            level_three["p103"] = "<> (p3 && photo) && [] (!(p1 || p2 || p3 || p4 || p5 || p6) -> !camera)"
-            level_three["p201"] = "<> (d5 && carry U (d3 && X !carry))"
-            # level_three["p201"] = "<> (p1 && carry U p5)"
-            # p4 work but p5 not
+            level_three["p101"] = "<> (m1 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_three["p102"] = "<> (m4 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_three["p103"] = "<> (m6 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
             self.hierarchy.append(level_three)
             
         elif case == 16:
@@ -247,7 +246,7 @@ class Specification():
             self.hierarchy.append(level_one)
             
             level_two = dict()
-            level_two['p100'] = "<> (d5 && carry U (d3 && X !carry))"
+            level_two['p100'] = "<>(d11 && guide U (m6 && X !guide))"
             self.hierarchy.append(level_two)
             
         return self.hierarchy

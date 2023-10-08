@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from specification import Specification
 from buchi import BuchiConstructor
 from util import create_parser, vis_graph, plot_workspace, prGreen, prRed, prYellow, depth_to_leaf
-from workspace_supermarket import Workspace
+
 from product_ts import ProductTs
 import networkx as nx 
 from itertools import product
@@ -21,6 +21,11 @@ import time
 def main(args=None):
     parser = create_parser()
     args = parser.parse_known_args()[0]
+    if args.domain == "supermarket":
+        from workspace_supermarket import Workspace
+    elif args.domain == "bosch":
+        from workspace_bosch import Workspace
+
     start_time = time.time() # Record the start time
    
     # ==========================
