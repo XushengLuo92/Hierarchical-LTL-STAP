@@ -62,7 +62,7 @@ class BuchiConstructor(object):
                     buchi_graph.nodes[state]['label'] = to_dnf('1')
                     
         # delete vertices without selfloop
-        self.delete_node_no_selfloop_except_init_accept(buchi_graph)
+        # self.delete_node_no_selfloop_except_init_accept(buchi_graph)
         
         return buchi_graph
     
@@ -117,34 +117,8 @@ class BuchiConstructor(object):
                 # save
                 init_accept[(init, accept)] = len1
 
-        # shortest simple cycle, including self loop
-        accept_accept = dict()
-        for accept in buchi_graph.graph['accept']:
-            # 0 if with self loop or without outgoing edges (co-safe formulae)
-            if buchi_graph.nodes[accept]['label']:
-                accept_accept[accept] = 0
-                continue
-
-            acpt_graph = buchi_graph.copy()
-            # remove other accepting vertices
-            acpt_graph.remove_nodes_from([node for node in buchi_graph.graph['accept'] if node != accept])
-
-            # find the shortest path back to itself
-            length = np.inf
-            for suc in acpt_graph.succ[accept]:
-                try:
-                    len1, path = nx.algorithms.single_source_dijkstra(buchi_graph,
-                                                                      source=suc, target=accept)
-                except nx.exception.NetworkXNoPath:
-                    len1, path = np.inf, []
-                if len1 + 1 < length and path:
-                    length = len1 + 1
-            accept_accept[accept] = length
-
         # select initial to accept
-        init_acpt = {pair: length + accept_accept[pair[1]] for pair, length in init_accept.items()
-                     if length != np.inf and accept_accept[pair[1]] != np.inf}
-        return sorted(init_acpt.items(), key=lambda x: x[1])
+        return sorted(init_accept.items(), key=lambda x: x[1])
     
     def get_subgraph(self, init, accept, buchi_graph):
         """
@@ -194,11 +168,6 @@ class BuchiConstructor(object):
         prune the subgraph following ID and ST properties
         """
         removed_edge = []
-        for node in subgraph.nodes():
-            if 'init' in node and subgraph.nodes[node]['label'] == to_dnf('0'):
-                for edge in subgraph.edges(node):
-                    if subgraph.edges[edge]['label'] != to_dnf('1'):
-                        removed_edge.append(edge)
         # remove the edge following ID and ST properties
         for node in subgraph.nodes():
             for succ in subgraph.succ[node]:
@@ -425,7 +394,11 @@ class BuchiConstructor(object):
         init_state_dist = dict()
         for init in buchi_graph.graph['init']:
             for state in buchi_graph.nodes():
-                path = nx.algorithms.shortest_path(buchi_graph, init, state)
+                try : 
+                    path = nx.algorithms.shortest_path(buchi_graph, init, state)
+                except nx.exception.NetworkXNoPath:
+                    init_state_dist[state] = -np.inf
+                    continue
                 # only count edges with essntial transitions
                 pruned_path = []
                 for idx in range(len(path) - 1):

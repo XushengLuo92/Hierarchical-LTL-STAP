@@ -239,14 +239,19 @@ class Specification():
             self.hierarchy.append(level_three)
             
         elif case == 16:
-            # deeper version of case 4 in IJRR STAP
-            # which is more computionally efficient than the shallower version
+            # flat version of case 4 in IJRR STAP
             level_one = dict()
             level_one["p0"] = "<> p100"
             self.hierarchy.append(level_one)
             
             level_two = dict()
-            level_two['p100'] = "<>(d11 && guide U (m6 && X !guide))"
+            level_two['p100'] = \
+               "<> (d5 && carry U (d3 && X !carry)) && [] (carry -> !publicc) && \
+                <> (d11 && guide U (m6 && X !guide)) && \
+                <> (m1 && photo) && \
+                <> (m4 && photo) && \
+                <> (m6 && photo) && \
+                [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
             self.hierarchy.append(level_two)
             
         return self.hierarchy
