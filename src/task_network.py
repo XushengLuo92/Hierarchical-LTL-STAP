@@ -1,6 +1,7 @@
 from data_structure import Hierarchy, PrimitiveSubtask, CompositeSubtask, PrimitiveSubtaskId
 from buchi import BuchiConstructor
-from util import print_subtask_info, print_global_partial_order, print_primitive_subtasks_with_identifer, vis_graph, prCyan
+from util import print_subtask_info, print_global_partial_order, \
+    print_primitive_subtasks_with_identifer, vis_graph, prCyan, prRed
 from collections import namedtuple
 import networkx as nx
 from sympy import to_dnf
@@ -37,21 +38,28 @@ def get_primitive_and_composite_subtask(pruned_subgraph, element2edge, leaf_spec
 
     return primitive_elements, composite_elements, composite_subtask_element_dict
 
-def build_buchi_graph_and_poset(task_specification, leaf_specs, workspace: Workspace):
+def build_buchi_graph_and_poset(task_specification, leaf_specs, workspace: Workspace, args):
     primitive_subtasks = dict()
     composite_subtasks = dict()
     task_hierarchy = dict()
     
     buchi_constructor = BuchiConstructor()
     task_hierarchy = dict()
+    nodes = []
+    edges = []
     for index, level in enumerate(task_specification.hierarchy):
         for (phi, spec) in level.items():
             buchi_graph = buchi_constructor.construct_buchi_graph(spec)
             buchi_graph.graph['conflict_aps'] = list(workspace.regions.keys())
             decomp_sets = None
-            prCyan(f"{phi}, {spec}")
+            if args.print_task:
+                prCyan(f"{phi}, {spec}, {buchi_graph.number_of_nodes()} nodes and {buchi_graph.number_of_edges()} edge")
+            nodes.append(buchi_graph.number_of_nodes())
+            edges.append(buchi_graph.number_of_edges())
             # find decomp nodes for leaf specs
             if phi in leaf_specs:
+                state2labels = BuchiConstructor.get_state2label_seqs(buchi_graph)
+                prCyan(f'State2labels: {state2labels}')
                 # decomp_sets do not include init and accept in the implementation
                 decomp_sets = buchi_constructor.get_all_decomp_nodes(buchi_graph)
                 buchi_constructor.get_dist_to_init_states(buchi_graph)
@@ -67,7 +75,10 @@ def build_buchi_graph_and_poset(task_specification, leaf_specs, workspace: Works
                     get_primitive_and_composite_subtask(pruned_subgraph, element2edge, leaf_specs)
                 primitive_subtasks[phi] = PrimitiveSubtask(element_in_poset=primitive_elements)
                 composite_subtasks[phi] = CompositeSubtask(subtask2element=composite_subtask_element_dict)
-    
+            if args.print_task:
+                prRed(f"{task_hierarchy[phi].buchi_graph.graph['formula']}, {task_hierarchy[phi].buchi_graph.graph['dist']}")
+    if args.print_task:
+        prCyan(f"total nodes {sum(nodes)}, edges {sum(edges)}")
     # buchi_time = time.time() # Record the end time
     # prGreen("Take {:.2f} secs to generate buchi graph".format(buchi_time - spec_time))
     # prRed("Buchi graph for {} has {} nodes and {} edges, with decomp sets {}".format(list(task_hierarchy.keys()), 
@@ -261,12 +272,12 @@ def generate_global_poset_graph(task_hierarchy, primitive_subtasks_with_identifi
     return reduced_task_network
 
 def construct_task_network(task_specification, leaf_specs, workspace: Workspace, args):
-    task_hierarchy, primitive_subtasks, composite_subtasks = build_buchi_graph_and_poset(task_specification, leaf_specs, workspace)
-    if args.vis:
+    task_hierarchy, primitive_subtasks, composite_subtasks = build_buchi_graph_and_poset(task_specification, leaf_specs, workspace, args)
+    if args.print_task:
         print_subtask_info(task_hierarchy, leaf_specs, primitive_subtasks, composite_subtasks)
     # ----------------- partial global order set -----------------
-    primitive_subtasks_with_identifier, primitive_subtasks_partial_order = produce_global_poset(task_hierarchy, leaf_specs, composite_subtasks, primitive_subtasks, args.vis)
-    if args.vis:
+    primitive_subtasks_with_identifier, primitive_subtasks_partial_order = produce_global_poset(task_hierarchy, leaf_specs, composite_subtasks, primitive_subtasks, args.print_task)
+    if args.print_task:
         print_primitive_subtasks_with_identifer(primitive_subtasks_with_identifier, task_hierarchy)
         print_global_partial_order(primitive_subtasks_partial_order, task_hierarchy)
     reduced_task_network = generate_global_poset_graph(task_hierarchy, primitive_subtasks_with_identifier, primitive_subtasks_partial_order)

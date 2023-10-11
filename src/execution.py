@@ -1,7 +1,7 @@
 import copy
 from util import prYellow, prRed
 
-def generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_order, simultaneous=True):
+def generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args, simultaneous=True):
     if simultaneous:
         # only include active robots per phi
         # it is possible that the path for a phi is interrupted 
@@ -10,7 +10,8 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_or
         temp_robot_path_act = dict()
         pre_phi = ''
         for wpt_act in optimal_path:
-            prRed(wpt_act)
+            if args.print_path:
+                prRed(wpt_act)
             if pre_phi and wpt_act.phi != pre_phi:
                 robot_path_act_per_phi.append((pre_phi, temp_robot_path_act.copy()))
                 temp_robot_path_act.clear()
@@ -26,9 +27,10 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_or
                 temp_robot_path_act[type_robot] = [x_act]
             
         robot_path_act_per_phi.append((pre_phi, temp_robot_path_act.copy()))
-        for phi, robot_path_act in robot_path_act_per_phi:
-            prYellow(f"{phi}, {robot_path_act}")
-        
+        if args.print_path:
+            for phi, robot_path_act in robot_path_act_per_phi:
+                prYellow(f"{phi}, {robot_path_act}")
+            
         ordered_phis = [phi for phi, _ in robot_path_act_per_phi]
         robot_path_act = {type_robot: [(workspace.type_robot_location[type_robot], 'default')] for type_robot in workspace.type_robot_location.keys()}
         robot_phi = {type_robot: [''] for type_robot in workspace.type_robot_location.keys()}

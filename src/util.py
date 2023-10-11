@@ -58,7 +58,10 @@ def create_parser():
     parser.add_argument('--task', default="man", type=str)
     parser.add_argument('--case', default=0, type=int)
     parser.add_argument('--vis', action='store_true', help='Enable visualization')
-    parser.add_argument('--print', action='store_true', help='Enable print to terminal')
+    parser.add_argument('--print_search', action='store_true', help='Enable print search to terminal')
+    parser.add_argument('--print_path', action='store_true', help='Enable print path to terminal')
+    parser.add_argument('--print_task', action='store_true', help='Enable print task to terminal')
+    parser.add_argument('--print_step', action='store_true', help='Enable print step-wise info to terminal')
     parser.add_argument('--log', action='store_true', help='Enable save log')
     parser.add_argument('--dot', action='store_true', help='Enable dot graph')
     parser.add_argument('--simul', action='store_true', help='Enable simultaneous execution')
@@ -75,7 +78,7 @@ def plot_workspace(workspace, ax):
         plot_bosch(workspace, ax)
         
 def plot_supermarket(workspace, ax):
-    plt.rc('text', usetex=False)
+    plt.rc('text', usetex=True)
     ax.set_xlim((0, workspace.width))
     ax.set_ylim((0, workspace.height))
     plt.xticks(np.arange(0, workspace.width + 1, 5))
@@ -86,18 +89,21 @@ def plot_supermarket(workspace, ax):
     plt.savefig('./data/supermarket.png', format='png', dpi=300)
 
 def plot_bosch(workspace, ax):
-    plt.rc('text', usetex=False)
+    plt.rc('text', usetex=True)
     ax.set_xlim((1, workspace.width))
     ax.set_ylim((1, workspace.height))
     plt.xticks(np.arange(1, workspace.width + 1, 5))
     plt.yticks(np.arange(1, workspace.height + 1, 5))
     plot_bosch_helper(ax, workspace.regions, 'region')
     plot_bosch_helper(ax, workspace.obstacles, 'obstacle')
+    # plt.axis('off')
+    # plt.tick_params(axis='both', which='both', bottom=False, top=False, left=False, right=False)
+
     # plt.grid(visible=True, which='major', color='gray', linestyle='--')
     plt.savefig('./data/bosch_building.png', format='png', dpi=300)
 
 def plot_supermarket_helper(ax, obj, obj_label):
-    plt.rc('text', usetex=False)
+    plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
     plt.gca().set_aspect('equal', adjustable='box')
     # p0 dock
@@ -139,7 +145,7 @@ def plot_supermarket_helper(ax, obj, obj_label):
             ax.text(np.mean(x) - 2, np.mean(y) + 1, r'{}'.format(region['p' + key[1:]]), fontsize=6)
             
 def plot_bosch_helper(ax, obj, obj_label):
-    plt.rc('text', usetex=False)
+    plt.rc('text', usetex=True)
     plt.rc('font', family='serif')
     plt.gca().set_aspect('equal', adjustable='box')
  
@@ -161,8 +167,11 @@ def plot_bosch_helper(ax, obj, obj_label):
             p = PatchCollection(patches, facecolors=color, edgecolors=color, linewidths=0.2, alpha=alpha)
             ax.add_collection(p)
         # ax.text(np.mean(x) - 0.2, np.mean(y) - 0.2, r'${}_{{{}}}$'.format(key[0], key[1:]), fontsize=12)
-        if 'obs' not in key and 'r' not in key:
-            ax.text(np.mean(x)-0.4, np.mean(y)-0.2, key, fontsize=6)
+        if 'obs' not in key and 'r' not in key and 'public' not in key:
+            ax.text(np.mean(x)-0.4, np.mean(y)-0.2, r'${}_{{{}}}$'.format(key[0], key[1:]), fontsize=6)
+        if 'public' in key:
+            ax.text(np.mean(x)-0.4, np.mean(y)-0.2, r'${}$'.format(key), fontsize=6)
+            
         # if 'obs' not in key and 'r' in key:
         #     ax.text(np.mean(x)-0.4, np.mean(y)-0.2, key, fontsize=12)
         

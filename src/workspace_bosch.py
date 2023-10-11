@@ -33,7 +33,8 @@ class Workspace(object):
         self.height = 8
         self.width = 31
         robots_of_interest = {1, 2, 3, 4, 5, 6}
-        self.type_robot_location = {(1, r): self.regions['r'+str(r)][0] for r in robots_of_interest}
+        # self.type_robot_location = {(1, r): self.regions['r'+str(r)][0] for r in robots_of_interest}
+        self.type_robot_location = self.allocate_init_locs(robots_of_interest)
         # [region and corresponding locations
         self.label_location = {'r{0}'.format(r): self.type_robot_location[(1, r)] for r in robots_of_interest}
         # [region where robots reside
@@ -121,12 +122,12 @@ class Workspace(object):
             'm4': [(28, 3)],
             'm5': [(6, 1)],
             'm6': [(4, 5)],
-            'r1': [(5, 7)],
-            'r2': [(7, 6)],
-            'r3': [(7, 2)],
-            'r4': [(25, 2)],
-            'r5': [(30, 7)],
-            'r6': [(20, 1)],
+            # 'r1': [(5, 7)],
+            # 'r2': [(7, 6)],
+            # 'r3': [(7, 2)],
+            # 'r4': [(25, 2)],
+            # 'r5': [(30, 7)],
+            # 'r6': [(20, 1)],
             'publicc': [(21, 6), (22, 6), (23, 6)],
             'e': [(21, 7)],
             'p': [(17, 3)],
@@ -154,17 +155,23 @@ class Workspace(object):
         
         return obstacles
 
-    def initialize(self):
+    def allocate_init_locs(self, robots_of_interest):
         type_robot_location = dict()
-        x0 = copy.deepcopy(self.regions['p0'])
+        x_label = [x for region in self.regions.values() for x in region]
+        x_label.extend([x for obs in self.obstacles.values() for x in obs])
+        x_free = []
+        for w in range(1, self.width):
+            for h in range(1, self.height):
+                if (w, h) not in x_label:
+                    x_free.append((w, h))
         # random.seed(1)
         for robot_type in self.type_num.keys():
-            for num in range(self.type_num[robot_type]):
+            for robot in robots_of_interest:
                 while True:
-                    candidate = random.sample(x0, 1)[0]
+                    candidate = random.sample(x_free, 1)[0]
                     if candidate not in type_robot_location.values():
-                        type_robot_location[(robot_type, num)] = candidate
-                        x0.remove(candidate)
+                        type_robot_location[(robot_type, robot)] = candidate
+                        x_free.remove(candidate)
                         break
         return type_robot_location
     

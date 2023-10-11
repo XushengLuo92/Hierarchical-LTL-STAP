@@ -101,7 +101,7 @@ def _dijkstra_multisource(
     while fringe:
         expand_count += 1
         (total_d, state_d, v) = pop(fringe)
-        if args.print:
+        if args.print_search:
             prYellow(f'pop ({total_d}, {state_d}), {v}')
         if args.log:
             with open('log.txt', 'a') as f:
@@ -121,7 +121,7 @@ def _dijkstra_multisource(
             if not at_most_one_non_decomp_states(u.phis_progress, spec_info.leaf_spec_order.keys(), task_hierarchy):
                 raise AssertionError("More than one automaton states are not decompoistion states.")
 
-            if args.print:
+            if args.print_search:
                 print(f'succ {u}')
             # print(f'succ {u}')
 
@@ -143,7 +143,7 @@ def _dijkstra_multisource(
             if u not in seen or vu_total_dist < seen[u][0]:
                 seen[u] = (vu_total_dist, vu_state_dist)
                 push(fringe, (vu_total_dist, vu_state_dist, u))
-                if args.print:
+                if args.print_search:
                     prCyan(f"push ({vu_total_dist}, {vu_state_dist}), {u}")
                 if args.log:
                     with open('log.txt', 'a') as f:
@@ -153,7 +153,8 @@ def _dijkstra_multisource(
                     paths[u] = paths[v] + [u]
     if args.log:
         sys.stdout = original_stdout
-    prYellow(f"Expand node count {expand_count}")
+    if args.print_search:
+        prYellow(f"Expand node count {expand_count}")
     # The optional predecessor and path dictionaries can be accessed
     # by the caller via the pred and paths objects passed as arguments.
     return dist, target

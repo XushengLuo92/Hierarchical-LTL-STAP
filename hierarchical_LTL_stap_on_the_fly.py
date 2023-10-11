@@ -49,12 +49,13 @@ def main(args=None):
         path_to_root[spec] = nx.shortest_path(hierarchy_graph, source="p0", target=spec)[::-1]
     # specs_with_increasing_depth = []
     # for key in sorted(depth_specs.keys()):
-    #     specs_with_increasing_depth.extend(depth_specs[key])    
-    prRed(f"Specs: {specs.hierarchy}")
-    prRed(f"Depth: {depth_specs}")
-    prRed(f"Path to root: {path_to_root}")
-    spec_time = time.time() # Record the end time
-    prGreen("Take {:.2f} secs to generate {} specs".format(spec_time - start_time, hierarchy_graph.number_of_nodes()))
+    #     specs_with_increasing_depth.extend(depth_specs[key])
+    if args.print_step:    
+        prRed(f"Specs: {specs.hierarchy}")
+        prRed(f"Depth: {depth_specs}")
+        prRed(f"Path to root: {path_to_root}")
+        spec_time = time.time() # Record the end time
+        prGreen("Take {:.2f} secs to generate {} specs".format(spec_time - start_time, hierarchy_graph.number_of_nodes()))
     
     # ==========================
     # Step 2: workspace
@@ -66,8 +67,9 @@ def main(args=None):
         plot_workspace(workspace, ax)
         vis_graph(workspace.graph_workspace, f'data/workspace', latex=False, buchi_graph=False)
     workspace_time = time.time() # Record the end time
-    prGreen("Take {:.2f} secs to generate workspace".format(workspace_time - spec_time))    
-    prRed(f"Worksapce has {workspace.graph_workspace.number_of_nodes()} nodes and {workspace.graph_workspace.number_of_edges()} edges")
+    if args.print_step:    
+        prGreen("Take {:.2f} secs to generate workspace".format(workspace_time - spec_time))    
+        prRed(f"Workspace has {workspace.graph_workspace.number_of_nodes()} nodes and {workspace.graph_workspace.number_of_edges()} edges")
                    
 
     # ==========================
@@ -85,13 +87,14 @@ def main(args=None):
     #         task_hierarchy[phi] = Hierarchy(level=index+1, phi=phi, buchi_graph=buchi_graph, decomp_sets=decomp_sets)
     task_hierarchy, leaf_spec_order, first_spec_candidates = construct_task_network(specs, leaf_specs, workspace, args)
     buchi_time = time.time() # Record the end time
-    prGreen("Take {:.2f} secs to generate buchi graph".format(buchi_time - workspace_time))
-    prRed("Buchi graph for {} has {} nodes and {} edges, with decomp sets {}".format(list(task_hierarchy.keys()), 
+    if args.print_step:    
+        prGreen("Take {:.2f} secs to generate buchi graph".format(buchi_time - workspace_time))
+        prRed("Buchi graph for {} has {} nodes and {} edges, with decomp sets {}".format(list(task_hierarchy.keys()), 
                                                                 [h.buchi_graph.number_of_nodes() for h in task_hierarchy.values()],
                                                                 [h.buchi_graph.number_of_edges() for h in task_hierarchy.values()],
                                                                 [h.decomp_sets for h in task_hierarchy.values()],))
-    prRed(f"First spec candidates: {first_spec_candidates}")
-    prRed(f"Order between leaf specs: {leaf_spec_order}")
+        prRed(f"First spec candidates: {first_spec_candidates}")
+        prRed(f"Order between leaf specs: {leaf_spec_order}")
     
     spec_info = SpecInfo(depth_specs=depth_specs, path_to_root=path_to_root,
                          leaf_spec_order=leaf_spec_order)
@@ -133,15 +136,18 @@ def main(args=None):
                                                 for type_robot, x in workspace.type_robot_location.items()])
     cost, optimal_path = multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec_info, args)
     search_time = time.time() # Record the end time
-    prGreen("Take {:.2f} secs to search".format(search_time - buchi_time))
+    if args.print_step:    
+        prGreen("Take {:.2f} secs to search".format(search_time - buchi_time))
 
     # ==========================
     # Step 5: extract robot path
     # ========================== 
-    robot_path, robot_phi, robot_act = generate_simultaneous_exec(optimal_path, workspace, leaf_specs, leaf_spec_order)
+    robot_path, robot_phi, robot_act = generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args)
     # prRed(robot_act)
-    path_time = time.time() # Record the end time
-    prGreen("Take {:.2f} secs to extract path of cost {:.2f}".format(path_time - search_time, cost))
+    if args.print_step:    
+        path_time = time.time() # Record the end time
+        prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
+    prGreen("The path cost {:.2f}".format(cost))
     if args.event:
         event_based_execution(robot_path, robot_phi, leaf_spec_order, first_spec_candidates)
     if args.vis:
