@@ -58,10 +58,11 @@ def build_buchi_graph_and_poset(task_specification, leaf_specs, workspace: Works
             edges.append(buchi_graph.number_of_edges())
             # find decomp nodes for leaf specs
             if phi in leaf_specs:
-                state2labels = BuchiConstructor.get_state2label_seqs(buchi_graph)
-                prCyan(f'State2labels: {state2labels}')
                 # decomp_sets do not include init and accept in the implementation
-                decomp_sets = buchi_constructor.get_all_decomp_nodes(buchi_graph)
+                buchi_constructor.prune_graph(buchi_graph)
+                decomp_sets = BuchiConstructor.get_decomp_set_stap(buchi_graph)
+                # prCyan(f'decomp: {decomp_sets}')
+                # decomp_sets = buchi_constructor.get_all_decomp_nodes(buchi_graph)
                 buchi_constructor.get_dist_to_init_states(buchi_graph)
                 # buchi_graph has been pruned in get_all_decomp_nodes
                 task_hierarchy[phi] = Hierarchy(level=index+1, phi=spec, buchi_graph=buchi_graph, decomp_sets=decomp_sets,

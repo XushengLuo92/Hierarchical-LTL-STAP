@@ -1,10 +1,12 @@
 import os
 import subprocess
 import re
-from sympy.logic.boolalg import to_dnf, And, Or, Not
+from sympy.logic.boolalg import to_dnf, And, Or, Not, Implies
 import networkx as nx
 import numpy as np
 from util import prRed
+import time
+from itertools import product
 
 class BuchiConstructor(object):
     """_summary_
@@ -24,8 +26,10 @@ class BuchiConstructor(object):
         # directory of the program ltl2ba
         dirname = os.path.dirname(__file__)
         # output of the program ltl2ba
+        before = time.time()  
         output = subprocess.check_output(dirname + "/./../ltl2ba -f \"" + formula + "\"", shell=True).decode(
             "utf-8")
+        # prRed("Time to get NBA {:.2f}".format(time.time() - before))
         # find all states/nodes in the buchi automaton
         state_re = re.compile(r'\n(\w+):\n\t')
         state_group = re.findall(state_re, output)
@@ -120,7 +124,7 @@ class BuchiConstructor(object):
         # select initial to accept
         return sorted(init_accept.items(), key=lambda x: x[1])
     
-    def get_subgraph(self, init, accept, buchi_graph):
+    def  get_subgraph(self, init, accept, buchi_graph):
         """
         get the subgraph between init and accept
         """
@@ -334,6 +338,24 @@ class BuchiConstructor(object):
 
         return element_sequences, element_seq_to_path_map, sorted(hasse_graphs.values(), key=lambda x: (x[0][0], -x[0][1]), reverse=True)
     
+    def prune_graph(self, buchi_graph):
+        init_acpt = self.get_init_accept(buchi_graph)
+        edges_to_be_removed = []
+        for pair, _ in init_acpt:
+            init_state, accept_state = pair[0], pair[1]
+            _, _, removed_edge = self.get_subgraph(init_state, accept_state, buchi_graph)
+            edges_to_be_removed.extend(removed_edge)
+        buchi_graph.remove_edges_from(edges_to_be_removed)
+        
+        # remove node with zero indegree
+        nodes_to_be_removed = []
+        for node in buchi_graph.nodes():
+            if 'init' not in node and buchi_graph.in_degree(node) == 0:
+                nodes_to_be_removed.append(node)
+        buchi_graph.remove_nodes_from(nodes_to_be_removed)
+        buchi_graph.graph['init'] = tuple(buchi_graph.graph['init'])
+        buchi_graph.graph['accept'] = tuple(buchi_graph.graph['accept'])
+    
     def get_all_decomp_nodes(self, buchi_graph):
         init_acpt = self.get_init_accept(buchi_graph)
         decomp_sets = set()
@@ -360,16 +382,6 @@ class BuchiConstructor(object):
                             # print(f'idx {idx}, node {path[idx+1]}')
                             decomp_sets.add(path[idx+1])
 
-            # print('element_sequences')
-            # print(element_sequences)
-            # print('element2edge')
-            # print(element2edge)
-            # print('edge2element')
-            # print(edge2element)
-            # print('decomp_sets')
-            # print(decomp_sets)
-            # print('element_seq_to_path_map')
-            # print(element_seq_to_path_map)
         for node in decomp_sets:
             buchi_graph.nodes[node]['color'] = 'red'
         buchi_graph.remove_edges_from(edges_to_be_removed)
@@ -383,6 +395,7 @@ class BuchiConstructor(object):
         buchi_graph.graph['init'] = tuple(buchi_graph.graph['init'])
         buchi_graph.graph['accept'] = tuple(buchi_graph.graph['accept'])
         return decomp_sets
+    
     
     def get_dist_to_init_states(self, buchi_graph):
         """calculate the distance to initial states
@@ -407,7 +420,6 @@ class BuchiConstructor(object):
                         pruned_path.append(path[idx])
                 init_state_dist[state] = len(pruned_path)
             init_state_dists[init] = init_state_dist
-        prRed(f"{buchi_graph.graph['formula']}, {init_state_dists}")
         buchi_graph.graph['dist'] = init_state_dists    
     
     def get_ordered_subtasks(self, buchi_graph):
@@ -468,3 +480,61 @@ class BuchiConstructor(object):
             handle_clause(expr)
         
         return literals
+    
+    @staticmethod
+    def get_state2label_seqs(buchi_graph: nx.DiGraph):
+        states2labels = dict()
+        for state in buchi_graph.nodes():
+            if state in buchi_graph.graph['init'] or state in buchi_graph.graph['accept']:
+                continue
+            labels_init2state = []
+            labels_state2accept = []
+            for init in buchi_graph.graph['init']:
+                for accept in buchi_graph.graph['accept']:
+                    paths_init2state = nx.algorithms.all_simple_paths(buchi_graph, init, state)
+                    paths_state2accept = nx.algorithms.all_simple_paths(buchi_graph, state, accept)
+                    labels_init2state.extend([[buchi_graph.edges[(path[idx], path[idx+1])]['label']
+                                          for idx in range(len(path) - 1)] for path in paths_init2state])
+                    labels_state2accept.extend([[buchi_graph.edges[(path[idx], path[idx+1])]['label']
+                                          for idx in range(len(path) - 1)] for path in paths_state2accept])
+            # reverse the label seqeuence
+            states2labels[state] = [b + a for a, b in product(labels_init2state, labels_state2accept)]
+        return states2labels
+    
+    @staticmethod
+    def satisfaction(buchi_graph: nx.DiGraph, cur_state, trace, run, runs):
+        if not trace:
+            return False
+        tmp_trace = trace.copy()
+        tmp_label = tmp_trace.pop(0)
+        for succ in buchi_graph.succ[cur_state]:
+            test_label = buchi_graph.edges[(cur_state, succ)]['label']
+            if Implies(tmp_label, test_label).simplify() == True:
+                tmp_run = run.copy()
+                tmp_run.append(succ)
+                if succ in buchi_graph.graph['accept']:
+                    runs.append(tmp_run)
+                    return True
+                if BuchiConstructor.satisfaction(buchi_graph, succ, tmp_trace, tmp_run, runs):
+                    return True
+        return False
+    
+    @staticmethod
+    def get_decomp_set_stap(buchi_graph: nx.DiGraph):
+        states2labels = BuchiConstructor.get_state2label_seqs(buchi_graph)
+        decomp_set = set()
+        for state, seqs in states2labels.items():
+            for init in buchi_graph.graph['init']:
+                for seq in seqs:
+                    # seq = [to_dnf('d5 & default'), to_dnf('dispose'), to_dnf('d5 & emptybin'), to_dnf('1')]
+                    run = [init]
+                    runs = []
+                    if BuchiConstructor.satisfaction(buchi_graph, init, seq, run, runs):
+                        decomp_set.add(state)
+                        # prRed(f"state {state}, seq {seq}, run {runs[0]}")
+                        break
+                if state in decomp_set:
+                    break
+        return decomp_set
+            
+                
