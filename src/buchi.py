@@ -208,6 +208,26 @@ class BuchiConstructor(object):
         subgraph.remove_edges_from(removed_edge)
                 
         return removed_edge
+    
+    def prune_clauses(self, buchi_graph):
+        for edge in buchi_graph.edges():
+            if (buchi_graph.edges[edge]['label'] == to_dnf('1')):
+                continue
+            label = buchi_graph.edges[edge]['label']
+            if isinstance(label, Or):           
+                remain_clause = []
+                for clause in label.args:
+                    if len(set(BuchiConstructor.get_positive_literals(clause)).intersection(set(buchi_graph.graph['conflict_aps']))) <= 1:
+                        remain_clause.append(clause)
+                if len(remain_clause) == 0:
+                    # infeasible edges should be removed already by func prune_subgraph_automaton
+                    exit()
+                else:
+                    buchi_graph.edges[edge]['label'] = Or(*remain_clause)
+            else:
+                if len(set(BuchiConstructor.get_positive_literals(label)).intersection(set(buchi_graph.graph['conflict_aps']))) > 1:
+                    # print(label, BuchiConstructor.get_positive_literals(label))
+                    exit()
         
     def find_all_nodes(self, subgraph, init, accept):
         """
@@ -525,8 +545,8 @@ class BuchiConstructor(object):
         decomp_set = set()
         for state, seqs in states2labels.items():
             for init in buchi_graph.graph['init']:
-                for seq in seqs:
-                    # seq = [to_dnf('d5 & default'), to_dnf('dispose'), to_dnf('d5 & emptybin'), to_dnf('1')]
+                for i in range(len(seqs)):
+                    seq = seqs[i]
                     run = [init]
                     runs = []
                     if BuchiConstructor.satisfaction(buchi_graph, init, seq, run, runs):

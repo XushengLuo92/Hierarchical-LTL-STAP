@@ -60,6 +60,8 @@ def build_buchi_graph_and_poset(task_specification, leaf_specs, workspace: Works
             if phi in leaf_specs:
                 # decomp_sets do not include init and accept in the implementation
                 buchi_constructor.prune_graph(buchi_graph)
+                buchi_constructor.prune_clauses(buchi_graph)
+                # print(buchi_graph.number_of_nodes(), buchi_graph.number_of_edges())
                 decomp_sets = BuchiConstructor.get_decomp_set_stap(buchi_graph)
                 # prCyan(f'decomp: {decomp_sets}')
                 # decomp_sets = buchi_constructor.get_all_decomp_nodes(buchi_graph)
