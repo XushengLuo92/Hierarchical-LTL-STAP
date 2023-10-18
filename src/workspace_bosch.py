@@ -17,7 +17,7 @@ class Workspace(object):
     """
     define the workspace where robots reside
     """
-    def __init__(self, domain_file='./src/default_domain.json'):
+    def __init__(self, domain_file='./src/default_domain.json', num_of_robots=6):
         # dimension of the workspace
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
@@ -32,7 +32,7 @@ class Workspace(object):
         self.obstacles = self.allocate_obstacles()
         self.height = 8
         self.width = 31
-        robots_of_interest = {1, 2, 3, 4, 5, 6}
+        robots_of_interest = range(1, num_of_robots+1)
         # self.type_robot_location = {(1, r): self.regions['r'+str(r)][0] for r in robots_of_interest}
         self.type_robot_location = self.allocate_init_locs(robots_of_interest)
         # [region and corresponding locations

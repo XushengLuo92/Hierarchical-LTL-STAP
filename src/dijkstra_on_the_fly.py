@@ -116,7 +116,7 @@ def _dijkstra_multisource(
         if reach_target(v):
             target = v
             break
-        succ = ProductTs.produce_succ(v, task_hierarchy, workspace, spec_info)
+        succ = ProductTs.produce_succ(v, task_hierarchy, workspace, spec_info, args)
         for u, cost in succ:
             if not at_most_one_non_decomp_states(u.phis_progress, spec_info.leaf_spec_order.keys(), task_hierarchy):
                 raise AssertionError("More than one automaton states are not decompoistion states.")
@@ -132,7 +132,7 @@ def _dijkstra_multisource(
             if cost is None:
                 continue
             vu_state_dist = dist[v][1] + cost
-            vu_total_dist = vu_state_dist - args.heuristic_weight * u.progress_metric
+            vu_total_dist = vu_state_dist - args.heuristic_weight * u.progress_metric * int(args.heuristics)
             # skip if phi has been reached
             # if phi in phis:
             #     continue

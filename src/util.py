@@ -68,7 +68,9 @@ def create_parser():
     parser.add_argument('--event', action='store_true', help='Enable event based execution')
     parser.add_argument('--domain_file', default="./src/domain_default.json")
     parser.add_argument('--heuristic_weight', default=0, type=int)
+    parser.add_argument('--num_robots', default=6, type=int)
     parser.add_argument('--domain', default="supermarket", type=str)
+    parser.add_argument('--heuristics',action='store_true', help='Enable heuristics when searching')
     return parser
 
 def plot_workspace(workspace, ax):
