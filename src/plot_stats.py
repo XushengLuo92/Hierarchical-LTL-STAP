@@ -49,8 +49,9 @@ for i in range(bars_per_group):
 ax.set_xticks(inter_group_gap * group_positions + group_width / 3)
 ax.set_xticklabels(['1', '2', '3', r'$1\wedge2$', r'$1\wedge3$', r'$2\wedge3$', r'$1\wedge2\wedge3$'])
 ax.set_xlabel('Scenarios')
-ax.set_ylabel('Runtimes/s')
+ax.set_ylabel('Runtimes [s]')
 ax.legend()
+ax.yaxis.grid(visible=True, which='major', color='gray', linestyle='--')
 
 # Display the plot
 plt.tight_layout()
@@ -107,6 +108,7 @@ plt.savefig('./data/runtimes.png', format='png', dpi=300)
 # ax.set_xlabel('Scenarios')
 # ax.set_ylabel('Cost')
 # ax.legend()
+# ax.yaxis.grid(visible=True, which='major', color='gray', linestyle='--')
 
 # # Display the plot
 # plt.tight_layout()

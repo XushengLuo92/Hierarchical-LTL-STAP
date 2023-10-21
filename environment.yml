@@ -1,0 +1,11 @@
+# run: conda env create --file environment.yml
+name: hierarchical_ltl_stap
+channels:
+  - anaconda
+  - defaults
+dependencies:
+  - python=3.10.12
+  - pip
+  - anaconda::pygraphviz
+  - pip:
+    - -r requirements.txt
