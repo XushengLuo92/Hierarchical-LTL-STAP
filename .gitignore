@@ -1,5 +1,8 @@
-src/__pycache__
+hierarchical_ltl_stap/__pycache__
 data/
 ltl2ba
 test.ipynb
 log.txt
+note.md
+.DS_Store
+hierarchical_ltl_stap.egg-info

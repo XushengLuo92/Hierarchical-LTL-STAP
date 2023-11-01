@@ -1,5 +1,5 @@
 editdistance==0.6.2
-matplotlib==3.7.2
+matplotlib==3.8.1
 networkx==3.1
 numpy==1.25.2
 sympy==1.12

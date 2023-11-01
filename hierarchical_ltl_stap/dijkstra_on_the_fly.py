@@ -1,9 +1,9 @@
 import networkx as nx
 from heapq import heappush, heappop
 from itertools import count
-from util import prCyan, prYellow
-from data_structure import Node, SpecInfo
-from product_ts import ProductTs
+from .util import prCyan, prYellow
+from .data_structure import Node, SpecInfo
+from .product_ts import ProductTs
 from sympy import symbols
 
 import sys

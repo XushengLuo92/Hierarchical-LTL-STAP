@@ -4,7 +4,7 @@ import re
 from sympy.logic.boolalg import to_dnf, And, Or, Not, Implies
 import networkx as nx
 import numpy as np
-from util import prRed
+from .util import prRed
 import time
 from itertools import product
 

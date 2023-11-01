@@ -1,13 +1,13 @@
-from data_structure import Hierarchy, PrimitiveSubtask, CompositeSubtask, PrimitiveSubtaskId
-from buchi import BuchiConstructor
-from util import print_subtask_info, print_global_partial_order, \
+from .data_structure import Hierarchy, PrimitiveSubtask, CompositeSubtask, PrimitiveSubtaskId
+from .buchi import BuchiConstructor
+from .util import print_subtask_info, print_global_partial_order, \
     print_primitive_subtasks_with_identifer, vis_graph, prCyan, prRed
 from collections import namedtuple
 import networkx as nx
 from sympy import to_dnf
 import os
 from itertools import product
-from workspace_supermarket import Workspace
+from .workspace_supermarket import Workspace
     
 def is_primitive(label, leaf_specs):
     # task is primitive if exist literal with "location" smaller than 100

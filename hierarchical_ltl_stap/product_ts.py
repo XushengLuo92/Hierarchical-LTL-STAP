@@ -2,9 +2,9 @@
 from itertools import product
 import networkx as nx
 from sympy import symbols
-from buchi import BuchiConstructor
-from data_structure import Node
-from workspace_supermarket import Workspace
+from .buchi import BuchiConstructor
+from .data_structure import Node
+from .workspace_supermarket import Workspace
 import copy
 
 class ProductTs(object):

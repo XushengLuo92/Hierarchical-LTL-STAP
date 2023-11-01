@@ -6,7 +6,7 @@
             "type": "python",
             "request": "launch",
             "program": "hierarchical_LTL_stap_on_the_fly.py",
-            "args": ["--task=nav", "--case=16", "--vis", "--dot", "--heuristic_weight=100", "--domain_file=/Users/xushengluo/Documents/Code/Hierarchical-LTL-STAP/src/domain_bosch.json", "--domain=bosch"],
+            "args": ["--task=nav", "--case=15", "--vis", "--dot", "--heuristic_weight=100", "--domain_file=/Users/xushengluo/Documents/Code/Hierarchical-LTL-STAP/hierarchical_ltl_stap/domain_bosch.json", "--domain=bosch"],
             "python": "/Users/xushengluo/miniconda3/envs/hierarchical_ltl/bin/python",
             "console": "integratedTerminal"
         }

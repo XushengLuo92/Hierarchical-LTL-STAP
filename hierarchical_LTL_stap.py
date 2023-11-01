@@ -2,16 +2,16 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-from specification import Specification
-from buchi import BuchiConstructor
-from util import create_parser, vis_graph, plot_supermarket, prGreen, prRed, prYellow
-from workspace_supermarket import Workspace
-from product_ts import ProductTs
+from hierarchical_ltl_stap.specification import Specification
+from hierarchical_ltl_stap.buchi import BuchiConstructor
+from hierarchical_ltl_stap.util import create_parser, vis_graph, plot_supermarket, prGreen, prRed, prYellow
+from hierarchical_ltl_stap.workspace_supermarket import Workspace
+from hierarchical_ltl_stap.product_ts import ProductTs
 import networkx as nx 
 from itertools import product
-from dijkstra import multi_source_multi_targets_dijkstra
+from hierarchical_ltl_stap.dijkstra import multi_source_multi_targets_dijkstra
 import matplotlib.pyplot as plt
-from vis import vis
+from hierarchical_ltl_stap.vis import vis
 
 import time
 from collections import namedtuple

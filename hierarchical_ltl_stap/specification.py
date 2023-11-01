@@ -1,5 +1,5 @@
 import networkx as nx 
-from util import vis_graph
+from .util import vis_graph
 
 task1 = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)  && \
             <> (d5 && emptybin && X (d5 && default))"
@@ -391,6 +391,16 @@ class Specification():
             <> (p && carry U (d7 && X !carry)) && \
             <> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
             self.hierarchy.append(level_two)
+        
+        elif case == 23:
+            level_one = dict()
+            level_one["p0"] = "<> p100"
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two['p100'] = "<> (m1 && <> m2)"
+            self.hierarchy.append(level_two)
+            
             
         return self.hierarchy
     

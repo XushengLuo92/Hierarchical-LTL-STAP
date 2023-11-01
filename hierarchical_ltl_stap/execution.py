@@ -1,5 +1,5 @@
 import copy
-from util import prYellow, prRed
+from .util import prYellow, prRed
 
 def generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args, simultaneous=True):
     if simultaneous:

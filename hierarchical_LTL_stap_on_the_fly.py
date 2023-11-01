@@ -1,20 +1,16 @@
-import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+from hierarchical_ltl_stap.specification import Specification
+from hierarchical_ltl_stap.buchi import BuchiConstructor
+from hierarchical_ltl_stap.util import create_parser, vis_graph, plot_workspace, prGreen, prRed, prYellow, depth_to_leaf
 
-from specification import Specification
-from buchi import BuchiConstructor
-from util import create_parser, vis_graph, plot_workspace, prGreen, prRed, prYellow, depth_to_leaf
-
-from product_ts import ProductTs
+from hierarchical_ltl_stap.product_ts import ProductTs
 import networkx as nx 
 from itertools import product
-from dijkstra_on_the_fly import multi_source_multi_targets_dijkstra
+from hierarchical_ltl_stap.dijkstra_on_the_fly import multi_source_multi_targets_dijkstra
 import matplotlib.pyplot as plt
-from vis import vis
-from data_structure import Node, SpecInfo
-from task_network import construct_task_network
-from execution import generate_simultaneous_exec, event_based_execution
+from hierarchical_ltl_stap.vis import vis
+from hierarchical_ltl_stap.data_structure import Node, SpecInfo
+from hierarchical_ltl_stap.task_network import construct_task_network
+from hierarchical_ltl_stap.execution import generate_simultaneous_exec, event_based_execution
 
 import time
 
@@ -22,9 +18,9 @@ def main(args=None):
     parser = create_parser()
     args = parser.parse_known_args()[0]
     if args.domain == "supermarket":
-        from workspace_supermarket import Workspace
+        from hierarchical_ltl_stap.workspace_supermarket import Workspace
     elif args.domain == "bosch":
-        from workspace_bosch import Workspace
+        from hierarchical_ltl_stap.workspace_bosch import Workspace
 
     start_time = time.time() # Record the start time
    

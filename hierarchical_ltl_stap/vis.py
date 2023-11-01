@@ -4,7 +4,7 @@ from matplotlib.collections import PatchCollection
 import numpy as np
 import matplotlib.animation as anim
 import matplotlib.patches as mpatches
-from util import plot_workspace
+from .util import plot_workspace
 
 class RobotPath:
     def __init__(self, x, color, robot_path, robot_act, robot_pre_suf_time, workspace, ap):
