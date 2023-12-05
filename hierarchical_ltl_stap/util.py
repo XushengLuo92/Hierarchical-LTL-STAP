@@ -71,6 +71,9 @@ def create_parser():
     parser.add_argument('--num_robots', default=6, type=int)
     parser.add_argument('--domain', default="supermarket", type=str)
     parser.add_argument('--heuristics',action='store_true', help='Enable heuristics when searching')
+    parser.add_argument('--heuristics_order',action='store_true', help='Enable heuristics of temporal order when searching')
+    parser.add_argument('--heuristics_switch',action='store_true', help='Enable heuristics of essential switch when searching')
+    parser.add_argument('--heuristics_automaton',action='store_true', help='Enable heuristics of automaton when searching')
     return parser
 
 def plot_workspace(workspace, ax):
@@ -171,8 +174,8 @@ def plot_bosch_helper(ax, obj, obj_label):
         # ax.text(np.mean(x) - 0.2, np.mean(y) - 0.2, r'${}_{{{}}}$'.format(key[0], key[1:]), fontsize=12)
         if 'obs' not in key and 'r' not in key and 'public' not in key:
             ax.text(np.mean(x)-0.4, np.mean(y)-0.2, r'${}_{{{}}}$'.format(key[0], key[1:]), fontsize=6)
-        if 'public' in key:
-            ax.text(np.mean(x)-0.4, np.mean(y)-0.2, r'${}$'.format(key), fontsize=6)
+        if 'publicc' in key:
+            ax.text(np.mean(x)-0.4, np.mean(y)-0.2, r'$public$', fontsize=6)
             
         # if 'obs' not in key and 'r' in key:
         #     ax.text(np.mean(x)-0.4, np.mean(y)-0.2, key, fontsize=12)

@@ -98,6 +98,7 @@ def _dijkstra_multisource(
         push(fringe, (0, 0, source))
     target = None
     expand_count = 0
+    use_heuristics = args.heuristics or args.heuristics_automaton
     while fringe:
         expand_count += 1
         (total_d, state_d, v) = pop(fringe)
@@ -132,7 +133,7 @@ def _dijkstra_multisource(
             if cost is None:
                 continue
             vu_state_dist = dist[v][1] + cost
-            vu_total_dist = vu_state_dist - args.heuristic_weight * u.progress_metric * int(args.heuristics)
+            vu_total_dist = vu_state_dist - args.heuristic_weight * u.progress_metric * int(use_heuristics)
             # skip if phi has been reached
             # if phi in phis:
             #     continue

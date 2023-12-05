@@ -325,7 +325,8 @@ def construct_task_network(task_specification, leaf_specs, workspace: Workspace,
         non_reachable_nodes = set(leaf_spec_network.nodes()) - all_connected_nodes - {leaf_spec_a}
         leaf_spec_order[leaf_spec_a] = reachable_from_node.union(non_reachable_nodes)
 
-    if not args.heuristics:
+    use_heuristics = args.heuristics or args.heuristics_order
+    if not use_heuristics:
         leaf_spec_order = {leaf_spec: set(leaf_specs) - {leaf_spec} for leaf_spec in leaf_specs}
         first_spec_candidates = leaf_specs
     return task_hierarchy, leaf_spec_order, first_spec_candidates

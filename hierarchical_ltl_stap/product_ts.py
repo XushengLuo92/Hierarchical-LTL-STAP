@@ -207,7 +207,8 @@ class ProductTs(object):
                                                                 ProductTs.update_progress_metric(task_hierarchy, updated_phis_progress)), 
                                                             task_hierarchy, path_to_root[node.phi][1:], weight, succ)
                             # update essentail x of type_robot
-                            if x == next_x and q != next_q and args.heuristics:
+                            use_heuristics = args.heuristics or args.heuristics_switch
+                            if x == next_x and q != next_q and use_heuristics:
                                 # NOTE consider transition (phi_1, r, x, q_1) -> (phi_2, r, x, q_2) -> (phi_2, r', x', q_2)
                                 ProductTs.essential_phi_type_robot_x.update({(other_phi, node.type_robot, x, other_q) for other_phi in leaf_specs
                                                     for other_q in set(task_hierarchy[other_phi].buchi_graph.graph['init']) | \
@@ -295,7 +296,8 @@ class ProductTs(object):
             return []
         next_type_robot = type_robots[idx + 1]
         # x is not in desired areas that lead to decomp state; different from IJRR paper
-        if args.heuristics:
+        use_heuristics = args.heuristics or args.heuristics_switch
+        if use_heuristics:
             if (node.phi, node.type_robot, node.type_robots_x[node.type_robot], node.phis_progress[node.phi]) not in ProductTs.essential_phi_type_robot_x or \
             (node.phi, next_type_robot, node.type_robots_x[next_type_robot], node.phis_progress[node.phi]) not in ProductTs.essential_phi_type_robot_x:
                 return []
@@ -328,15 +330,16 @@ class ProductTs(object):
         # in case of precedence relation, only connect accept to init
         # in case of independence relation, connect all decomp states except init to init   
         # for the same robot, connect from one accept node of a team model to every init node of another team model with target location
+        use_heuristics = args.heuristics or args.heuristics_switch
         action = 'inter-spec-i'
-        if q in buchi_graph.graph['accept'] and (not args.heuristics or (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x):
+        if q in buchi_graph.graph['accept'] and (not use_heuristics or (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x):
             # constrain the set of states that can be accepting product states
             # update buchi state
             for leaf_phi in leaf_phis_order[node.phi]: # only connect when precedence relation exists
                 leaf_buchi_graph = task_hierarchy[leaf_phi].buchi_graph
                 leaf_q = node.phis_progress[leaf_phi]
                 if leaf_q in leaf_buchi_graph.graph['init'] and \
-                    (not args.heuristics or (leaf_phi, node.type_robot, x, node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x):
+                    (not use_heuristics or (leaf_phi, node.type_robot, x, node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x):
                     succ.append([Node(leaf_phi, node.type_robot, action, 'x', node.type_robots_x, 
                                       node.phis_progress, set(),
                                       ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0])
@@ -344,14 +347,14 @@ class ProductTs(object):
         # for the same robot, if two phis are independent, connect from one decomp node of a team model to the current decomp node (if so) of another team model
         hierarchy = task_hierarchy[node.phi]   
         if (q in hierarchy.decomp_sets or q in buchi_graph.graph['accept'] ) and \
-            (not args.heuristics or (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x):
+            (not use_heuristics or (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x):
             for leaf_phi in leaf_phis_order[node.phi]:
                 if node.phi in leaf_phis_order[leaf_phi]:
                     leaf_buchi_graph = task_hierarchy[leaf_phi].buchi_graph
                     leaf_q = node.phis_progress[leaf_phi]
                     leaf_hierarchy = task_hierarchy[leaf_phi]
                     if leaf_q in (leaf_hierarchy.decomp_sets | set(leaf_hierarchy.buchi_graph.graph['init'])) and \
-                        (not args.heuristics or 
+                        (not use_heuristics or 
                          (leaf_phi, node.type_robot, node.type_robots_x[node.type_robot], node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x):
                         succ.append([Node(leaf_phi, node.type_robot, action, 'x', node.type_robots_x, 
                                           node.phis_progress, set(),
@@ -360,7 +363,7 @@ class ProductTs(object):
         # connect from its accept node of a team model to every decomp node of the first robot's team model with corresponding location                
         action = 'inter-spec-ii'
         type_robots = list(workspace.type_robot_location.keys())
-        if q in buchi_graph.graph['accept'] and (not args.heuristics or (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x):
+        if q in buchi_graph.graph['accept'] and (not use_heuristics or (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x):
                 # constrain the set of states that can be accepting product states
                 # update buchi state
                 for leaf_phi in leaf_phis_order[node.phi]:
@@ -369,7 +372,7 @@ class ProductTs(object):
                     decomp_set = hierarchy.decomp_sets | set(leaf_buchi_graph.graph['init']) | set(leaf_buchi_graph.graph['accept'])
                     leaf_q = node.phis_progress[leaf_phi]
                     if leaf_q in decomp_set and \
-                        (not args.heuristics or 
+                        (not use_heuristics or 
                          (leaf_phi, type_robots[0], node.type_robots_x[type_robots[0]], node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x):
                         succ.append([Node(leaf_phi, type_robots[0], action, 'x', node.type_robots_x, 
                                           node.phis_progress, set(),

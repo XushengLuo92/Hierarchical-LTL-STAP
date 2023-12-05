@@ -23,7 +23,7 @@ class Workspace(object):
         # self.width = int(sys.argv[1])
         # n = int(sys.argv[2])
         # n = 4
-        self.type_num = {1: 6}  # single-task robot
+        self.type_num = {1: num_of_robots}  # single-task robot
         # self.num_of_regions = 8
         # self.num_of_obstacles = 6
         self.occupied = []
