@@ -145,7 +145,7 @@ def main(args=None):
         prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
     prGreen("The path cost {:.2f}".format(cost))
     if args.event:
-        event_based_execution(robot_path, robot_phi, leaf_spec_order, first_spec_candidates)
+        event_based_execution(robot_path, robot_phi, robot_act, leaf_spec_order, first_spec_candidates)
     if args.vis:
         vis(args.task, args.case, workspace, robot_path, {robot: [len(path)] * 2 for robot, path in robot_path.items()}, [], robot_act)
         vis_time = time.time() # Record the end time

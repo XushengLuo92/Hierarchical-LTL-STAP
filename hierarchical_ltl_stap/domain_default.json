@@ -2,14 +2,13 @@
   "robot_actions": {
     "default": {
       "preconditions": [[]],
-      "effects": []
+      "effects": ["default"]
     }
   },
   "env_actions": {},
   // heteregeneous robots
   "robot_group": {
-    "1" : ["default"],
-    "2" : ["default"]
+    "1" : ["default"]
   },
   "action_model": {
     "nodes": ["x"],

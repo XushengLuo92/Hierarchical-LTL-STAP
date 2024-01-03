@@ -17,13 +17,13 @@ class Workspace(object):
     """
     define the workspace where robots reside
     """
-    def __init__(self, domain_file='./src/default_domain.json'):
+    def __init__(self, domain_file='./src/default_domain.json', num_of_robots=6):
         # dimension of the workspace
-        # self.length = int(sys.argv[1])
-        # self.width = int(sys.argv[1])
+        self.length = 15 # 9   # length
+        self.width = 40 # 9   # width
         # n = int(sys.argv[2])
         # n = 4
-        self.type_num = {1: 2, 2: 2}   # single-task robot
+        self.type_num = {1: num_of_robots}  # single-task robot
         self.num_of_regions = 8
         self.num_of_obstacles = 6
         self.occupied = []
@@ -151,68 +151,80 @@ class Workspace(object):
     def allocate_region_dars(self):
         regions = []        
         # ICRA
-        shelf_width_x = 1
-        shelf_length_y = 1
-        start_dock_x = 0
-        dock_width_x = 2
-        dock_length_y = 1
-        first_shelf_to_dock_x = 0
-        first_shelf_to_dock_y = 1
+        shelf_width_x = 2
+        shelf_length_y = 5
+        start_charging_station_x = 2
+        charging_station_width_x = 4
+        charging_station_length_y = 6
+        first_shelf_to_charging_station_x = 2
+        first_shelf_to_charging_station_y = 2
         inter_shelf_x = 3
-        depot_to_last_shelf_x = 1
-        depot_width_x = 2
-        depot_length_y = 2
+        depot_to_last_shelf_x = 2
+        depot_width_x = 4
+        depot_length_y = 4
         
         # p0 dock
         # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics 
         # p7 packing area
-        regions.append(list(itertools.product(range(start_dock_x, start_dock_x + dock_width_x), range(0, dock_length_y)))) 
-        for i in range(self.n_shelf):
-            regions.append(list(itertools.product([dock_width_x + first_shelf_to_dock_x + 
+        n_shelf = 6
+        regions.append(list(itertools.product(range(start_charging_station_x, start_charging_station_x + charging_station_width_x), range(0, charging_station_length_y)))) 
+        for i in range(n_shelf):
+            regions.append(list(itertools.product([charging_station_width_x + first_shelf_to_charging_station_x + 
                                                     i * (shelf_width_x + inter_shelf_x) - 1,
-                                                    dock_width_x + first_shelf_to_dock_x + 
+                                                    charging_station_width_x + first_shelf_to_charging_station_x + 
                                                     i * (shelf_width_x + inter_shelf_x) + shelf_width_x], 
-                                                range(dock_length_y + first_shelf_to_dock_y,
-                                                    dock_length_y + first_shelf_to_dock_y + shelf_length_y))))
+                                                range(charging_station_length_y + first_shelf_to_charging_station_y,
+                                                    charging_station_length_y + first_shelf_to_charging_station_y + shelf_length_y))))
             
             
-        regions[0].extend(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
-                                                    (self.n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x,
-                                                        dock_width_x + first_shelf_to_dock_x +
-                                                    (self.n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x + depot_width_x),
+        regions.append(list(itertools.product(range(charging_station_width_x + first_shelf_to_charging_station_x + 
+                                                    (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x,
+                                                        charging_station_width_x + first_shelf_to_charging_station_x +
+                                                    (n_shelf - 1) * (shelf_width_x + inter_shelf_x) + shelf_width_x + depot_to_last_shelf_x + depot_width_x),
                                             range(0, depot_length_y))))
+
         return regions
 
     def allocate_obstacle_dars(self):
         obstacles = []
         # ICRA
-        shelf_width_x = 1
-        shelf_length_y = 1
-        dock_width_x = 2
-        dock_length_y = 1
-        first_shelf_to_dock_x = 0
-        first_shelf_to_dock_y = 1
+        shelf_width_x = 2
+        shelf_length_y = 5
+        charging_station_width_x = 4
+        charging_station_length_y = 6
+        first_shelf_to_charging_station_x = 2
+        first_shelf_to_charging_station_y = 2
         inter_shelf_x = 3
         
         # p0 charging station
         # p1 grocery p2 health p3 outdors p4 pet p5 furniture p6 electronics
-        for i in range(self.n_shelf):
-            obstacles.append(list(itertools.product(range(dock_width_x + first_shelf_to_dock_x + 
+        n_shelf = 6
+        for i in range(n_shelf):
+            obstacles.append(list(itertools.product(range(charging_station_width_x + first_shelf_to_charging_station_x + 
                                                         i * (shelf_width_x + inter_shelf_x),
-                                                        dock_width_x + first_shelf_to_dock_x + 
+                                                        charging_station_width_x + first_shelf_to_charging_station_x + 
                                                         i * (shelf_width_x + inter_shelf_x) + shelf_width_x), 
-                                                  range(dock_length_y + first_shelf_to_dock_y,
-                                                        dock_length_y + first_shelf_to_dock_y + shelf_length_y))))
+                                                  range(charging_station_length_y + first_shelf_to_charging_station_y,
+                                                        charging_station_length_y + first_shelf_to_charging_station_y + shelf_length_y))))
             
 
         return obstacles
+
+    # def initialize(self):
+    #     # TRO version 1
+    #     # type_robot_location = {(1, 0): (7, 0), (1, 1): (7, 1), (1, 2): (8, 1),
+    #     #                        (2, 0): (6, 0), (2, 1): (6, 1)}
+    #     # TRO version 2
+    #     type_robot_location = {(1, 0): (8, 0), (1, 1): (8, 1), (1, 2): (9, 1),
+    #                            (2, 0): (8, 9), (2, 1): (9, 9)}
+    #     return type_robot_location
 
     def initialize(self):
         type_robot_location = dict()
         x0 = copy.deepcopy(self.regions['p0'])
         # random.seed(1)
         for robot_type in self.type_num.keys():
-            for num in range(1, 1 + self.type_num[robot_type]):
+            for num in range(self.type_num[robot_type]):
                 while True:
                     candidate = random.sample(x0, 1)[0]
                     if candidate not in type_robot_location.values():
