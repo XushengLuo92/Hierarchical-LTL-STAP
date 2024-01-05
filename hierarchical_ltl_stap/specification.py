@@ -398,9 +398,9 @@ class Specification():
             self.hierarchy.append(level_one)
             
             level_two = dict()
-            level_two['p100'] = "<> (m1 && <> m2)"
+            level_two['p100'] = "<> (apple37512a22 && carry && <> (bowl2813285c && camera))"
             self.hierarchy.append(level_two)
-            
+        
             
         return self.hierarchy
     

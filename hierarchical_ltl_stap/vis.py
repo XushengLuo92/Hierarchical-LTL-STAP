@@ -120,10 +120,10 @@ def vis(task, case, workspace, robot_path, robot_pre_suf_time, ap, robot_act):
     plot_workspace(workspace, ax)
 
     time_template = 'time = %.1fs'
-    time_text = ax.text(0.01, 1.4, time_template % cls_robot_path.elapse_time, transform=ax.transAxes)
+    time_text = ax.text(0.01, 1.05, time_template % cls_robot_path.elapse_time, transform=ax.transAxes)
     
     ap_template = '{0}'
-    ap_text = ax.text(0.5, 1.4, ap_template.format('{0}'.format(".")), color='red', weight='bold',  transform=ax.transAxes)
+    ap_text = ax.text(0.5, 1.05, ap_template.format('{0}'.format(".")), color='red', weight='bold',  transform=ax.transAxes)
     cls_robot_path.label(workspace.type_robot_location)
     groups = ["type1", "type2", "type3"]
     particles = ax.scatter(cls_robot_path.x[:, 0], cls_robot_path.x[:, 1], c=cls_robot_path.color, s=30, cmap="hsv", vmin=0, vmax=1)

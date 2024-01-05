@@ -21,6 +21,8 @@ def main(args=None):
         from hierarchical_ltl_stap.workspace_supermarket import Workspace
     elif args.domain == "bosch":
         from hierarchical_ltl_stap.workspace_bosch import Workspace
+    elif args.domain == "ai2thor":
+        from hierarchical_ltl_stap.workspace_ai2thor import Workspace
 
     start_time = time.time() # Record the start time
    

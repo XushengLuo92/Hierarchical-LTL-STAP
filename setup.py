@@ -15,7 +15,7 @@ setup(
     ],
     author='Xusheng Luo',
     author_email='xusheng.luo2@gmail.com',
-    description='Cource code for the paper "Robotic Planning under Hierarchical Temporal Logic Specifications"',
+    description='Cource code for the paper "Simultaneous Task Allocation and Planning for Multi-Robots under Hierarchical Temporal Logic Specifications"',
     license='MIT',
     url='https://github.com/XushengLuo92/Hierarchical-LTL-STAP',
 )
