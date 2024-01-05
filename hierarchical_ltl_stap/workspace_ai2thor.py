@@ -6,10 +6,9 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 import random
-import sys
 import itertools
 import pickle
-import copy
+import re
 import json
 import subprocess
 
@@ -17,7 +16,7 @@ class Workspace(object):
     """
     define the workspace where robots reside
     """
-    def __init__(self, domain_file='./src/default_domain.json', num_of_robots=6):
+    def __init__(self, leaf_specs, num_of_robots=6):
         # dimension of the workspace
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
@@ -42,7 +41,7 @@ class Workspace(object):
 
         self.graph_workspace = nx.Graph()
         self.build_graph()
-        self.domain = self.get_domain(domain_file)
+        self.domain = self.generate_domain(leaf_specs)
         self.load_action_model()
 
     def reachable(self, location, obstacles):
@@ -138,15 +137,38 @@ class Workspace(object):
                         break
         return type_robot_location
     
-    def get_domain(self, domain_file):
-        def remove_comments(json_str):
-            return '\n'.join([line for line in json_str.split('\n') if not line.strip().startswith('//')])
-
-        with open(domain_file, 'r') as f:
-            data = f.read()
-
-        cleaned_data = remove_comments(data)
-        return json.loads(cleaned_data)
+    def generate_domain(self, leaf_specs):
+        domain = dict()
+        domain['robot_actions'] = dict()
+        domain['env_actions'] = dict()
+        domain['robot_group'] = dict()
+        domain['action_model'] = {'nodes': [], 'edges': []}
+        
+        pattern = r'\b\w*000\w*\b'
+        actions = set(['default'])
+        for leaf_spec in leaf_specs:
+            actions.update(set(re.findall(pattern, leaf_spec)))
+        num_robot_type = len(self.type_num.keys())
+        domain['robot_group'] = {str(i): list(actions) for i in range(1, num_robot_type+1)}
+        domain['action_model']['nodes'] = list(actions) + ['x']
+        for act in actions:
+            obj_pattern = r'000(.*)'
+            # Find the match
+            match = re.search(obj_pattern, act)
+            obj = match.group(1) if match else None
+            if act == 'default':
+                domain['robot_actions']['default'] = {
+                "preconditions": [[]],
+                "effects": ['default']}
+                continue
+            else:
+                domain['robot_actions'][act] = {
+                "preconditions": [[]],
+                "effects": [act]}
+            domain['action_model']['edges'].append({"from": 'x', "to": act, "label": act})
+            domain['action_model']['edges'].append({"from": act, "to": 'x', "label": "default"})
+        domain['action_model']['edges'].append({"from": 'x', "to": 'x', "label": "default"})
+        return domain
         
     def get_state_based_world_state(self, location, world_state):
         """generate observations

@@ -58,7 +58,11 @@ def main(args=None):
     # ==========================
     # Step 2: workspace
     # ==========================
-    workspace = Workspace(args.domain_file, args.num_robots)
+    if args.domain == "supermarket" or args.domain == "bosch":
+        workspace = Workspace(args.domain_file, args.num_robots)
+    elif args.domain == "ai2thor":
+        leaf_specs_ltl = [specs.hierarchy[-1][leaf_spec] for leaf_spec in leaf_specs]
+        workspace = Workspace(leaf_specs_ltl, args.num_robots)
     if args.vis:
         fig = plt.figure()
         ax = fig.add_subplot(111)
