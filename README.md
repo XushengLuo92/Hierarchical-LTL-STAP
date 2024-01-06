@@ -26,3 +26,7 @@ Write the following HTN into JOSN format. Each subtask is mapped into a JSON blo
 where "Task_1" denotes the hierarchy level, "task_id" is the unique id, "task_description" summarize the task along with all of its subtasks, "task_relied_sentence" is the part of sentence corresponding to this task_1, "temporal_relation_of_subtasks" denote the temporal relation between this task_1 with other tasks that have the same hierarchy level in HTN, "subtasks_of_this_node" is the set of subtasks that "Task_1" is decomposed into, where each subtask use the identical JSON block. 
 Here is another example task" You are suggested to help in shopping, you will pick beef, chicken and apples if you find them. if you pick beef, you are suggested to pick a carrots. if there is no beef, you will pick egges and a potato. Finally, you will have to check out and Place what you picked in three bags according a classification of meat, vegetables and fruits"
 Translate it into HTN and JSON format.
+
+```bash
+python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=23 --heuristics --heuristic_weight=100 --domain=ai2thor --num_robots=2 --vis --print_step
+```
