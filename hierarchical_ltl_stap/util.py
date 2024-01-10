@@ -54,7 +54,7 @@ def create_parser():
     Returns:
         _type_: _description_
     """
-    parser = argparse.ArgumentParser(description='FM')
+    parser = argparse.ArgumentParser(description='LTL_STAP')
     parser.add_argument('--task', default="man", type=str)
     parser.add_argument('--case', default=0, type=int)
     parser.add_argument('--vis', action='store_true', help='Enable visualization')
