@@ -122,3 +122,13 @@ python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=21 --heuristics --h
   year={2024}
 }
 ```
+
+# Related work
+```
+@article{luo2023robotic,
+  title={Decomposition-based Hierarchical Task Allocation and Planning for Multi-Robots under Hierarchical Temporal Logic Specifications},
+  author={Luo, Xusheng and Xu, Shaojun and Liu, Ruixuan and Liu, Changliu},
+  journal={arXiv preprint arXiv:2308.10393},
+  year={2023}
+}
+```
