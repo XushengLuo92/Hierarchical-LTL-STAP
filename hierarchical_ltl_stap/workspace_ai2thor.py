@@ -11,12 +11,13 @@ import pickle
 import re
 import json
 import subprocess
+import typing
 
 class Workspace(object):
     """
     define the workspace where robots reside
     """
-    def __init__(self, leaf_specs, num_of_robots=6):
+    def __init__(self, leaf_specs, num_of_robots=6,regions:typing.Optional[dict] = None,obstacles:typing.Optional[dict] = None):
         # dimension of the workspace
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
@@ -27,8 +28,13 @@ class Workspace(object):
         # self.num_of_obstacles = 6
         self.occupied = []
         self.n_shelf = 6
-        self.regions = self.allocate_regions()
-        self.obstacles = self.allocate_obstacles()
+        self.regions = regions
+        if isinstance(self.regions,type(None)):
+            self.set_regions(self.allocate_regions())
+        # self.allocate_regions()
+        self.obstacles = obstacles
+        if isinstance(self.obstacles,type(None)):
+            self.set_obstacles(self.allocate_obstacles())
         self.height = 25
         self.width = 21
         robots_of_interest = range(1, num_of_robots+1)
@@ -98,17 +104,19 @@ class Workspace(object):
                        scale_units='xy', angles='xy', scale=1, label='prefix path')
 
             plt.savefig('img/path.png', bbox_inches='tight', dpi=600)
-
+    def set_regions(self,regions):
+        self.regions=regions
     def  allocate_regions(self):
         regions = {}
-        with open('/Users/xushengluo/Documents/Code/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
+        with open('/home/user/xsj/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
             regions = pickle.load(file)
             regions = pickle.load(file)
 
         return regions
-
+    def set_obstacles(self,obstacles):
+        self.obstacles=obstacles
     def allocate_obstacles(self):
-        with open('/Users/xushengluo/Documents/Code/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
+        with open('/home/user/xsj/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
             data = pickle.load(file)
         obstacles = {
             'obs': data['obstacle']
