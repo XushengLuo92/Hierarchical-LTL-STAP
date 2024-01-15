@@ -138,6 +138,7 @@ class eventExec():
     # change the interaction methods from hand in input into a request-respond way
     def __init__(self,robot_path_ori, robot_phi, robot_act_ori, leaf_spec_order, first_spec_candidates,type='no interact') -> None:
         pass
+        self.whole_task_finished:bool=False
         self.current_exec_subtasks = []
         self.current_exec_robots = []
         self.current_exec_phis = []
@@ -157,8 +158,9 @@ class eventExec():
             self.event_based_execution_no_interaction()
         else:
             # otherwise arbitary
-            self.event_based_execution_init()
-    
+            pass
+            # self.event_based_execution_init()
+        
     def event_based_execution_init(self):
 
         # init
@@ -184,8 +186,12 @@ class eventExec():
         prRed(f"current_exec_subtasks: {self.current_exec_subtasks}")
         prRed(f"current_exec_phis: {self.current_exec_phis}")
         prRed(f"current_exec_act: {self.current_exec_act}")
-
-    def event_based_execution_request_new(self,finished_robot):
+        if self.current_exec_robots:
+            self.whole_task_finished=False
+        else:
+            self.whole_task_finished=True
+        return self.whole_task_finished,(self.current_exec_robots,self.current_exec_subtasks,self.current_exec_phis,self.current_exec_act)
+    def event_based_execution_request_new(self,finished_robot:int):
         prRed(f"finished robot {finished_robot}")
         # determine next subtask
         robot_idx = self.current_exec_robots.index(finished_robot)
@@ -238,7 +244,11 @@ class eventExec():
         prRed(f"current_exec_subtasks: {self.current_exec_subtasks}")
         prRed(f"current_exec_phis: {self.current_exec_phis}")
         prRed(f"current_exec_act: {self.current_exec_act}")
-                
+        if self.current_exec_robots:
+            self.whole_task_finished=False
+        else:
+            self.whole_task_finished=True
+        return self.whole_task_finished,(self.current_exec_robots,self.current_exec_subtasks,self.current_exec_phis,self.current_exec_act     )
         
     def event_based_execution_no_interaction(self):
         self.event_based_execution_init()
