@@ -124,7 +124,7 @@ class Workspace(object):
         with open('/home/user/xsj/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
             data = pickle.load(file)
         obstacles = {
-            'obs': data['obstacle']
+            'obs': data['obs']
         }
         
         return obstacles
@@ -154,7 +154,7 @@ class Workspace(object):
                 type_robot_location[(robot_type, robot)] = self.robot_pos[robot-1]
                 # robots_of_interest 是1..N robot pos 是0..N-1
 
-                
+
                 # while True:
                 #     candidate = random.sample(x_free, 1)[0]
                 #     if candidate not in type_robot_location.values():
