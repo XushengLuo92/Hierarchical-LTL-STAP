@@ -7,7 +7,7 @@ CompositeSubtask = namedtuple('CompositeSubtask', ['subtask2element'])
 PrimitiveSubtaskId = namedtuple('PrimitiveSubtaskId', ['parent', 'element'])
 
 class Node:
-    def __init__(self, phi, type_robot, action, action_state, type_robots_x, phis_progress, world_state, progress_metric):
+    def __init__(self, phi, type_robot, action, action_state, type_robots_x, phis_progress, world_state, progress_metric, obj_history):
         # rescue {(1, 0): (1, 0), (1, 1): (23, 0), (2, 0): (25, 1), (2, 1): (24, 1)} {'p0': 'T0_init', 'p200': 'T0_S2'} {'help', 'no_injury'}
         # action          robot state after taking action                      buchi state due to last action     world state after taking action
         # specific spec
@@ -24,6 +24,8 @@ class Node:
         # snapshot of world state set()
         self.world_state = world_state
         self.progress_metric = progress_metric
+        # history of manipulating objects
+        self.obj_history = obj_history
         
     # Implementing __eq__ is necessary to compare objects for equality
     def __eq__(self, other):

@@ -119,7 +119,7 @@ def main(args=None):
             type_robots_x = workspace.type_robot_location.copy()
             type_robot = list(workspace.type_robot_location.keys())[0]
             sources.append(Node(first_phi, type_robot, 'default', 'x', type_robots_x, phis_progress, set(), 
-                                ProductTs.update_progress_metric(task_hierarchy, phis_progress)))  
+                                ProductTs.update_progress_metric(task_hierarchy, phis_progress), dict()))  
         
     # phis_progress = {phi: tuple(task_hierarchy[phi].buchi_graph.graph['init']) for phi in task_hierarchy.keys()}
     # for phi in first_spec_candidates:
