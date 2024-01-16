@@ -145,6 +145,11 @@ class eventExec():
         self.current_exec_act= []
         self.invalid_str = "-1"
 
+        self.new_exec_subtasks = []
+        self.new_exec_robots = []
+        self.new_exec_phis = []
+        self.new_exec_act= []
+
         self.robot_phi=robot_phi
         self.robot_path = copy.deepcopy(robot_path_ori)
         self.robot_act = copy.deepcopy(robot_act_ori)
@@ -174,14 +179,20 @@ class eventExec():
         for first_spec in self.first_spec_candidates:
             for robot, tmp_phi in self.robot_phi.items():
                 if tmp_phi and tmp_phi[0] == first_spec:
-                    self.current_exec_robots.append(robot)
-                    self.current_exec_subtasks.append(self.robot_path[robot][0])
-                    self.current_exec_phis.append(self.robot_phi[robot][0])
-                    self.current_exec_act.append(self.robot_act[robot][0])
+                    self.new_exec_robots.append(robot)
+                    self.new_exec_subtasks.append(self.robot_path[robot][0])
+                    self.new_exec_phis.append(self.robot_phi[robot][0])
+                    self.new_exec_act.append(self.robot_act[robot][0])
+
                     self.robot_path[robot].pop(0)
                     self.robot_phi[robot].pop(0)
                     self.robot_act[robot].pop(0)
         # send
+        self.current_exec_subtasks = copy.deepcopy(self.new_exec_subtasks)
+        self.current_exec_robots = copy.deepcopy(self.new_exec_robots)
+        self.current_exec_phis = copy.deepcopy(self.new_exec_phis)
+        self.current_exec_act= copy.deepcopy(self.new_exec_act)
+
         prRed(f"current_exec_robots: {self.current_exec_robots}")
         prRed(f"current_exec_subtasks: {self.current_exec_subtasks}")
         prRed(f"current_exec_phis: {self.current_exec_phis}")
@@ -190,7 +201,8 @@ class eventExec():
             self.whole_task_finished=False
         else:
             self.whole_task_finished=True
-        return self.whole_task_finished,(self.current_exec_robots,self.current_exec_subtasks,self.current_exec_phis,self.current_exec_act)
+        return self.whole_task_finished,(self.new_exec_robots,self.new_exec_subtasks,self.new_exec_phis,self.new_exec_act)
+    
     def event_based_execution_request_new(self,finished_robot:int):
         prRed(f"finished robot {finished_robot}")
         # determine next subtask
@@ -199,6 +211,11 @@ class eventExec():
         self.current_exec_phis.pop(robot_idx)
         self.current_exec_subtasks.pop(robot_idx)
         self.current_exec_act.pop(robot_idx)
+
+        self.new_exec_subtasks = []
+        self.new_exec_robots = []
+        self.new_exec_phis = []
+        self.new_exec_act= []
         for robot, path in self.robot_path.items():
             # robot is executing task
             if robot in self.current_exec_robots:
@@ -237,6 +254,12 @@ class eventExec():
             self.current_exec_subtasks.append(path[0])
             self.current_exec_phis.append(self.robot_phi[robot][0])
             self.current_exec_act.append(self.robot_act[robot][0])
+
+            self.new_exec_subtasks.append(path[0])
+            self.new_exec_robots.append(robot)
+            self.new_exec_phis.append(self.robot_phi[robot][0])
+            self.new_exec_act.append(self.robot_act[robot][0])
+
             path.pop(0)
             self.robot_phi[robot].pop(0)
             self.robot_act[robot].pop(0)
@@ -248,7 +271,7 @@ class eventExec():
             self.whole_task_finished=False
         else:
             self.whole_task_finished=True
-        return self.whole_task_finished,(self.current_exec_robots,self.current_exec_subtasks,self.current_exec_phis,self.current_exec_act     )
+        return self.whole_task_finished,(self.new_exec_robots,self.new_exec_subtasks,self.new_exec_phis,self.new_exec_act     )
         
     def event_based_execution_no_interaction(self):
         self.event_based_execution_init()
