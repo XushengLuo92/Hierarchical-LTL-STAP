@@ -210,6 +210,7 @@ class eventExec():
         self.new_exec_act= []
 
         for idx in range(len(finished_robot)):
+            # 增加这个for循环用来支持对一次有若干任务同时结束的情况
             prRed(f"finished robot {finished_robot[idx]}")
             # determine next subtask
             robot_idx = self.current_exec_robots.index(finished_robot[idx])
