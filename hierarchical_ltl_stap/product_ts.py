@@ -129,16 +129,17 @@ class ProductTs(object):
         return progress_metric
     
     @staticmethod
-    def verify_obj_history(old_obj_history, cur_action, cur_robot):
+    def verify_obj_history(old_obj_history: dict(), cur_action: str, cur_robot):
+        if cur_action == 'default':
+            return True, old_obj_history.copy()
         obj = cur_action.split('000')[1]
-        print(old_obj_history, obj, cur_robot)
         if obj not in old_obj_history.keys() or cur_robot == old_obj_history[obj]:
             new_obj_history = old_obj_history.copy()
             if obj not in new_obj_history.keys():
                 new_obj_history[obj] = cur_robot
-                return True, new_obj_history
+            return True, new_obj_history
         else:
-            return False, old_obj_history
+            return False, old_obj_history.copy()
         
     @staticmethod
     def produce_succ_inside_ps(node: Node, task_hierarchy, workspace: Workspace, spec_info, args):
