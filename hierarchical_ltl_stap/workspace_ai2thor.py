@@ -18,13 +18,15 @@ class Workspace(object):
     define the workspace where robots reside
     """
     def __init__(self, leaf_specs, num_of_robots=6,regions:typing.Optional[dict] = None,obstacles:typing.Optional[dict] = None,robot_pos:typing.Optional[dict]=None):
-        robot_pos: {1:(7,8)}
         # dimension of the workspace
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
         # n = int(sys.argv[2])
         # n = 4
-        self.type_num = {1: num_of_robots, 2: num_of_robots}  # single-task robot
+        # self.type_num = {1: num_of_robots, 2: num_of_robots}  # single-task robot
+        
+        self.type_num = {1: num_of_robots}  # single-task robot
+
         # self.num_of_regions = 8
         # self.num_of_obstacles = 6
         self.occupied = []
@@ -45,6 +47,8 @@ class Workspace(object):
             self.set_robot_pos(self.allocate_robot_pos())
             print(self.robot_pos)
         self.type_robot_location = self.allocate_init_locs(robots_of_interest)
+
+        
         # [region and corresponding locations
         self.label_location = {'r{0}'.format(r): self.type_robot_location[(1, r)] for r in robots_of_interest}
         # [region where robots reside
