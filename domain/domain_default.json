@@ -1,15 +1,23 @@
 {
+  // action: preconditions and effects
+  // action is admissible as long as one set of preconditions is satisfied
   "robot_actions": {
     "default": {
       "preconditions": [[]],
       "effects": ["default"]
     }
   },
+  // action is admissible as long as one set of preconditions is satisfied
   "env_actions": {},
   // heteregeneous robots
+  // the set of actions available for each group of robots
   "robot_group": {
     "1" : ["default"]
   },
+  // graphical representation of action model; see the work: 
+  // Simultaneous task allocation and planning for temporal logic goals in heterogeneous multi-robot systems
+  // 'x' is the default node. By taking different actions, the graph transitions to corresponding nodes
+  // This graph can capture dependence relation between actions
   "action_model": {
     "nodes": ["x"],
     "edges": [
@@ -17,4 +25,3 @@
     ]
   }
 }
-  
