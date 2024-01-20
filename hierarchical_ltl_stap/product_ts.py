@@ -48,7 +48,8 @@ class ProductTs(object):
         for next_q in set(buchi_graph.succ[parent_q]): 
             tmp_node = Node(node.phi, node.type_robot, node.action, node.action_state, node.type_robots_x, 
                             node.phis_progress.copy(), node.world_state, 
-                            ProductTs.update_progress_metric(task_hierarchy, node.phis_progress))
+                            ProductTs.update_progress_metric(task_hierarchy, node.phis_progress),
+                            node.obj_history.copy())
             edge_label = buchi_graph.edges[(parent_q, next_q)]['label']
             aps_in_label = BuchiConstructor.get_literals(edge_label)
             aps_sub = {ap: True if ap in last_predicate else False for ap in symbols(aps_in_label)}
@@ -69,7 +70,7 @@ class ProductTs(object):
         if not proceed_to_next_q:
             tmp_node = Node(node.phi, node.type_robot, node.action, node.action_state, node.type_robots_x, 
                             node.phis_progress.copy(), node.world_state, 
-                            ProductTs.update_progress_metric(task_hierarchy, node.phis_progress))
+                            ProductTs.update_progress_metric(task_hierarchy, node.phis_progress), node.obj_history.copy())
             node_label = buchi_graph.nodes[parent_q]['label']
             aps_in_label = BuchiConstructor.get_literals(node_label)
             aps_sub = {ap: True if ap in last_predicate else False for ap in symbols(aps_in_label)}
@@ -126,7 +127,20 @@ class ProductTs(object):
                                               buchi_graph.graph['dist'][init][state])
             progress_metric += progress_metric_per_phi
         return progress_metric
-
+    
+    @staticmethod
+    def verify_obj_history(old_obj_history: dict(), cur_action: str, cur_robot):
+        if cur_action == 'default':
+            return True, old_obj_history.copy()
+        obj = cur_action.split('000')[1]
+        if obj not in old_obj_history.keys() or cur_robot == old_obj_history[obj]:
+            new_obj_history = old_obj_history.copy()
+            if obj not in new_obj_history.keys():
+                new_obj_history[obj] = cur_robot
+            return True, new_obj_history
+        else:
+            return False, old_obj_history.copy()
+        
     @staticmethod
     def produce_succ_inside_ps(node: Node, task_hierarchy, workspace: Workspace, spec_info, args):
         """find successors for the same agent and same spec
@@ -196,6 +210,9 @@ class ProductTs(object):
                         updated_type_robots_x = node.type_robots_x.copy()
                         updated_type_robots_x[node.type_robot] = next_x
                         for action, action_state in actions:
+                            valid, new_obj_history = ProductTs.verify_obj_history(node.obj_history, action, node.type_robot)
+                            if not valid:
+                                continue
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
                             weight = 0 if x == next_x else 1
                             man_weight = 0 if action == 'default' else action_weight
@@ -204,7 +221,8 @@ class ProductTs(object):
                             ProductTs.update_non_leaf_specs(cur_predicate, 
                                                             Node(node.phi, node.type_robot, action, action_state, updated_type_robots_x, 
                                                                 updated_phis_progress, updated_world_state,
-                                                                ProductTs.update_progress_metric(task_hierarchy, updated_phis_progress)), 
+                                                                ProductTs.update_progress_metric(task_hierarchy, updated_phis_progress), 
+                                                                new_obj_history), 
                                                             task_hierarchy, path_to_root[node.phi][1:], weight, succ)
                             # update essentail x of type_robot
                             use_heuristics = args.heuristics or args.heuristics_switch
@@ -219,6 +237,9 @@ class ProductTs(object):
                         updated_type_robots_x = node.type_robots_x.copy()
                         updated_type_robots_x[node.type_robot] = next_x
                         for action, action_state in actions:
+                            valid, new_obj_history = ProductTs.verify_obj_history(node.obj_history, action, node.type_robot)
+                            if not valid:
+                                continue
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
                             weight = 0 if x == next_x else 1
                             man_weight = 0 if action == 'default' else action_weight
@@ -226,7 +247,8 @@ class ProductTs(object):
                             ProductTs.update_non_leaf_specs(cur_predicate, 
                                                             Node(node.phi, node.type_robot, action, action_state, updated_type_robots_x, 
                                                                 updated_phis_progress, updated_world_state,
-                                                                ProductTs.update_progress_metric(task_hierarchy, updated_phis_progress)), 
+                                                                ProductTs.update_progress_metric(task_hierarchy, updated_phis_progress), 
+                                                                new_obj_history), 
                                                             task_hierarchy, path_to_root[node.phi][1:], weight, succ)
         # check the node label if no succ found
         if not succ:
@@ -238,6 +260,9 @@ class ProductTs(object):
                     updated_type_robots_x = node.type_robots_x.copy()
                     updated_type_robots_x[node.type_robot] = next_x
                     for action, action_state in actions:
+                        valid, new_obj_history = ProductTs.verify_obj_history(node.obj_history, action, node.type_robot)
+                        if not valid:
+                            continue
                         # self-loop
                         updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
                         weight = 0 if x == next_x else 1
@@ -247,7 +272,7 @@ class ProductTs(object):
                         ProductTs.update_non_leaf_specs([], 
                                                         Node(node.phi, node.type_robot, action, action_state, updated_type_robots_x, 
                                                             node.phis_progress, updated_world_state,
-                                                            ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 
+                                                            ProductTs.update_progress_metric(task_hierarchy, node.phis_progress), new_obj_history), 
                                                         task_hierarchy, path_to_root[node.phi][1:], weight, succ)
         return succ
     
@@ -308,7 +333,7 @@ class ProductTs(object):
         action = 'in-spec'
         updated_world_state = set(state for state in node.world_state if "no_" in state)
         succ = [Node(node.phi, next_type_robot, action, 'x', node.type_robots_x, node.phis_progress, updated_world_state,
-                     ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0]
+                     ProductTs.update_progress_metric(task_hierarchy, node.phis_progress), node.obj_history), 0]
         return [succ]
     
     def produce_succ_between_ps_same_robot(node: Node, task_hierarchy, workspace: Workspace, leaf_phis_order, args):
@@ -342,7 +367,7 @@ class ProductTs(object):
                     (not use_heuristics or (leaf_phi, node.type_robot, x, node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x):
                     succ.append([Node(leaf_phi, node.type_robot, action, 'x', node.type_robots_x, 
                                       node.phis_progress, set(),
-                                      ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0])
+                                      ProductTs.update_progress_metric(task_hierarchy, node.phis_progress), node.obj_history), 0])
 
         # for the same robot, if two phis are independent, connect from one decomp node of a team model to the current decomp node (if so) of another team model
         hierarchy = task_hierarchy[node.phi]   
@@ -358,7 +383,7 @@ class ProductTs(object):
                          (leaf_phi, node.type_robot, node.type_robots_x[node.type_robot], node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x):
                         succ.append([Node(leaf_phi, node.type_robot, action, 'x', node.type_robots_x, 
                                           node.phis_progress, set(),
-                                          ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0])
+                                          ProductTs.update_progress_metric(task_hierarchy, node.phis_progress), node.obj_history), 0])
             
         # connect from its accept node of a team model to every decomp node of the first robot's team model with corresponding location                
         action = 'inter-spec-ii'
@@ -376,7 +401,7 @@ class ProductTs(object):
                          (leaf_phi, type_robots[0], node.type_robots_x[type_robots[0]], node.phis_progress[leaf_phi]) in ProductTs.essential_phi_type_robot_x):
                         succ.append([Node(leaf_phi, type_robots[0], action, 'x', node.type_robots_x, 
                                           node.phis_progress, set(),
-                                          ProductTs.update_progress_metric(task_hierarchy, node.phis_progress)), 0])
+                                          ProductTs.update_progress_metric(task_hierarchy, node.phis_progress), node.obj_history), 0])
         return succ
     
     @staticmethod

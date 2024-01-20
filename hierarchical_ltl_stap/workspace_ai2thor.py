@@ -11,29 +11,44 @@ import pickle
 import re
 import json
 import subprocess
+import typing
 
 class Workspace(object):
     """
     define the workspace where robots reside
     """
-    def __init__(self, leaf_specs, num_of_robots=6):
+    def __init__(self, leaf_specs, num_of_robots=6,regions:typing.Optional[dict] = None,obstacles:typing.Optional[dict] = None,robot_pos:typing.Optional[dict]=None):
         # dimension of the workspace
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
         # n = int(sys.argv[2])
         # n = 4
-        self.type_num = {1: num_of_robots, 2: num_of_robots}  # single-task robot
+        # self.type_num = {1: num_of_robots, 2: num_of_robots}  # single-task robot
+        
+        self.type_num = {1: num_of_robots}  # single-task robot
+
         # self.num_of_regions = 8
         # self.num_of_obstacles = 6
         self.occupied = []
         self.n_shelf = 6
-        self.regions = self.allocate_regions()
-        self.obstacles = self.allocate_obstacles()
+        self.regions = regions
+        if isinstance(self.regions,type(None)):
+            self.set_regions(self.allocate_regions())
+        # self.allocate_regions()
+        self.obstacles = obstacles
+        if isinstance(self.obstacles,type(None)):
+            self.set_obstacles(self.allocate_obstacles())
         self.height = 25
         self.width = 21
         robots_of_interest = range(1, num_of_robots+1)
         # self.type_robot_location = {(1, r): self.regions['r'+str(r)][0] for r in robots_of_interest}
+        self.robot_pos=robot_pos
+        if isinstance(self.robot_pos,type(None)):
+            self.set_robot_pos(self.allocate_robot_pos())
+            print(self.robot_pos)
         self.type_robot_location = self.allocate_init_locs(robots_of_interest)
+
+        
         # [region and corresponding locations
         self.label_location = {'r{0}'.format(r): self.type_robot_location[(1, r)] for r in robots_of_interest}
         # [region where robots reside
@@ -98,43 +113,59 @@ class Workspace(object):
                        scale_units='xy', angles='xy', scale=1, label='prefix path')
 
             plt.savefig('img/path.png', bbox_inches='tight', dpi=600)
-
+    def set_regions(self,regions):
+        self.regions=regions
     def  allocate_regions(self):
         regions = {}
-        with open('/Users/xushengluo/Documents/Code/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
+        with open('/home/user/xsj/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
             regions = pickle.load(file)
             regions = pickle.load(file)
 
         return regions
-
+    def set_obstacles(self,obstacles):
+        self.obstacles=obstacles
     def allocate_obstacles(self):
-        with open('/Users/xushengluo/Documents/Code/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
+        with open('/home/user/xsj/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
             data = pickle.load(file)
         obstacles = {
-            'obs': data['obstacle']
+            'obs': data['obs']
         }
         
         return obstacles
-
+    def set_robot_pos(self,robot_pos):
+        self.robot_pos=robot_pos
+    def allocate_robot_pos(self):
+        robot_pos = {}
+        with open('/home/user/xsj/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
+            robot_pos = pickle.load(file)
+            robot_pos = pickle.load(file)
+            robot_pos = pickle.load(file)
+        return robot_pos
+    
     def allocate_init_locs(self, robots_of_interest):
+        print('robots_of_interest',robots_of_interest)
         type_robot_location = dict()
         x_label = [x for region in self.regions.values() for x in region]
         x_label.extend([x for obs in self.obstacles.values() for x in obs])
-        x_free = []
-        for w in range(1, self.width):
-            for h in range(1, self.height):
-                if (w, h) not in x_label:
-                    x_free.append((w, h))
+        # x_free = []
+        # for w in range(1, self.width):
+        #     for h in range(1, self.height):
+        #         if (w, h) not in x_label:
+        #             x_free.append((w, h))
         # random.seed(1)
         for robot_type in self.type_num.keys():
             for robot in robots_of_interest:
-                while True:
-                    candidate = random.sample(x_free, 1)[0]
-                    if candidate not in type_robot_location.values():
-                        type_robot_location[(robot_type, robot)] = candidate
-                        # type_robot_location[(robot_type, robot)] = (11, 15)
-                        x_free.remove(candidate)
-                        break
+                type_robot_location[(robot_type, robot)] = self.robot_pos[robot-1]
+                # robots_of_interest 是1..N robot pos 是0..N-1
+
+
+                # while True:
+                #     candidate = random.sample(x_free, 1)[0]
+                #     if candidate not in type_robot_location.values():
+                #         type_robot_location[(robot_type, robot)] = candidate
+                #         # type_robot_location[(robot_type, robot)] = (11, 15)
+                #         x_free.remove(candidate)
+                #         break
         return type_robot_location
     
     def generate_domain(self, leaf_specs):
