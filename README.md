@@ -8,6 +8,7 @@ Past research into robotic planning with temporal logic specifications, notably 
 ```bash
 cd /path/to/Hierarchical-LTL-Stap
 conda env create -f environment.yml
+conda activate hierarchical_ltl_stap
 ```
 ### Import as package
 ```bash
@@ -16,6 +17,11 @@ pip install -e .
 ```
 ### Install ltl2ba
 Download the software `LTL2BA` from this [link](http://www.lsv.fr/~gastin/ltl2ba/index.php), and follow the instructions to generate the exectuable `ltl2ba` and then copy it into the folder `Hierarchical-LTL-Stap`, same hierarchy level with `hierarchical_LTL_stap_on_the_fly.py`.
+# Usage
+## Input
+* Folder [domain](./domain) includes domain files that describe robot and environment action models.
+* Scripts [workspace](./hierarchical_ltl_stap/workspace_bosch.py) describes the environment that robots reside in.
+* Script [specification.py](./hierarchical_ltl_stap/specification.py) includes hierarchical task specifications.
 # Simulation
 The simulation environment and tasks are inspired by [Schillinger et al.](https://journals.sagepub.com/doi/abs/10.1177/0278364918774135)
 ### Environment 
