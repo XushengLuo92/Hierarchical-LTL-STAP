@@ -67,6 +67,12 @@ class BuchiConstructor(object):
                     
         # delete vertices without selfloop
         # self.delete_node_no_selfloop_except_init_accept(buchi_graph)
+        # add sink state
+        buchi_graph.add_node('sink', label=to_dnf('1'), name=state)
+        for acpt_state in buchi_graph.graph['accept']:
+            buchi_graph.nodes[acpt_state]['label'] = to_dnf('0')
+            buchi_graph.add_edge(acpt_state, 'sink', label=to_dnf('1'))
+            
         
         return buchi_graph
     
