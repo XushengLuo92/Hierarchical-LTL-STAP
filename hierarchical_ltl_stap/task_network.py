@@ -50,7 +50,10 @@ def build_buchi_graph_and_poset(task_specification, leaf_specs, workspace: Works
     for index, level in enumerate(task_specification.hierarchy):
         for (phi, spec) in level.items():
             buchi_graph = buchi_constructor.construct_buchi_graph(spec)
-            buchi_graph.graph['conflict_aps'] = list(workspace.regions.keys())
+            if phi in leaf_specs:
+                buchi_graph.graph['conflict_aps'] = list(workspace.regions.keys())
+            else:
+                buchi_graph.graph['conflict_aps'] = list(task_specification.hierarchy[index+1].keys())
             decomp_sets = None
             if args.print_task:
                 prCyan(f"{phi}, {spec}, {buchi_graph.number_of_nodes()} nodes and {buchi_graph.number_of_edges()} edge")
@@ -100,9 +103,9 @@ def produce_global_poset_within_composite_subtask(task_hierarchy, leaf_specs, pr
             continue
         buchi_graph = hierarchy.buchi_graph
         element2edge = hierarchy.element2edge
-        hass_graph = hierarchy.hass_graph
+        hass_graph = hierarchy.hass_graph #  [(w, h), {edge for edge in hasse.edges()}, list(hasse.nodes), hasse]
         poset_relation = hass_graph[1]
-        primitive_elements = primitive_subtasks[task].element_in_poset
+        primitive_elements = hass_graph[2] # only check prilimitive elements appearing in the specific poset
         checked_primitive_pairs = []
         for ele_a in primitive_elements:
             for ele_b in primitive_elements:
