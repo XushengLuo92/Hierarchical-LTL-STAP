@@ -265,14 +265,12 @@ class BuchiConstructor(object):
                     # equivalence: same node label and edge label, not in the same path
                     # when using sympy, == means structurally equivalent,
                     # it is OK here since we sort the literals in the clause
-                    if pruned_subgraph.nodes[edge[0]]['label'] == pruned_subgraph.nodes[edge_in_graph[0]]['label'] \
-                            and pruned_subgraph.edges[edge]['label'] == pruned_subgraph.edges[edge_in_graph][
-                                'label'] \
-                            and not (
-                                nx.has_path(pruned_subgraph, edge_in_graph[1], edge[0]) or nx.has_path(pruned_subgraph,
-                                                                                                       edge[1],
-                                                                                                       edge_in_graph[
-                                                                                                           0])):
+                    # ignore negative label
+                    if self.remove_negated_terms(pruned_subgraph.nodes[edge[0]]['label']) == \
+                            self.remove_negated_terms(pruned_subgraph.nodes[edge_in_graph[0]]['label']) \
+                        and self.remove_negated_terms(pruned_subgraph.edges[edge]['label']) == \
+                            self.remove_negated_terms(pruned_subgraph.edges[edge_in_graph]['label']) \
+                        and not (nx.has_path(pruned_subgraph, edge_in_graph[1], edge[0]) or nx.has_path(pruned_subgraph, edge[1], edge_in_graph[0])):      
                         continue
                     else:
                         # break if the considered edge edge_in_graph does not belong to this set of equivalent edges
