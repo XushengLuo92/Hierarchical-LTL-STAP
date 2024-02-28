@@ -297,6 +297,21 @@ class BuchiConstructor(object):
 
         return edge2element, element2edge
     
+     # Function to recursively manipulate the expression
+    def remove_negated_terms(self, expression):
+        if isinstance(expression, (And, Or)):  # Check if the expression is an AND or OR operation
+            # Recursively apply the function to all arguments that are not negated
+            args = [self.remove_negated_terms(arg) for arg in expression.args if not isinstance(arg, Not)]
+            if args:  # If there are any arguments left after removing negated terms
+                return expression.func(*args)  # Reconstruct the expression using the original function (And or Or)
+            else:
+                return True
+        else:
+            if isinstance(expression, Not):
+                return True
+            else:
+                return expression
+    
     def prune_subgraph(self, subgraph):
         """
         remove the edge as long as there exists another path the connects the vertices
