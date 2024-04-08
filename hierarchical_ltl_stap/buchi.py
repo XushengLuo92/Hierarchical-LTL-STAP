@@ -67,6 +67,12 @@ class BuchiConstructor(object):
                     
         # delete vertices without selfloop
         # self.delete_node_no_selfloop_except_init_accept(buchi_graph)
+        # add sink state
+        buchi_graph.add_node('sink', label=to_dnf('1'), name=state)
+        for acpt_state in buchi_graph.graph['accept']:
+            buchi_graph.nodes[acpt_state]['label'] = to_dnf('0')
+            buchi_graph.add_edge(acpt_state, 'sink', label=to_dnf('1'))
+            
         
         return buchi_graph
     
@@ -259,14 +265,12 @@ class BuchiConstructor(object):
                     # equivalence: same node label and edge label, not in the same path
                     # when using sympy, == means structurally equivalent,
                     # it is OK here since we sort the literals in the clause
-                    if pruned_subgraph.nodes[edge[0]]['label'] == pruned_subgraph.nodes[edge_in_graph[0]]['label'] \
-                            and pruned_subgraph.edges[edge]['label'] == pruned_subgraph.edges[edge_in_graph][
-                                'label'] \
-                            and not (
-                                nx.has_path(pruned_subgraph, edge_in_graph[1], edge[0]) or nx.has_path(pruned_subgraph,
-                                                                                                       edge[1],
-                                                                                                       edge_in_graph[
-                                                                                                           0])):
+                    # ignore negative label
+                    if self.remove_negated_terms(pruned_subgraph.nodes[edge[0]]['label']) == \
+                            self.remove_negated_terms(pruned_subgraph.nodes[edge_in_graph[0]]['label']) \
+                        and self.remove_negated_terms(pruned_subgraph.edges[edge]['label']) == \
+                            self.remove_negated_terms(pruned_subgraph.edges[edge_in_graph]['label']) \
+                        and not (nx.has_path(pruned_subgraph, edge_in_graph[1], edge[0]) or nx.has_path(pruned_subgraph, edge[1], edge_in_graph[0])):      
                         continue
                     else:
                         # break if the considered edge edge_in_graph does not belong to this set of equivalent edges
@@ -292,6 +296,21 @@ class BuchiConstructor(object):
                 edge2element[edge] = curr_element
 
         return edge2element, element2edge
+    
+     # Function to recursively manipulate the expression
+    def remove_negated_terms(self, expression):
+        if isinstance(expression, (And, Or)):  # Check if the expression is an AND or OR operation
+            # Recursively apply the function to all arguments that are not negated
+            args = [self.remove_negated_terms(arg) for arg in expression.args if not isinstance(arg, Not)]
+            if args:  # If there are any arguments left after removing negated terms
+                return expression.func(*args)  # Reconstruct the expression using the original function (And or Or)
+            else:
+                return True
+        else:
+            if isinstance(expression, Not):
+                return True
+            else:
+                return expression
     
     def prune_subgraph(self, subgraph):
         """

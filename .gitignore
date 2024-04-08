@@ -8,3 +8,6 @@ note.md
 .DS_Store
 hierarchical_ltl_stap.egg-info
 .vscode
+plot_stats.py
+dijkstra.py
+similarity.py
