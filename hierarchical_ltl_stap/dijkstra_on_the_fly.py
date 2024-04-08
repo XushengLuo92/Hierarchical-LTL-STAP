@@ -10,6 +10,31 @@ import sys
 """Modified from function multi_source_multi_targets_dijkstra in nx.algorithms
 """
 
+def update_cost(u: Node, cost_to_come: float | tuple, step_cost: float, args):
+    robot = u.type_robot
+    if args.cost == 'minmax':
+        assert isinstance(cost_to_come, tuple)
+        index = list(u.type_robots_x.keys()).index(robot)
+        updated_cost = list(cost_to_come)
+        updated_cost[index] += step_cost
+        return tuple(updated_cost)
+    elif args.cost == "min":
+        assert isinstance(cost_to_come, float)
+        return cost_to_come + step_cost
+    else:
+        assert False
+
+def calculate_cost(cost_to_come: float | tuple, args):
+    if args.cost == 'minmax':
+        assert isinstance(cost_to_come, tuple)
+        weight = 0.9
+        return weight * max(cost_to_come) + (1 - weight) * sum(cost_to_come)
+    elif args.cost == 'min':
+        assert isinstance(cost_to_come, float)
+        return cost_to_come
+    else:
+        assert False
+         
 def reach_target(v: Node):
     if 'accept' in v.phis_progress['p0']:
         return True
@@ -94,8 +119,10 @@ def _dijkstra_multisource(
     # use the count c to avoid comparing nodes (may not be able to)
     fringe = []
     for source in sources:
-        seen[source] = (0, 0)
-        push(fringe, (0, 0, source))
+        total_d = 0.0
+        state_d = 0.0 if args.cost == 'min' else tuple([0.0]*len(source.type_robots_x.keys()))
+        seen[source] = (total_d, state_d)
+        push(fringe, (total_d, state_d, source))
     target = None
     expand_count = 0
     use_heuristics = args.heuristics or args.heuristics_automaton
@@ -132,8 +159,10 @@ def _dijkstra_multisource(
                     print(f'succ {u}')
             if cost is None:
                 continue
-            vu_state_dist = dist[v][1] + cost
-            vu_total_dist = vu_state_dist - args.heuristic_weight * u.progress_metric * int(use_heuristics)
+            # vu_state_dist = dist[v][1] + cost
+            # vu_total_dist = vu_state_dist - args.heuristic_weight * u.progress_metric * int(use_heuristics)
+            vu_state_dist = update_cost(u, dist[v][1], cost, args)
+            vu_total_dist = calculate_cost(vu_state_dist, args) - args.heuristic_weight * u.progress_metric * int(use_heuristics)
             # skip if phi has been reached
             # if phi in phis:
             #     continue
@@ -175,6 +204,6 @@ def multi_source_multi_targets_dijkstra(sources, task_hierarchy, workspace, spec
         sources, task_hierarchy, workspace, spec_info, args, paths=paths,
     )
     try: 
-        return (dist[target][1], paths[target])
+        return (calculate_cost(dist[target][1], args), paths[target])
     except KeyError as err:
         raise nx.NetworkXNoPath(f"No path to {target}.") from err
