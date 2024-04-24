@@ -17,8 +17,15 @@ class Workspace(object):
     """
     define the workspace where robots reside
     """
-    def __init__(self, leaf_specs, num_of_robots=6,regions:typing.Optional[dict] = None,obstacles:typing.Optional[dict] = None,robot_pos:typing.Optional[dict]=None):
+    def __init__(self, leaf_specs, num_of_robots=6,regions:typing.Optional[dict] = None,obstacles:typing.Optional[dict] = None,robot_pos:typing.Optional[dict]=None,width=21,height=25):
+        self.height = height
+        self.width = width
+        # for i in range(1, self.width):
+        # for j in range(1, self.height):
+        # if (i, j) not in obstacles:
         # dimension of the workspace
+        
+        
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
         # n = int(sys.argv[2])
@@ -38,8 +45,7 @@ class Workspace(object):
         self.obstacles = obstacles
         if isinstance(self.obstacles,type(None)):
             self.set_obstacles(self.allocate_obstacles())
-        self.height = 25
-        self.width = 21
+
         robots_of_interest = range(1, num_of_robots+1)
         # self.type_robot_location = {(1, r): self.regions['r'+str(r)][0] for r in robots_of_interest}
         self.robot_pos=robot_pos
