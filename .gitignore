@@ -11,3 +11,6 @@ hierarchical_ltl_stap.egg-info
 plot_stats.py
 dijkstra.py
 similarity.py
+*.gz
+ltl2ba-1.3
+data
