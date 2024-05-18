@@ -279,7 +279,7 @@ class Workspace(object):
         
         new_world_state = set(state for state in world_state if 'no_' in state)
         # update based on environment action
-        robot_state_observ = []
+        robot_state_observ = set()
         for region, cells in self.regions.items():
             if robot_state in cells:
                 robot_state_observ.add(region)
