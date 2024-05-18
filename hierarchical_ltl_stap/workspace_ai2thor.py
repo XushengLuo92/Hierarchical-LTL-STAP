@@ -20,8 +20,8 @@ class Workspace(object):
     def __init__(self, leaf_specs, num_of_robots=6,regions:typing.Optional[dict] = None,obstacles:typing.Optional[dict] = None,robot_pos:typing.Optional[dict]=None,width=21,height=25):
         self.height = height
         self.width = width
-        # for i in range(1, self.width):
-        # for j in range(1, self.height):
+        # for i in range(0, self.width):
+        # for j in range(0, self.height):
         # if (i, j) not in obstacles:
         # dimension of the workspace
         
@@ -37,7 +37,7 @@ class Workspace(object):
         # self.num_of_regions = 8
         # self.num_of_obstacles = 6
         self.occupied = []
-        self.n_shelf = 6
+        # self.n_shelf = 6
         self.regions = regions
         if isinstance(self.regions,type(None)):
             self.set_regions(self.allocate_regions())
@@ -83,8 +83,10 @@ class Workspace(object):
 
     def build_graph(self):
         obstacles = list(itertools.chain(*self.obstacles.values()))
-        for i in range(1, self.width):
-            for j in range(1, self.height):
+        for i in range(0, self.width):
+            # the range from (1, self.width) to (0, self.width)
+            for j in range(0, self.height):
+                # the range from (1, self.height) to (0, self.height)
                 if (i, j) not in obstacles:
                     self.graph_workspace.add_edges_from(self.reachable((i, j), obstacles))
 
