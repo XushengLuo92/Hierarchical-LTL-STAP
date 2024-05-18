@@ -221,7 +221,6 @@ class Workspace(object):
         for region, cells in self.regions.items():
             if location in cells:
                 observations.add(region)
-                break
         for action, preconds_effs in self.domain.get('env_actions').items():
             for preconds in preconds_effs['preconditions']:
                 if all(element in observations for element in preconds if "!" not in element) and \
@@ -281,8 +280,7 @@ class Workspace(object):
         robot_state_observ = []
         for region, cells in self.regions.items():
             if robot_state in cells:
-                robot_state_observ = [region]
-                break
+                robot_state_observ.add(region)
         new_world_state.update(set(robot_state_observ))
         for env_action, preconds_effs in self.domain.get('env_actions').items():
             for preconds in preconds_effs['preconditions']:
