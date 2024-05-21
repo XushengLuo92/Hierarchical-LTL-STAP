@@ -12,7 +12,7 @@ import re
 import json
 import subprocess
 import typing
-
+import os 
 class Workspace(object):
     """
     define the workspace where robots reside
@@ -323,7 +323,7 @@ class Workspace(object):
             label = edge['label']
             self.action_model.add_edge(from_node, to_node, label=label)
         
-        title = "./data/action_model"
+        title = os.path.join(os.path.dirname(__file__),"../data/action_model")
         nx.nx_agraph.write_dot(self.action_model, title+'.dot')
         command = "dot -Tpng {0}.dot >{0}.png".format(title)
         subprocess.run(command, shell=True, capture_output=True, text=True)
