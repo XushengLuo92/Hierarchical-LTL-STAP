@@ -1,6 +1,6 @@
 import copy
 from .util import prYellow, prRed
-
+import numpy as np
 def generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args, simultaneous=True):
     if simultaneous:
         # only include active robots per phi
@@ -153,9 +153,11 @@ class eventExec():
         self.robot_phi=robot_phi
         self.robot_path = copy.deepcopy(robot_path_ori)
         self.robot_act = copy.deepcopy(robot_act_ori)
+        
         prRed(f"{self.robot_path}")
         prRed(f"{self.robot_phi}")
         prRed(f"{self.robot_act}")
+
 
         self.leaf_spec_order=leaf_spec_order
         self.first_spec_candidates=first_spec_candidates
@@ -165,7 +167,18 @@ class eventExec():
             # otherwise arbitary
             pass
             # self.event_based_execution_init()
-        
+    def plan_summary(self):
+        robots_step_cost=[]
+        num_robots=len(self.robot_path.keys())
+        for key in self.robot_path.keys():
+            curr_robot_path=self.robot_path[key]
+            count=0
+            curr_pos=curr_robot_path[0]
+            for pos in curr_robot_path[1:]:
+                count+=np.sum(np.abs(np.array(curr_pos)-np.array(pos)))
+                curr_pos=pos
+            robots_step_cost.append(count)
+        return robots_step_cost
     def event_based_execution_init(self):
 
         # init
