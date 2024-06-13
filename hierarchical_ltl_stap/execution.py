@@ -177,7 +177,7 @@ class eventExec():
             for pos in curr_robot_path[1:]:
                 count+=np.sum(np.abs(np.array(curr_pos)-np.array(pos)))
                 curr_pos=pos
-            robots_step_cost.append(count)
+            robots_step_cost.append(int(count))
         return robots_step_cost
     def event_based_execution_init(self):
 
@@ -223,63 +223,90 @@ class eventExec():
         self.new_exec_act= []
 
         for idx in range(len(finished_robot)):
+        # for robot_idx in self.current_exec_robots:
+        #     if robot_idx in finished_robot:
             # 增加这个for循环用来支持对一次有若干任务同时结束的情况
             prRed(f"finished robot {finished_robot[idx]}")
             # determine next subtask
+            # 如果有执行完的，就全部pop
             robot_idx = self.current_exec_robots.index(finished_robot[idx])
             self.current_exec_robots.pop(robot_idx)
             self.current_exec_phis.pop(robot_idx)
             self.current_exec_subtasks.pop(robot_idx)
             self.current_exec_act.pop(robot_idx)
 
-
-            for robot, path in self.robot_path.items():
-                # robot is executing task
-                if robot in self.current_exec_robots:
-                    continue
-                if not path:
-                    continue
-                tmp_phi = self.robot_phi[robot][0]
-                if not tmp_phi:
-                    continue
-                
-                # find the existence of current phi prior to tmp_phi
-                current_subtask_prior_to_phi = False
-                for current_phi in self.current_exec_phis:
-                    if current_phi != tmp_phi and tmp_phi in self.leaf_spec_order[current_phi] and \
-                        current_phi not in self.leaf_spec_order[tmp_phi]:
-                            current_subtask_prior_to_phi = True
-                            break
-                if current_subtask_prior_to_phi:
-                    continue
-                
-                # find the existence of future phi prior to tmp_phi
-                future_subtask_prior_to_phi = False
-                for other_robot, future_phis in self.robot_phi.items():
-                    if other_robot == robot or not future_phis:
-                        continue
-                    future_phi = future_phis[0]
-                    if future_phi and future_phi != tmp_phi and tmp_phi in self.leaf_spec_order[future_phi] and \
-                        future_phi not in self.leaf_spec_order[tmp_phi]:
-                            future_subtask_prior_to_phi = True
-                            break
-                if future_subtask_prior_to_phi:
-                    continue
-                
-                # send message robot, wpt, act
-                self.current_exec_robots.append(robot)
-                self.current_exec_subtasks.append(path[0])
-                self.current_exec_phis.append(self.robot_phi[robot][0])
-                self.current_exec_act.append(self.robot_act[robot][0])
-
-                self.new_exec_subtasks.append(path[0])
-                self.new_exec_robots.append(robot)
-                self.new_exec_phis.append(self.robot_phi[robot][0])
-                self.new_exec_act.append(self.robot_act[robot][0])
-
+        # 遍历每一个robot，是不是当前的robot，如果这个机器人正在执行，就不进行下一个动作
+        for robot, path in self.robot_path.items():
+            # robot is executing task
+            if robot in self.current_exec_robots:
+                print("robot",robot,"if robot in self.current_exec_robots:")
+                continue
+            if not path:
+                print("robot",robot,"if not path:")
+                continue
+            tmp_phi = self.robot_phi[robot][0]
+            while not tmp_phi and len(path)>0:
                 path.pop(0)
                 self.robot_phi[robot].pop(0)
                 self.robot_act[robot].pop(0)
+                if not path:
+                    print("robot",robot,"if not path:")
+                    continue
+                tmp_phi = self.robot_phi[robot][0]
+                print("robot",robot,"if not tmp_phi:")
+            if not path:
+                print("robot",robot,"if not path:")
+                continue
+            # if not tmp_phi:
+            #     for key in self.robot_phi.keys():
+            #         print(key,len(self.robot_phi[key]),self.robot_phi[key])
+            #     print("robot",robot,"if not tmp_phi:")
+            #     continue
+
+            
+            # find the existence of current phi prior to tmp_phi
+            # 如果要执行 leaf_spec_order 就是 tmp_phi
+            # 当前正在执行的且没执行完，并且要在tmpphi前执行，就先不执行tmpphi
+            current_subtask_prior_to_phi = False
+            for current_phi in self.current_exec_phis:
+                if current_phi != tmp_phi and tmp_phi in self.leaf_spec_order[current_phi] and \
+                    current_phi not in self.leaf_spec_order[tmp_phi]:
+                        current_subtask_prior_to_phi = True
+                        break
+            if current_subtask_prior_to_phi:
+                print("robot",robot,"if current_subtask_prior_to_phi:")
+                continue
+            
+            # find the existence of future phi prior to tmp_phi
+            # 找未执行的任务是不是要在tmpphi前执行，如果他们没被执行，那tmp就不能执行
+            future_subtask_prior_to_phi = False
+            for other_robot, future_phis in self.robot_phi.items():
+                if other_robot == robot or not future_phis:
+                    print("robot",robot,"if other_robot == robot or not future_phis:")
+                    continue
+                future_phi = future_phis[0]
+                if future_phi and future_phi != tmp_phi and tmp_phi in self.leaf_spec_order[future_phi] and \
+                    future_phi not in self.leaf_spec_order[tmp_phi]:
+                        future_subtask_prior_to_phi = True
+                        break
+            if future_subtask_prior_to_phi:
+                print("robot",robot,"if future_subtask_prior_to_phi:")
+                continue
+            
+            # send message robot, wpt, act
+            self.current_exec_robots.append(robot)
+            self.current_exec_subtasks.append(path[0])
+            self.current_exec_phis.append(self.robot_phi[robot][0])
+            self.current_exec_act.append(self.robot_act[robot][0])
+
+            self.new_exec_subtasks.append(path[0])
+            self.new_exec_robots.append(robot)
+            self.new_exec_phis.append(self.robot_phi[robot][0])
+            self.new_exec_act.append(self.robot_act[robot][0])
+
+            path.pop(0)
+            self.robot_phi[robot].pop(0)
+            self.robot_act[robot].pop(0)
         prRed(f"current_exec_robots: {self.current_exec_robots}")
         prRed(f"current_exec_subtasks: {self.current_exec_subtasks}")
         prRed(f"current_exec_phis: {self.current_exec_phis}")
@@ -288,6 +315,7 @@ class eventExec():
             self.whole_task_finished=False
         else:
             self.whole_task_finished=True
+        print("(self.new_exec_robots,self.new_exec_subtasks,self.new_exec_phis,self.new_exec_act     )",(self.new_exec_robots,self.new_exec_subtasks,self.new_exec_phis,self.new_exec_act     ))
         return self.whole_task_finished,(self.new_exec_robots,self.new_exec_subtasks,self.new_exec_phis,self.new_exec_act     )
         
     def event_based_execution_no_interaction(self):
