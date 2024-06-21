@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from hierarchical_ltl_stap.vis import vis
 from hierarchical_ltl_stap.data_structure import Node, SpecInfo
 from hierarchical_ltl_stap.task_network import construct_task_network
-from hierarchical_ltl_stap.execution import generate_simultaneous_exec, event_based_execution
+from hierarchical_ltl_stap.execution import generate_simultaneous_exec, eventExec
 
 import time
 
@@ -119,7 +119,7 @@ def main(args=None):
             type_robots_x = workspace.type_robot_location.copy()
             type_robot = list(workspace.type_robot_location.keys())[0]
             sources.append(Node(first_phi, type_robot, 'default', 'x', type_robots_x, phis_progress, set(), 
-                                ProductTs.update_progress_metric(task_hierarchy, phis_progress)))  
+                                ProductTs.update_progress_metric(task_hierarchy, phis_progress), dict()))  
         
     # phis_progress = {phi: tuple(task_hierarchy[phi].buchi_graph.graph['init']) for phi in task_hierarchy.keys()}
     # for phi in first_spec_candidates:
@@ -151,7 +151,8 @@ def main(args=None):
         prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
     prGreen("The path cost {:.2f}".format(cost))
     if args.event:
-        event_based_execution(robot_path, robot_phi, robot_act, leaf_spec_order, first_spec_candidates)
+        eventExec(robot_path, robot_phi, robot_act, leaf_spec_order, first_spec_candidates)
+        # event_based_execution(robot_path, robot_phi, robot_act, leaf_spec_order, first_spec_candidates)
     if args.vis:
         vis(args.task, args.case, workspace, robot_path, {robot: [len(path)] * 2 for robot, path in robot_path.items()}, [], robot_act)
         vis_time = time.time() # Record the end time

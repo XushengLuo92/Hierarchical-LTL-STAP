@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import os 
 from random import randint
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -11,29 +11,50 @@ import pickle
 import re
 import json
 import subprocess
-
+import typing
+import os 
 class Workspace(object):
     """
     define the workspace where robots reside
     """
-    def __init__(self, leaf_specs, num_of_robots=6):
+    def __init__(self, leaf_specs, num_of_robots=6,regions:typing.Optional[dict] = None,obstacles:typing.Optional[dict] = None,robot_pos:typing.Optional[dict]=None,width=21,height=25):
+        self.height = height
+        self.width = width
+        # for i in range(0, self.width):
+        # for j in range(0, self.height):
+        # if (i, j) not in obstacles:
         # dimension of the workspace
+        
+        
         # self.length = int(sys.argv[1])
         # self.width = int(sys.argv[1])
         # n = int(sys.argv[2])
         # n = 4
-        self.type_num = {1: num_of_robots, 2: num_of_robots}  # single-task robot
+        # self.type_num = {1: num_of_robots, 2: num_of_robots}  # single-task robot
+        
+        self.type_num = {1: num_of_robots}  # single-task robot
+
         # self.num_of_regions = 8
         # self.num_of_obstacles = 6
         self.occupied = []
-        self.n_shelf = 6
-        self.regions = self.allocate_regions()
-        self.obstacles = self.allocate_obstacles()
-        self.height = 25
-        self.width = 21
+        # self.n_shelf = 6
+        self.regions = regions
+        if isinstance(self.regions,type(None)):
+            self.set_regions(self.allocate_regions())
+        # self.allocate_regions()
+        self.obstacles = obstacles
+        if isinstance(self.obstacles,type(None)):
+            self.set_obstacles(self.allocate_obstacles())
+
         robots_of_interest = range(1, num_of_robots+1)
         # self.type_robot_location = {(1, r): self.regions['r'+str(r)][0] for r in robots_of_interest}
+        self.robot_pos=robot_pos
+        if isinstance(self.robot_pos,type(None)):
+            self.set_robot_pos(self.allocate_robot_pos())
+            print(self.robot_pos)
         self.type_robot_location = self.allocate_init_locs(robots_of_interest)
+
+        
         # [region and corresponding locations
         self.label_location = {'r{0}'.format(r): self.type_robot_location[(1, r)] for r in robots_of_interest}
         # [region where robots reside
@@ -62,8 +83,10 @@ class Workspace(object):
 
     def build_graph(self):
         obstacles = list(itertools.chain(*self.obstacles.values()))
-        for i in range(1, self.width):
-            for j in range(1, self.height):
+        for i in range(0, self.width):
+            # the range from (1, self.width) to (0, self.width)
+            for j in range(0, self.height):
+                # the range from (1, self.height) to (0, self.height)
                 if (i, j) not in obstacles:
                     self.graph_workspace.add_edges_from(self.reachable((i, j), obstacles))
 
@@ -98,43 +121,59 @@ class Workspace(object):
                        scale_units='xy', angles='xy', scale=1, label='prefix path')
 
             plt.savefig('img/path.png', bbox_inches='tight', dpi=600)
-
+    def set_regions(self,regions):
+        self.regions=regions
     def  allocate_regions(self):
         regions = {}
-        with open('/Users/xushengluo/Documents/Code/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
+        with open('/home/user/xsj/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
             regions = pickle.load(file)
             regions = pickle.load(file)
 
         return regions
-
+    def set_obstacles(self,obstacles):
+        self.obstacles=obstacles
     def allocate_obstacles(self):
-        with open('/Users/xushengluo/Documents/Code/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
+        with open('/home/user/xsj/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
             data = pickle.load(file)
         obstacles = {
-            'obs': data['obstacle']
+            'obs': data['obs']
         }
         
         return obstacles
-
+    def set_robot_pos(self,robot_pos):
+        self.robot_pos=robot_pos
+    def allocate_robot_pos(self):
+        robot_pos = {}
+        with open('/home/user/xsj/NL2HLTL-ai2sim/data3.txt', 'rb') as file:
+            robot_pos = pickle.load(file)
+            robot_pos = pickle.load(file)
+            robot_pos = pickle.load(file)
+        return robot_pos
+    
     def allocate_init_locs(self, robots_of_interest):
+        print('robots_of_interest',robots_of_interest)
         type_robot_location = dict()
         x_label = [x for region in self.regions.values() for x in region]
         x_label.extend([x for obs in self.obstacles.values() for x in obs])
-        x_free = []
-        for w in range(1, self.width):
-            for h in range(1, self.height):
-                if (w, h) not in x_label:
-                    x_free.append((w, h))
+        # x_free = []
+        # for w in range(1, self.width):
+        #     for h in range(1, self.height):
+        #         if (w, h) not in x_label:
+        #             x_free.append((w, h))
         # random.seed(1)
         for robot_type in self.type_num.keys():
             for robot in robots_of_interest:
-                while True:
-                    candidate = random.sample(x_free, 1)[0]
-                    if candidate not in type_robot_location.values():
-                        type_robot_location[(robot_type, robot)] = candidate
-                        # type_robot_location[(robot_type, robot)] = (11, 15)
-                        x_free.remove(candidate)
-                        break
+                type_robot_location[(robot_type, robot)] = self.robot_pos[robot-1]
+                # robots_of_interest 是1..N robot pos 是0..N-1
+
+
+                # while True:
+                #     candidate = random.sample(x_free, 1)[0]
+                #     if candidate not in type_robot_location.values():
+                #         type_robot_location[(robot_type, robot)] = candidate
+                #         # type_robot_location[(robot_type, robot)] = (11, 15)
+                #         x_free.remove(candidate)
+                #         break
         return type_robot_location
     
     def generate_domain(self, leaf_specs):
@@ -184,7 +223,6 @@ class Workspace(object):
         for region, cells in self.regions.items():
             if location in cells:
                 observations.add(region)
-                break
         for action, preconds_effs in self.domain.get('env_actions').items():
             for preconds in preconds_effs['preconditions']:
                 if all(element in observations for element in preconds if "!" not in element) and \
@@ -241,11 +279,10 @@ class Workspace(object):
         
         new_world_state = set(state for state in world_state if 'no_' in state)
         # update based on environment action
-        robot_state_observ = []
+        robot_state_observ = set()
         for region, cells in self.regions.items():
             if robot_state in cells:
-                robot_state_observ = [region]
-                break
+                robot_state_observ.add(region)
         new_world_state.update(set(robot_state_observ))
         for env_action, preconds_effs in self.domain.get('env_actions').items():
             for preconds in preconds_effs['preconditions']:
@@ -286,7 +323,7 @@ class Workspace(object):
             label = edge['label']
             self.action_model.add_edge(from_node, to_node, label=label)
         
-        title = "./data/action_model"
+        title = os.path.join(os.path.dirname(__file__),"../data/action_model")
         nx.nx_agraph.write_dot(self.action_model, title+'.dot')
         command = "dot -Tpng {0}.dot >{0}.png".format(title)
         subprocess.run(command, shell=True, capture_output=True, text=True)
