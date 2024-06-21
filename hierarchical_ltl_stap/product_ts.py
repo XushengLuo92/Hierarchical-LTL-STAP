@@ -129,8 +129,8 @@ class ProductTs(object):
         return progress_metric
     
     @staticmethod
-    def verify_obj_history(old_obj_history: dict(), cur_action: str, cur_robot):
-        if cur_action == 'default':
+    def verify_obj_history(old_obj_history: dict, cur_action: str, cur_robot):
+        if cur_action == 'default' or '000' not in cur_action:
             return True, old_obj_history.copy()
         obj = cur_action.split('000')[1]
         if obj not in old_obj_history.keys() or cur_robot == old_obj_history[obj]:
