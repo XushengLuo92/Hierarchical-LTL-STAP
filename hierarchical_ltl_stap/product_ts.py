@@ -129,8 +129,8 @@ class ProductTs(object):
         return progress_metric
     
     @staticmethod
-    def verify_obj_history(old_obj_history: dict, cur_action: str, cur_robot):
-        if cur_action == 'default' or '000' not in cur_action:
+    def verify_obj_history(workspace: Workspace, old_obj_history: dict, cur_action: str, cur_robot):
+        if cur_action == 'default' or workspace.name() != 'ai2thor':
             return True, old_obj_history.copy()
         obj = cur_action.split('000')[1]
         if obj not in old_obj_history.keys() or cur_robot == old_obj_history[obj]:
@@ -210,7 +210,7 @@ class ProductTs(object):
                         updated_type_robots_x = node.type_robots_x.copy()
                         updated_type_robots_x[node.type_robot] = next_x
                         for action, action_state in actions:
-                            valid, new_obj_history = ProductTs.verify_obj_history(node.obj_history, action, node.type_robot)
+                            valid, new_obj_history = ProductTs.verify_obj_history(workspace, node.obj_history, action, node.type_robot)
                             if not valid:
                                 continue
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
@@ -237,7 +237,7 @@ class ProductTs(object):
                         updated_type_robots_x = node.type_robots_x.copy()
                         updated_type_robots_x[node.type_robot] = next_x
                         for action, action_state in actions:
-                            valid, new_obj_history = ProductTs.verify_obj_history(node.obj_history, action, node.type_robot)
+                            valid, new_obj_history = ProductTs.verify_obj_history(workspace, node.obj_history, action, node.type_robot)
                             if not valid:
                                 continue
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
@@ -260,7 +260,7 @@ class ProductTs(object):
                     updated_type_robots_x = node.type_robots_x.copy()
                     updated_type_robots_x[node.type_robot] = next_x
                     for action, action_state in actions:
-                        valid, new_obj_history = ProductTs.verify_obj_history(node.obj_history, action, node.type_robot)
+                        valid, new_obj_history = ProductTs.verify_obj_history(workspace, node.obj_history, action, node.type_robot)
                         if not valid:
                             continue
                         # self-loop

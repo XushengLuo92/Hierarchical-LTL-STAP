@@ -329,4 +329,4 @@ class Workspace(object):
         subprocess.run(command, shell=True, capture_output=True, text=True)
         
     def name(self):
-        return "bosch"
+        return "ai2thor"
