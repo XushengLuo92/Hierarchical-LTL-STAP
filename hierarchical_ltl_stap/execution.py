@@ -4,7 +4,8 @@ import numpy as np
 
 def generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args, simultaneous=True):
     if simultaneous:
-        # only include active robots per phi
+        # Divide the optimal path into several segments corresponding to the phis
+        # such that each segment only contains active robots that fulfill the phi.
         # it is possible that the path for a phi is interrupted 
         non_essential_actions = ['default', 'in-spec', 'inter-spec-i', 'inter-spec-ii']
         robot_path_act_per_phi = [] 
@@ -29,29 +30,31 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args, s
             
         robot_path_act_per_phi.append((pre_phi, temp_robot_path_act.copy()))
         if args.print_path:
-            for phi, robot_path_act in robot_path_act_per_phi:
-                prYellow(f"{phi}, {robot_path_act}")
+            for curr_phi, robot_path_act in robot_path_act_per_phi:
+                prYellow(f"{curr_phi}, {robot_path_act}")
             
-        ordered_phis = [phi for phi, _ in robot_path_act_per_phi]
+        ordered_phis = [phi for phi, _ in robot_path_act_per_phi] # phi in ordered_phis are at least as important as those phis that are behind it
         robot_path_act = {type_robot: [(workspace.type_robot_location[type_robot], 'default')] for type_robot in workspace.type_robot_location.keys()}
         robot_phi = {type_robot: [''] for type_robot in workspace.type_robot_location.keys()}
-        phi_horizon = [0] * len(ordered_phis)
+        phi_horizon = [0] * len(ordered_phis) # the latest time step when the specific phi is involved 
         # robot_horizon = {type_robot: 1 for type_robot in workspace.type_robot_location.keys()}
         for idx in range(len(ordered_phis)):
-            phi = ordered_phis[idx]
+            curr_phi = ordered_phis[idx]
             # first phi
+            # no need to consider other stuff, just parallel the path 
             if idx == 0:
                 for robot, path in robot_path_act_per_phi[idx][1].items():
                     for wpt_act in path:
                         # remove identical x
                         if wpt_act[0] != robot_path_act[robot][-1][0] or wpt_act[1] not in non_essential_actions:
                             robot_path_act[robot].append(wpt_act)
-                            robot_phi[robot].append(phi)
+                            robot_phi[robot].append(curr_phi)
                     phi_horizon[idx] = max(phi_horizon[idx], len(robot_path_act[robot]))
                 continue
                 
-            # for each robot, find the phi that the robot is aligned, that is, the horizon of robot path lies within the duration of the aligned phi
-            # loop backwards until the aligned phi, stop early if reaching the phi that has the precedent relation
+            # (1) For each robot, find the phi that is the closest one behind (including) the current robot path
+            # (2) Then between this phi and the final phi, determine the phi such that the robot must take action behind it
+            # (3) Finally, add the robot path behind the time stamp determined by the phi
             for robot, path in robot_path_act_per_phi[idx][1].items():
                 specific_robot_horizon = len(robot_path_act[robot])
                 aligned_phi_idex = -1
@@ -65,41 +68,26 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args, s
                                 aligned_phi_idex = pre_phi_idx
                 if aligned_phi_idex == -1:
                     aligned_phi_idex = 0
+                    
+                horizon_of_closest_pred_phi = -1
                 for pre_phi_idx in range(idx-1, aligned_phi_idex - 1, -1): 
                     pre_phi = ordered_phis[pre_phi_idx]
-                    pre_phi_prior_phi = phi in leaf_spec_order[pre_phi]
-                    phi_prior_pre_phi = pre_phi in leaf_spec_order[phi]
-                    is_independent = pre_phi_prior_phi and phi_prior_pre_phi
-                    if not is_independent and ordered_phis[pre_phi_idx] != phi:
-                        horizon_including_pre_phi = phi_horizon[pre_phi_idx]
-                        # align
-                        tmp_x_act = (robot_path_act[robot][-1][0], 'default')
-                        robot_path_act[robot].extend([tmp_x_act] * (horizon_including_pre_phi - len(robot_path_act[robot])))
-                        robot_phi[robot].extend([robot_phi[robot][-1]] * (horizon_including_pre_phi - len(robot_phi[robot])))
-                        # concatenate
-                        for wpt_act in path:
-                            # remove identical x
-                            if wpt_act[0] != robot_path_act[robot][-1][0] or wpt_act[1] not in non_essential_actions:
-                                robot_path_act[robot].append(wpt_act)
-                                robot_phi[robot].append(phi)
-                        # robot_horizon[robot] = horizon_including_pre_phi + horizon_per_robot_aligned_phi
-                        phi_horizon[idx] = max(phi_horizon[idx], len(robot_path_act[robot]))
-                    elif pre_phi_idx == aligned_phi_idex or ordered_phis[pre_phi_idx] == phi:
-                        # reaching all the way down to the aligned phi and independent of the aligned phi
-                        # or same robot and same phi
-                        # concatenate
-                        for wpt_act in path:
-                            # remove identical x
-                            if wpt_act[0] != robot_path_act[robot][-1][0] or wpt_act[1] not in non_essential_actions:
-                                robot_path_act[robot].append(wpt_act)
-                                robot_phi[robot].append(phi)
-                        # robot_horizon[robot] = horizon_including_pre_phi + horizon_per_robot_aligned_phi
-                        phi_horizon[idx] = max(phi_horizon[idx],len(robot_path_act[robot]))
-                    elif is_independent:
-                        # independent
-                        continue
-                    else:
-                        exit
+                    pre_phi_prior_to_current_phi = curr_phi in leaf_spec_order[pre_phi]
+                    current_phi_to_prior_pre_phi = pre_phi in leaf_spec_order[curr_phi]
+                    is_independent = pre_phi_prior_to_current_phi and current_phi_to_prior_pre_phi
+                    if not is_independent or ordered_phis[pre_phi_idx] == curr_phi:
+                        horizon_of_closest_pred_phi = max(phi_horizon[pre_phi_idx], horizon_of_closest_pred_phi)
+                # align
+                tmp_x_act = (robot_path_act[robot][-1][0], 'default')
+                robot_path_act[robot].extend([tmp_x_act] * (horizon_of_closest_pred_phi - len(robot_path_act[robot])))
+                robot_phi[robot].extend([''] * (horizon_of_closest_pred_phi - len(robot_phi[robot])))
+                # concatenate
+                for wpt_act in path:
+                    # remove identical x
+                    if wpt_act[0] != robot_path_act[robot][-1][0] or wpt_act[1] not in non_essential_actions:
+                        robot_path_act[robot].append(wpt_act)
+                        robot_phi[robot].append(curr_phi)
+                phi_horizon[idx] = max(phi_horizon[idx], len(robot_path_act[robot]))
     else:
         robot_path_act = {type_robot: [] for type_robot in workspace.type_robot_location.keys() }
         pre_phi = ''
