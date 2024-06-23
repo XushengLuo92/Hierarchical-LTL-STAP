@@ -408,4 +408,4 @@ class ProductTs(object):
     def produce_succ(node: Node, task_hierarchy, workspace: Workspace, spec_info, args):
         return ProductTs.produce_succ_inside_ps(node, task_hierarchy, workspace, spec_info, args)  + \
             ProductTs.produce_succ_between_ps_same_phi(node, task_hierarchy, workspace, spec_info.path_to_root, args) + \
-                ProductTs.produce_succ_between_ps_same_robot(node, task_hierarchy, workspace, spec_info.leaf_spec_order, args)
+                ProductTs.produce_succ_between_ps_same_robot(node, task_hierarchy, workspace, spec_info.strict_leaf_spec_order, args)

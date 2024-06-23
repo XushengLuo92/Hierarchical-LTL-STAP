@@ -258,7 +258,60 @@ class Specification():
             level_two['p100'] = "<> d3 && ! d5 U d3"
             level_two['p200'] = "<> d5 && ! d3 U d5"
             self.hierarchy.append(level_two)
+            
+        elif case == 25:
+            level_one = dict()
+            level_one["p0"] = "<> ( p101 && ( <> ( p102 && <> p103 ) ) ) "
+            # level_one["p0"] = "<>  p101 &&  <>  p102 && <> p103 "
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two['p101'] = "<> ( p104 ) && ( <> p105 )"
+            level_two['p102'] = "<> p106"
+            level_two['p103'] = "<> p107"
+            self.hierarchy.append(level_two)
+            
+            level_three = dict()
+            level_three['p104'] = "<> d2"
+            level_three['p105'] = "<> d3"
+            level_three['p106'] = "<> m5"
+            level_three['p107'] = "<> d10"
+            self.hierarchy.append(level_three)
         
+        elif case == 26:
+            level_one = dict()
+            # level_one["p0"] = "<> ( p101 &&  <>  p102 ) "
+            level_one["p0"] = "<>  p101 &&  <>  p102"
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two['p101'] = "<> d2 && <> d3"
+            level_two['p102'] = "<> m5"
+            self.hierarchy.append(level_two)
+            
+        elif case == 27:
+            level_one = dict()
+            level_one["p0"] = "<> ( p101 && ( <> ( p102 && ( <> p103 && <> p104 ) ) ) ) )"
+            # level_one["p0"] = "<>  p101 &&  <>  p102"
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two['p101'] = "<> ( d3 && ( <> m5 ) )"
+            level_two['p102'] = "<> d10"
+            level_two['p103'] = "( <> d2 ) && ( <> d1 )"
+            level_two['p104'] = "<> ( d14 && ( <> g ) )"
+            self.hierarchy.append(level_two)
+           
+            # level_three = dict()
+            # level_three['p105'] = "<> d3"
+            # level_three['p106'] = "<> m5"
+            # level_three['p107'] = "<> d10"
+            # level_three['p108'] = "<> d2"
+            # level_three['p109'] = "<> d1"
+            # level_three['p110'] = "<> d14"
+            # level_three['p111'] = "<> g"
+            # self.hierarchy.append(level_three)
+
         return self.hierarchy
     
     def get_manipulation_specification(self, case):

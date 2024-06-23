@@ -87,7 +87,10 @@ def main(args=None):
     #             init_acpt = buchi_constructor.get_init_accept(buchi_graph)
     #             decomp_sets = buchi_constructor.get_all_decomp_nodes(buchi_graph, init_acpt)
     #         task_hierarchy[phi] = Hierarchy(level=index+1, phi=phi, buchi_graph=buchi_graph, decomp_sets=decomp_sets)
-    task_hierarchy, leaf_spec_order, first_spec_candidates = construct_task_network(specs, leaf_specs, workspace, args)
+    # difference between leaf_spec_order and strict_leaf_spec_order
+    # strict_leaf_spec_order only includes pair of nodes that has no other nodes between them
+    task_hierarchy, leaf_spec_order, strict_leaf_spec_order, first_spec_candidates = construct_task_network(specs, leaf_specs, workspace, args)
+    
     buchi_time = time.time() # Record the end time
     if args.print_step:    
         prGreen("Take {:.2f} secs to generate buchi graph".format(buchi_time - workspace_time))
@@ -97,9 +100,10 @@ def main(args=None):
                                                                 [h.decomp_sets for h in task_hierarchy.values()],))
         prRed(f"First spec candidates: {first_spec_candidates}")
         prRed(f"Order between leaf specs: {leaf_spec_order}")
+        prRed(f"Strict Order between leaf specs: {strict_leaf_spec_order}")
     
     spec_info = SpecInfo(depth_specs=depth_specs, path_to_root=path_to_root,
-                         leaf_spec_order=leaf_spec_order)
+                         leaf_spec_order=leaf_spec_order, strict_leaf_spec_order=strict_leaf_spec_order)
 
     # print(task_hierarchy.items())
     if args.vis:
@@ -146,7 +150,8 @@ def main(args=None):
     # ========================== 
     robot_path, robot_phi, robot_act = generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args)
     # prRed(robot_act)
-    if args.print_step:    
+    if args.print_step:   
+        prRed(robot_path) 
         path_time = time.time() # Record the end time
         prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
     prGreen("The path cost {:.2f}".format(cost))

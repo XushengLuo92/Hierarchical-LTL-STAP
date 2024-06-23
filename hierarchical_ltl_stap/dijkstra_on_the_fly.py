@@ -10,19 +10,91 @@ import sys
 """Modified from function multi_source_multi_targets_dijkstra in nx.algorithms
 """
 
-def update_cost(u: Node, cost_to_come: float | tuple, step_cost: float, args):
-    robot = u.type_robot
+def generate_simultaneous_horizon(optimal_path, workspace, leaf_spec_order):
+    # Divide the optimal path into several segments corresponding to the phis
+    # such that each segment only contains active robots that fulfill the phi.
+    # it is possible that the path for a phi is interrupted 
+    non_essential_actions = ['default', 'in-spec', 'inter-spec-i', 'inter-spec-ii']
+    robot_path_act_per_phi = [] 
+    temp_robot_path_act = dict()
+    pre_phi = ''
+    for wpt_act in optimal_path:
+        if pre_phi and wpt_act.phi != pre_phi:
+            robot_path_act_per_phi.append((pre_phi, temp_robot_path_act.copy()))
+            temp_robot_path_act.clear()
+        
+        pre_phi = wpt_act.phi
+        type_robot = wpt_act.type_robot
+        x_act = (wpt_act.type_robots_x[type_robot], wpt_act.action)
+        # remove identical x
+        if type_robot in temp_robot_path_act.keys() and \
+                (x_act[0] != temp_robot_path_act[type_robot][-1][0] or x_act[1] not in non_essential_actions):
+            temp_robot_path_act[type_robot].append(x_act)
+        elif type_robot not in temp_robot_path_act.keys():
+            temp_robot_path_act[type_robot] = [x_act]
+        
+    robot_path_act_per_phi.append((pre_phi, temp_robot_path_act.copy()))
+        
+    ordered_phis = [phi for phi, _ in robot_path_act_per_phi] # phi in ordered_phis are at least as important as those phis that are behind it
+    robot_path_len = {type_robot: 1 for type_robot in workspace.type_robot_location.keys()}
+    phi_horizon = [0] * len(ordered_phis) # the latest time step when the specific phi is involved 
+    for idx in range(len(ordered_phis)):
+        curr_phi = ordered_phis[idx]
+        # first phi
+        # no need to consider other stuff, just parallel the path 
+        if idx == 0:            
+            for robot, path in robot_path_act_per_phi[idx][1].items():
+                robot_path_len[robot] += len(path)
+                phi_horizon[idx] = max(phi_horizon[idx], robot_path_len[robot])
+            continue
+            
+        # (1) For each robot, find the phi that is the closest one behind (including) the current robot path
+        # (2) Then between this phi and the final phi, determine the phi such that the robot must take action behind it
+        # (3) Finally, add the robot path behind the time stamp determined by the phi
+        for robot, path in robot_path_act_per_phi[idx][1].items():
+            specific_robot_horizon = robot_path_len[robot]
+            aligned_phi_idex = -1
+            # find the phi within whose range the specific robot horizon lies
+            if specific_robot_horizon >= phi_horizon[idx - 1]:
+                aligned_phi_idex = idx - 1
+            else:
+                for pre_phi_idx in range(idx - 1, 0, -1):
+                    if specific_robot_horizon < phi_horizon[pre_phi_idx] and \
+                        specific_robot_horizon >= phi_horizon[pre_phi_idx - 1]:
+                            aligned_phi_idex = pre_phi_idx
+            if aligned_phi_idex == -1:
+                aligned_phi_idex = 0
+                
+            horizon_of_closest_pred_phi = -1
+            for pre_phi_idx in range(idx-1, aligned_phi_idex - 1, -1): 
+                pre_phi = ordered_phis[pre_phi_idx]
+                pre_phi_prior_to_current_phi = curr_phi in leaf_spec_order[pre_phi]
+                current_phi_to_prior_pre_phi = pre_phi in leaf_spec_order[curr_phi]
+                is_independent = pre_phi_prior_to_current_phi and current_phi_to_prior_pre_phi
+                if not is_independent or ordered_phis[pre_phi_idx] == curr_phi:
+                    horizon_of_closest_pred_phi = max(phi_horizon[pre_phi_idx], horizon_of_closest_pred_phi)
+            # align
+            robot_path_len[robot] += max(0, horizon_of_closest_pred_phi - robot_path_len[robot])
+            # concatenate
+            robot_path_len[robot] += len(path)
+            phi_horizon[idx] = max(phi_horizon[idx], robot_path_len[robot])
+   
+    robot_act_len = {type_robot: 0 for type_robot in workspace.type_robot_location.keys()}
+    for wpt_act in optimal_path:
+        type_robot = wpt_act.type_robot
+        robot_act_len[type_robot] += 0 if wpt_act.action in non_essential_actions else 1
+    return tuple([robot_path_len[type_robot] + robot_act_len[type_robot] for type_robot in robot_path_len.keys()])
+        
+def update_cost(path: list, cost_to_come: float | tuple, step_cost: float, workspace, leaf_spec_order, args):
     if args.cost == 'minmax':
         assert isinstance(cost_to_come, tuple)
-        index = list(u.type_robots_x.keys()).index(robot)
-        updated_cost = list(cost_to_come)
-        updated_cost[index] += step_cost
-        return tuple(updated_cost)
+        updated_cost = generate_simultaneous_horizon(path, workspace, leaf_spec_order)
+        return updated_cost
     elif args.cost == "min":
         assert isinstance(cost_to_come, float)
         return cost_to_come + step_cost
     else:
-        assert False
+        assert False        
 
 def calculate_cost(cost_to_come: float | tuple, args):
     if args.cost == 'minmax':
@@ -119,6 +191,8 @@ def _dijkstra_multisource(
     # use the count c to avoid comparing nodes (may not be able to)
     fringe = []
     for source in sources:
+        # total_d: total cost combining nav distance and task progress
+        # state_d: nav distance
         total_d = 0.0
         state_d = 0.0 if args.cost == 'min' else tuple([0.0]*len(source.type_robots_x.keys()))
         seen[source] = (total_d, state_d)
@@ -159,9 +233,7 @@ def _dijkstra_multisource(
                     print(f'succ {u}')
             if cost is None:
                 continue
-            # vu_state_dist = dist[v][1] + cost
-            # vu_total_dist = vu_state_dist - args.heuristic_weight * u.progress_metric * int(use_heuristics)
-            vu_state_dist = update_cost(u, dist[v][1], cost, args)
+            vu_state_dist = update_cost(paths[v] + [u], dist[v][1], cost, workspace, spec_info.leaf_spec_order, args)
             vu_total_dist = calculate_cost(vu_state_dist, args) - args.heuristic_weight * u.progress_metric * int(use_heuristics)
             # skip if phi has been reached
             # if phi in phis:
