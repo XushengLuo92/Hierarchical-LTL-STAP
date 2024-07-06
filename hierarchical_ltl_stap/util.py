@@ -45,7 +45,7 @@ def vis_graph(graph, title, latex=False, buchi_graph=False):
         command = "dot -Tpng {0}.dot >{0}.png".format(title)
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
     else:
-        command = "dot2tex {0}.dot --preproc > {0}.tex".format(title)
+        command = "dot2tex --preproc --texmode math {0}.dot  | dot2tex > {0}.tex && pdflatex {0}.tex".format(title)
         result = subprocess.run(command, shell=True, capture_output=True, text=True)
         
 def create_parser():

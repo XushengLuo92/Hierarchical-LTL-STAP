@@ -214,6 +214,7 @@ class ProductTs(object):
                             if not valid:
                                 continue
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
+                            if x == next_x: updated_world_state.add('still')
                             weight = 0 if x == next_x else 1
                             man_weight = 0 if action == 'default' else action_weight
                             weight += man_weight
@@ -241,6 +242,7 @@ class ProductTs(object):
                             if not valid:
                                 continue
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
+                            if x == next_x: updated_world_state.add('still')
                             weight = 0 if x == next_x else 1
                             man_weight = 0 if action == 'default' else action_weight
                             weight += man_weight
@@ -265,6 +267,7 @@ class ProductTs(object):
                             continue
                         # self-loop
                         updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
+                        if x == next_x: updated_world_state.add('still')
                         weight = 0 if x == next_x else 1
                         man_weight = 0 if action == 'default' else action_weight
                         weight += man_weight
