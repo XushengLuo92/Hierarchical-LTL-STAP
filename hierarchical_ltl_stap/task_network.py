@@ -333,13 +333,4 @@ def construct_task_network(task_specification, leaf_specs, workspace: Workspace,
         leaf_spec_order = {leaf_spec: set(leaf_specs) - {leaf_spec} for leaf_spec in leaf_specs}
         first_spec_candidates = leaf_specs
         
-    strict_leaf_spec_order = {leaf_spec: set(leaf_spec_network.succ[leaf_spec]) for leaf_spec in leaf_specs}
-    nodes = leaf_spec_network.nodes()
-    for u in nodes:
-        for v in nodes:
-            if u == v:
-                continue
-            if not nx.has_path(leaf_spec_network, u, v) and not nx.has_path(leaf_spec_network, v, u):
-                strict_leaf_spec_order[u].add(v)
-                strict_leaf_spec_order[v].add(u)
-    return task_hierarchy, leaf_spec_order, strict_leaf_spec_order, first_spec_candidates
+    return task_hierarchy, leaf_spec_order, leaf_spec_network, first_spec_candidates

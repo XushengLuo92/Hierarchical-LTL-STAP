@@ -89,7 +89,7 @@ def main(args=None):
     #         task_hierarchy[phi] = Hierarchy(level=index+1, phi=phi, buchi_graph=buchi_graph, decomp_sets=decomp_sets)
     # difference between leaf_spec_order and strict_leaf_spec_order
     # strict_leaf_spec_order only includes pair of nodes that has no other nodes between them
-    task_hierarchy, leaf_spec_order, strict_leaf_spec_order, first_spec_candidates = construct_task_network(specs, leaf_specs, workspace, args)
+    task_hierarchy, leaf_spec_order, leaf_spec_network, first_spec_candidates = construct_task_network(specs, leaf_specs, workspace, args)
     
     buchi_time = time.time() # Record the end time
     if args.print_step:    
@@ -100,10 +100,9 @@ def main(args=None):
                                                                 [h.decomp_sets for h in task_hierarchy.values()],))
         prRed(f"First spec candidates: {first_spec_candidates}")
         prRed(f"Order between leaf specs: {leaf_spec_order}")
-        prRed(f"Strict Order between leaf specs: {strict_leaf_spec_order}")
     
     spec_info = SpecInfo(depth_specs=depth_specs, path_to_root=path_to_root,
-                         leaf_spec_order=leaf_spec_order, strict_leaf_spec_order=strict_leaf_spec_order)
+                         leaf_spec_order=leaf_spec_order, leaf_spec_network=leaf_spec_network)
 
     # print(task_hierarchy.items())
     if args.vis:

@@ -339,11 +339,31 @@ class ProductTs(object):
                      ProductTs.update_progress_metric(task_hierarchy, node.phis_progress), node.obj_history), 0]
         return [succ]
     
-    def produce_succ_between_ps_same_robot(node: Node, task_hierarchy, workspace: Workspace, leaf_phis_order, args):
+    @staticmethod
+    def get_strict_leaf_phis_order(curr_phi, phis_progress, leaf_spec_network):
+        # remove nodes whose tasks have been completed
+        removed_nodes = {phi for phi in phis_progress.keys() if phi in leaf_spec_network.nodes() and 'accept' in phis_progress[phi]}
+        removed_nodes.discard(curr_phi)
+        leaf_spec_network.remove_nodes_from(removed_nodes)
+        nodes = leaf_spec_network.nodes()
+        strict_leaf_spec_order = {leaf_spec: set() for leaf_spec in nodes}
+        in_degrees = dict(leaf_spec_network.in_degree())
+        root_nodes = [n for n, in_degree in in_degrees.items() if in_degree == 0]
+        for u in nodes:
+            # if a node has in degree 0, it can transition to any other root node and its direct successor
+            if u in root_nodes:
+                strict_leaf_spec_order[u] = set(root_nodes) - {u}
+                strict_leaf_spec_order[u].update(set(leaf_spec_network.succ[u]))
+        leaf_spec_network.add_nodes_from(removed_nodes)
+        return strict_leaf_spec_order
+    
+    @staticmethod
+    def produce_succ_between_ps_same_robot(node: Node, task_hierarchy, workspace: Workspace, leaf_spec_network, args):
         succ = []
         buchi_graph = task_hierarchy[node.phi].buchi_graph
         x = node.type_robots_x[node.type_robot]
         q = node.phis_progress[node.phi]
+        strict_leaf_phis_order = ProductTs.get_strict_leaf_phis_order(node.phi, node.phis_progress, leaf_spec_network)
         # @TODO It seems no need to connect init with init
         # # for the same robot, connect from one init node of a team model to the init node of another team model with init location
         # if q in buchi_graph.graph['init'] and (node.type_robot, x) in ProductTs.essential_type_robot_x:
@@ -363,7 +383,7 @@ class ProductTs(object):
         if q in buchi_graph.graph['accept'] and (not use_heuristics or (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x):
             # constrain the set of states that can be accepting product states
             # update buchi state
-            for leaf_phi in leaf_phis_order[node.phi]: # only connect when precedence relation exists
+            for leaf_phi in strict_leaf_phis_order[node.phi]: # only connect when precedence relation exists
                 leaf_buchi_graph = task_hierarchy[leaf_phi].buchi_graph
                 leaf_q = node.phis_progress[leaf_phi]
                 if leaf_q in leaf_buchi_graph.graph['init'] and \
@@ -376,8 +396,8 @@ class ProductTs(object):
         hierarchy = task_hierarchy[node.phi]   
         if (q in hierarchy.decomp_sets or q in buchi_graph.graph['accept'] ) and \
             (not use_heuristics or (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x):
-            for leaf_phi in leaf_phis_order[node.phi]:
-                if node.phi in leaf_phis_order[leaf_phi]:
+            for leaf_phi in strict_leaf_phis_order[node.phi]:
+                if node.phi in strict_leaf_phis_order[leaf_phi]:
                     leaf_buchi_graph = task_hierarchy[leaf_phi].buchi_graph
                     leaf_q = node.phis_progress[leaf_phi]
                     leaf_hierarchy = task_hierarchy[leaf_phi]
@@ -394,7 +414,7 @@ class ProductTs(object):
         if q in buchi_graph.graph['accept'] and (not use_heuristics or (node.phi, node.type_robot, x, q) in ProductTs.essential_phi_type_robot_x):
                 # constrain the set of states that can be accepting product states
                 # update buchi state
-                for leaf_phi in leaf_phis_order[node.phi]:
+                for leaf_phi in strict_leaf_phis_order[node.phi]:
                     leaf_buchi_graph = task_hierarchy[leaf_phi].buchi_graph
                     hierarchy = task_hierarchy[leaf_phi]
                     decomp_set = hierarchy.decomp_sets | set(leaf_buchi_graph.graph['init']) | set(leaf_buchi_graph.graph['accept'])
@@ -411,4 +431,4 @@ class ProductTs(object):
     def produce_succ(node: Node, task_hierarchy, workspace: Workspace, spec_info, args):
         return ProductTs.produce_succ_inside_ps(node, task_hierarchy, workspace, spec_info, args)  + \
             ProductTs.produce_succ_between_ps_same_phi(node, task_hierarchy, workspace, spec_info.path_to_root, args) + \
-                ProductTs.produce_succ_between_ps_same_robot(node, task_hierarchy, workspace, spec_info.strict_leaf_spec_order, args)
+                ProductTs.produce_succ_between_ps_same_robot(node, task_hierarchy, workspace, spec_info.leaf_spec_network, args)
