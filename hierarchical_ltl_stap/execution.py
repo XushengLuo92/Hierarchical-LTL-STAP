@@ -112,11 +112,11 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args, s
         path_len = len(path)
         if not path:
             path.extend((horizon - path_len) * [(workspace.type_robot_location[robot], 'default')])
-            robot_phi[robot].extend((horizon - path_len) * [robot_phi[robot]])
+            robot_phi[robot].extend((horizon - path_len) * [''])
         else:
             tmp_x_act = (path[-1][0], 'default')
             path.extend((horizon - path_len) * [tmp_x_act])
-            robot_phi[robot].extend((horizon - path_len) * [robot_phi[robot][-1]])
+            robot_phi[robot].extend((horizon - path_len) * [''])
         # prRed(path)
     
     robot_path = {type_robot: [x_act[0] for x_act in path_act] for type_robot, path_act in robot_path_act.items()}
