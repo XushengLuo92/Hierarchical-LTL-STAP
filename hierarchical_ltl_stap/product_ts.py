@@ -198,6 +198,7 @@ class ProductTs(object):
             edge_label = buchi_graph.edges[(q, next_q)]['label']
             aps_in_label = BuchiConstructor.get_literals(edge_label)
             aps_sub = {ap: True if ap in aps_true else False for ap in symbols(aps_in_label)}
+            if 'still' in aps_in_label: aps_sub['still'] = True
             if edge_label.subs(aps_sub) == True:    
                 # update progress of leaf phis if accepting state or decomp state is reached
                 updated_phis_progress = node.phis_progress.copy()
@@ -214,7 +215,6 @@ class ProductTs(object):
                             if not valid:
                                 continue
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
-                            if x == next_x: updated_world_state.add('still')
                             weight = 0 if x == next_x else 1
                             man_weight = 0 if action == 'default' else action_weight
                             weight += man_weight
@@ -242,7 +242,6 @@ class ProductTs(object):
                             if not valid:
                                 continue
                             updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
-                            if x == next_x: updated_world_state.add('still')
                             weight = 0 if x == next_x else 1
                             man_weight = 0 if action == 'default' else action_weight
                             weight += man_weight
@@ -267,7 +266,6 @@ class ProductTs(object):
                             continue
                         # self-loop
                         updated_world_state = workspace.update_world_state(next_x, action, node.world_state)
-                        if x == next_x: updated_world_state.add('still')
                         weight = 0 if x == next_x else 1
                         man_weight = 0 if action == 'default' else action_weight
                         weight += man_weight
