@@ -56,6 +56,7 @@ def build_buchi_graph_and_poset(task_specification, leaf_specs, workspace: Works
                 buchi_graph.graph['conflict_aps'] = list(task_specification.hierarchy[index+1].keys())
             decomp_sets = None
             if args.print_task:
+                # This is used to calculate the total number of nodes and edges 
                 prCyan(f"{phi}, {spec}, {buchi_graph.number_of_nodes()} nodes and {buchi_graph.number_of_edges()} edge")
             nodes.append(buchi_graph.number_of_nodes())
             edges.append(buchi_graph.number_of_edges())

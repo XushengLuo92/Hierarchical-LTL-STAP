@@ -311,7 +311,104 @@ class Specification():
             # level_three['p110'] = "<> d14"
             # level_three['p111'] = "<> g"
             # self.hierarchy.append(level_three)
-
+            
+        elif case == 28:
+            # hierarchical version of combined task 1 and 2 and 3
+            # absorb p301
+            level_one = dict()
+            level_one["p0"] = '<> p100 && <> p200 && <> p300'
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two["p100"] = '<> p101 && <> p102'
+            level_two["p200"] = '<> p201 && <> p202 && <> p203'
+            level_two["p300"] = '<> p301 && <> p302 && <> p303'
+            self.hierarchy.append(level_two)
+            
+            level_three = dict()
+            level_three["p101"] = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)"
+            level_three["p102"] = "<> (d5 && emptybin && X (d5 && default))"
+            level_three["p201"] = "<> (p && carry U (d10 && X !carry)) && [] (carry -> !publicc)"
+            level_three["p202"] = "<> (p && carry U (d7 && X !carry)) && [] (carry -> !publicc)"
+            level_three["p203"] = "<> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
+            level_three['p301'] = "<> (m1 && photo) && <> (m4 && photo) && <> (m6 && photo)" \
+                                " && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_three['p302'] = "<> (d5 && carry U (d3 && X !carry)) && [] (carry -> !publicc)"
+            level_three['p303'] = "<> (d11 && guide U (m6 && X !guide))"
+            self.hierarchy.append(level_three)
+            
+            
+        elif case == 29:
+            # hierarchical version of combined task 1 and 2 and 3
+            # absorb p301 and p100
+            level_one = dict()
+            level_one["p0"] = '<> p100 && <> p200 && <> p300'
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two["p100"] = '<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)' \
+                '&& <> (d5 && emptybin && X (d5 && default))'
+            level_two["p200"] = '<> p201 && <> p202 && <> p203'
+            level_two["p300"] = '<> p301 && <> p302 && <> p303'
+            self.hierarchy.append(level_two)
+            
+            level_three = dict()
+            level_three["p201"] = "<> (p && carry U (d10 && X !carry)) && [] (carry -> !publicc)"
+            level_three["p202"] = "<> (p && carry U (d7 && X !carry)) && [] (carry -> !publicc)"
+            level_three["p203"] = "<> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
+            level_three['p301'] = "<> (m1 && photo) && <> (m4 && photo) && <> (m6 && photo)" \
+                                " && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_three['p302'] = "<> (d5 && carry U (d3 && X !carry)) && [] (carry -> !publicc)"
+            level_three['p303'] = "<> (d11 && guide U (m6 && X !guide))"
+            self.hierarchy.append(level_three)
+            
+        elif case == 30:
+             # hierarchical version of combined task 1 and 2 and 3
+            # absorb p301, p100 and p200
+            level_one = dict()
+            level_one["p0"] = '<> p100 && <> p200 && <> p300'
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two["p100"] = '<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)' \
+                '&& <> (d5 && emptybin && X (d5 && default))'
+            level_two["p200"] = '<> (p && carry U (d10 && X !carry)) ' \
+                '&& <> (p && carry U (d7 && X !carry)) ' \
+                    '&& <> (p && carry U (d5 && X !carry)) ' \
+                        '&& [] (carry -> !publicc)'
+            level_two["p300"] = '<> p301 && <> p302 && <> p303'
+            self.hierarchy.append(level_two)
+            
+            level_three = dict()
+            level_three['p301'] = "<> (m1 && photo) && <> (m4 && photo) && <> (m6 && photo)" \
+                                " && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_three['p302'] = "<> (d5 && carry U (d3 && X !carry)) && [] (carry -> !publicc)"
+            level_three['p303'] = "<> (d11 && guide U (m6 && X !guide))"
+            self.hierarchy.append(level_three)
+            
+        elif case == 31:
+            # hierarchical version of combined task 1 and 2 and 3
+            # absorb p301, p100, p200 and p300
+            level_one = dict()
+            level_one["p0"] = '<> p100 && <> p200 && <> p300'
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two["p100"] = '<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)' \
+                '&& <> (d5 && emptybin && X (d5 && default))'
+            level_two["p200"] = '<> (p && carry U (d10 && X !carry)) ' \
+                '&& <> (p && carry U (d7 && X !carry)) ' \
+                    '&& <> (p && carry U (d5 && X !carry)) ' \
+                        '&& [] (carry -> !publicc)'
+            level_two["p300"] =  "<> (d5 && carry U (d3 && X !carry)) && [] (carry -> !publicc) && \
+                <> (d11 && guide U (m6 && X !guide)) && \
+                <> (m1 && photo) && \
+                <> (m4 && photo) && \
+                <> (m6 && photo) && \
+                [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            self.hierarchy.append(level_two)
+            
+            
         return self.hierarchy
     
     def get_manipulation_specification(self, case):
@@ -357,7 +454,7 @@ class Specification():
                     raise ValueError(f"{phi} contains primitive spec {spec}")
         
         if vis:
-            vis_graph(hierarchy_graph, 'data/spec_hierarchy', latex=False)
+            vis_graph(hierarchy_graph, 'data/spec_hierarchy', latex=True)
             
         return hierarchy_graph
     

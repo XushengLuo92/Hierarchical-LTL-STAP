@@ -75,6 +75,7 @@ def create_parser():
     parser.add_argument('--heuristics_switch',action='store_true', help='Enable heuristics of essential switch when searching')
     parser.add_argument('--heuristics_automaton',action='store_true', help='Enable heuristics of automaton when searching')
     parser.add_argument('--cost', default='min', type=str, help='types of cost representation')
+    parser.add_argument('--run', default=-1, type=int, help='test instance for batch test')
     return parser
 
 def plot_workspace(workspace, ax):
