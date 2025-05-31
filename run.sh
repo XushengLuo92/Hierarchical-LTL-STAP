@@ -1,10 +1,10 @@
-for i in {12..14}
+for i in {23..23}
 do
     echo "------------- $i --------------" 
     echo "------------- heuristics_all  --------------" 
     for j in {1..20}
     do
-        time gtimeout 1h  python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=$i --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json  --domain=bosch --num_robots=2 
+        time gtimeout 1h  python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=$i --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json  --domain=bosch --num_robots=6
     done
     # echo "------------- heuristics_order  --------------" 
     # for j in {1..10}

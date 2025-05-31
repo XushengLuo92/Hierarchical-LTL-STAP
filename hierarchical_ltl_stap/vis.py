@@ -55,7 +55,7 @@ class RobotPath:
                 a = self.robot_act[type_robot][int(np.floor(elapse_time))]
             
             if a not in non_essential_actions:
-                act.append(f'{type_robot} {a}')
+                act.append(f'({type_robot[1]} {a})')
 
             robot_point[type_robot] = x[-1]
         self.x = np.array(x)

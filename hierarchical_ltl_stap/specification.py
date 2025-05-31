@@ -2,7 +2,7 @@ import networkx as nx
 from .util import vis_graph
 
 task1 = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)  && \
-            <> (d5 && emptybin && X (d5 && default))"
+            <> (g && X (g && emptybin) && <> (d5 && X (d5 && default)))"
 task2 = "<> (p && carry U (d10 && X !carry)) && \
             <> (p && carry U (d7 && X !carry)) && \
             <> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
@@ -51,7 +51,7 @@ class Specification():
             self.hierarchy.append(level_one)
             level_two = dict()
             level_two["p100"] = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)"
-            level_two["p200"] = "<> (d5 && emptybin && X (d5 && default))"
+            level_two["p200"] = "<> (g && X (g && emptybin) && <> (d5 && X (d5 && default)))"
             self.hierarchy.append(level_two)
             
         elif case == 13:
@@ -93,7 +93,7 @@ class Specification():
             level_two = dict()
             level_two['p100'] = \
               "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)  && \
-               <> (d5 && emptybin && X (d5 && default))"
+               <> (g && X (g && emptybin) && <> (d5 && X (d5 && default)))"
             self.hierarchy.append(level_two)
             
         elif case == 16:
@@ -138,7 +138,7 @@ class Specification():
             
             level_three = dict()
             level_three["p101"] = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)"
-            level_three["p102"] = "<> (d5 && emptybin && X (d5 && default))"
+            level_three["p102"] = "<> (g && X (g && emptybin) && <> (d5 && X (d5 && default)))"
             level_three["p201"] = "<> (p && carry U (d10 && X !carry)) && [] (carry -> !publicc)"
             level_three["p202"] = "<> (p && carry U (d7 && X !carry)) && [] (carry -> !publicc)"
             level_three["p203"] = "<> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
@@ -157,7 +157,7 @@ class Specification():
             
             level_three = dict()
             level_three["p101"] = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)"
-            level_three["p102"] = "<> (d5 && emptybin && X (d5 && default))"
+            level_three["p102"] = "<> (g && X (g && emptybin) && <> (d5 && X (d5 && default)))"
             level_three['p201'] = "<> p301 && <> p302 && <> p303"
             level_three['p202'] = "<> (d5 && carry U (d3 && X !carry)) && [] (carry -> !publicc)"
             level_three['p203'] = "<> (d11 && guide U (m6 && X !guide))"
@@ -209,7 +209,36 @@ class Specification():
             
             level_three = dict()
             level_three["p101"] = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)"
-            level_three["p102"] = "<> (d5 && emptybin && X (d5 && default))"
+            level_three["p102"] = "<> (g && X (g && emptybin) && <> (d5 && X (d5 && default)))"
+            level_three["p201"] = "<> (p && carry U (d10 && X !carry)) && [] (carry -> !publicc)"
+            level_three["p202"] = "<> (p && carry U (d7 && X !carry)) && [] (carry -> !publicc)"
+            level_three["p203"] = "<> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
+            level_three['p301'] = "<> p401 && <> p402 && <> p403"
+            level_three['p302'] = "<> (d5 && carry U (d3 && X !carry)) && [] (carry -> !publicc)"
+            level_three['p303'] = "<> (d11 && guide U (m6 && X !guide))"
+            self.hierarchy.append(level_three)
+            
+            level_four = dict()
+            level_four["p401"] = "<> (m1 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_four["p402"] = "<> (m4 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            level_four["p403"] = "<> (m6 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
+            self.hierarchy.append(level_four)
+            
+        elif case == 22:
+            # hierarchical version of combined task 1 and 2 and 3
+            level_one = dict()
+            level_one["p0"] = '<> (p100 || p200) && <> p300'
+            self.hierarchy.append(level_one)
+            
+            level_two = dict()
+            level_two["p100"] = '<> p101 && <> p102'
+            level_two["p200"] = '<> p201 && <> p202 && <> p203'
+            level_two["p300"] = '<> p301 && <> p302 && <> p303'
+            self.hierarchy.append(level_two)
+            
+            level_three = dict()
+            level_three["p101"] = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)"
+            level_three["p102"] = "<> (g && X (g && emptybin) && <> (d5 && X (d5 && default)))"
             level_three["p201"] = "<> (p && carry U (d10 && X !carry)) && [] (carry -> !publicc)"
             level_three["p202"] = "<> (p && carry U (d7 && X !carry)) && [] (carry -> !publicc)"
             level_three["p203"] = "<> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
@@ -224,22 +253,22 @@ class Specification():
             level_four["p403"] = "<> (m6 && photo) && [] (!(m1 || m2 || m3 || m4 || m5 || m6) -> !camera)"
             self.hierarchy.append(level_four)
         
-        elif case == 22:
+        elif case == 23:
             # flat version of combined task
             level_one = dict()
             level_one["p0"] = "<> p100"
             self.hierarchy.append(level_one)
             
             level_two = dict()
-            # level_two['p100'] = task1 + ' && ' + task2
-            level_two['p100'] = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)  && \
-            <> (d5 && emptybin && X (d5 && default)) && \
-            <> (p && carry U (d10 && X !carry)) && \
-            <> (p && carry U (d7 && X !carry)) && \
-            <> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
+            level_two['p100'] = task1 + ' || ' + task2 + ' || ' + task3
+            # level_two['p100'] = "<> (d5 && default && X ((carrybin U dispose) && <> default)) && [](carrybin -> !publicc)  && \
+            # <> (d5 && emptybin && X (d5 && default)) && \
+            # <> (p && carry U (d10 && X !carry)) && \
+            # <> (p && carry U (d7 && X !carry)) && \
+            # <> (p && carry U (d5 && X !carry)) && [] (carry -> !publicc)"
             self.hierarchy.append(level_two)
         
-        elif case == 23:
+        elif case == 24:
             # case 1 in AI2THOR
             level_one = dict()
             level_one["p0"] = "<> p100"
@@ -249,7 +278,7 @@ class Specification():
             level_two['p100'] = "<> (apple37512a22 && carry000apple37512a22) && <> (cabinet19b27166 && camera000cabinet19b27166)"
             self.hierarchy.append(level_two)
 
-        elif case == 24:
+        elif case == 25:
             level_one = dict()
             level_one["p0"] = "<> p100 && <> p200"
             self.hierarchy.append(level_one)

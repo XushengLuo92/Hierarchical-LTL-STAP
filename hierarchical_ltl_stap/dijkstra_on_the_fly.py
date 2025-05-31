@@ -83,6 +83,10 @@ def generate_simultaneous_horizon(optimal_path, workspace, leaf_spec_order):
     for wpt_act in optimal_path:
         type_robot = wpt_act.type_robot
         robot_act_len[type_robot] += 0 if wpt_act.action in non_essential_actions else 1
+    for i, wpt_act in enumerate(optimal_path):
+        if i > 1:
+            type_robot = wpt_act.type_robot
+            robot_act_len[type_robot] += 0 if wpt_act.type_robots_x[type_robot] == optimal_path[i-1].type_robots_x[type_robot] else 0.1
     return tuple([robot_path_len[type_robot] + robot_act_len[type_robot] for type_robot in robot_path_len.keys()])
         
 def update_cost(path: list, cost_to_come: float | tuple, step_cost: float, workspace, leaf_spec_order, args):

@@ -31,7 +31,7 @@
       "effects": ["dispose"]
     },
     "emptybin": {
-      "preconditions": [[]],
+      "preconditions": [["g"]],
       "effects": ["emptybin"]
     },
     "photo": {
