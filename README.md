@@ -1,5 +1,6 @@
 # Simultaneous Task Allocation and Planning for Multi-Robots under Hierarchical Temporal Logic Specifications
-Past research into robotic planning with temporal logic specifications, notably Linear Temporal Logic (LTL), was largely based on singular formulas for individual or groups of robots. But with increasing task complexity, LTL formulas unavoidably grow lengthy, complicating interpretation and spec- ification generation, and straining the computational capacities of the planners. We capitalized on the intrinsic structure of tasks and introduced a hierarchical structure to LTL specifi- cations, which have proven to be more expressive than their flat counterparts. We also designed an algorithm to ascertain whether they are satisfied given an input sequence. Second, we employ a search-based approach to synthesize plans for a multi-robot system, accomplishing simultaneous task allocation and planning. The search space is approximated by loosely interconnected sub-spaces, with each sub-space corresponding to one LTL specification. The search is predominantly confined to a single sub-space, transitioning to another sub-space under certain conditions, determined by the decomposition of automatons. Moreover, multiple heuristics are formulated to expedite the search significantly. A theoretical analysis concerning complete- ness and optimality is conducted under mild assumptions. When compared with existing methods on service tasks, our method outperforms in terms of execution times with comparable solution quality. Finally, scalability is evaluated by testing a group of 30 robots and achieving reasonable runtimes.
+Research in robotic planning with temporal logic specifications, such as Linear Temporal Logic (LTL), has relied on single formulas. However, as task complexity increases, LTL formulas become lengthy, making them difficult to interpret and generate, and straining the computational capacities of planners. To address this, we introduce a hierarchical structure for a widely used specification type—LTL on finite traces. The resulting language, termed H-LTL_f, is defined with both its syntax and semantics. We further prove that H-LTL_f is more expressive than its standard “flat” counterparts. Moreover, we conducted a user study that compared the standard LTL_f with our hierarchical version and found that users could more easily comprehend complex tasks using the hierarchical structure. We develop a search-based approach to synthesize plans for multi-robot systems, achieving simultaneous task allocation and planning. This method approximates the search space by loosely interconnected sub-spaces, each corresponding to an LTL_f specification. The search primarily focuses on a single sub-space, transitioning to another under conditions determined by the decomposition of automata. We develop multiple heuristics to significantly expedite the search. Our theoretical analysis, conducted under mild assumptions, addresses completeness and optimality. Compared to existing methods used in various simulators for service tasks, our approach improves planning times while maintaining comparable solution quality.
+
 
 # Install
  The code is tesed using Python 3.10.12.
@@ -36,19 +37,22 @@ $$
 \begin{align*}
  L_1: \quad &  \phi(1,1) =  \Diamond \phi(2,1) \wedge \Diamond\phi(2,2)\\
  L_2: \quad &  \phi(2,1) = \Diamond (d_5 \wedge \mathsf{default} \bigcirc ((\mathsf{carrybin}\  \mathcal{U}\  \mathsf{dispose}) \wedge \Diamond \mathsf{default})) \wedge \square (\mathsf{carrybin \Rightarrow \neg \mathsf{public}})\\
-                & \phi(2,2) = \Diamond (d_5 \wedge \mathsf{emptybin} \wedge \bigcirc (d_5 \wedge \mathsf{default})) 
+                & \phi(2,2) = \Diamond (g \wedge \bigcirc (g \wedge \mathsf{emptybin}) \wedge \Diamond (d_5 \wedge \bigcirc (d_5 \wedge \mathsf{default})))
 \end{align*}
 $$
 
-
 ```bash
-python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=12 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json  --domain=bosch --num_robots=6 --vis --print_step 
+python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=12 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json --cost=min --domain=bosch --num_robots=6 --vis --print_step 
 ```
 The explanation of arguments can be found in function [create_parser](hierarchical_ltl_stap/util.py).
-<video src="https://github.com/XushengLuo92/Hierarchical-LTL-STAP/assets/26454312/129236c0-9738-441e-bee5-a3e7511f732a" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
+<video src="https://github.com/user-attachments/assets/bed12153-de0d-4153-bbaf-6717ad5f2868" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
 </video>
 
-In the demonstration video, the red text highlights a particular robot and the action it's performing at a given moment. For example, "(1, 2) carrybin" indicates that at this point in time, the second robot of type 1 is engaged in transporting a bin. Additionally, the red arrow signifies the direction of movement for that time step.
+```bash
+python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=12 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json --cost=minmax --domain=bosch --num_robots=6 --vis --print_step 
+```
+<video src="https://github.com/user-attachments/assets/879d2485-acb8-4ec1-ab0c-74225fd1241a" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
+</video>
 
 ### Scenario 2
 Distribute printed copies of a document to desks $d_{10}$, $d_7$, and $d_5$, and avoid public areas while carrying the document. 
@@ -64,8 +68,9 @@ $$
 ```bash
 python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=13 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json  --domain=bosch --num_robots=6 --vis --print_step 
 ```
-<video src="https://github.com/XushengLuo92/Hierarchical-LTL-STAP/assets/26454312/5d037556-73b0-47dc-a859-8df9eee1cbe2" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
+<video src="https://github.com/user-attachments/assets/58236e50-5649-4185-b006-39f22f2da01e" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
 </video>
+
 
 ### Scenario 3
 Take a photo in meeting rooms $m_1$, $m_4$, and $m_6$. The camera should be turned off for privacy reasons when not in meeting rooms. Deliver a document from desk $d_5$ to $d_3$, ensuring it does not pass through any public areas, as the document is internal and confidential. Guide a person waiting at desk $d_{11}$ to meeting room $m_6$.
@@ -86,7 +91,7 @@ $$
 ```bash
 python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=14 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json  --domain=bosch --num_robots=6 --vis --print_step 
 ```
-<video src="https://github.com/XushengLuo92/Hierarchical-LTL-STAP/assets/26454312/f9abcc75-754a-4672-97a6-79c38d2efe29" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
+<video src="https://github.com/user-attachments/assets/41b4e1c8-5ac5-43ba-ab2e-04d490721bb4" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
 </video>
 
 ### Scenario 4 
@@ -115,17 +120,22 @@ $$
  ```bash
 python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=21 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json  --domain=bosch --num_robots=6 --vis --print_step 
 ```
-<video src="https://github.com/XushengLuo92/Hierarchical-LTL-STAP/assets/26454312/1a3ea7a3-1ed3-401a-8178-d1fa1014cf3d" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
+<video src="https://github.com/user-attachments/assets/d65a0b99-b74e-4095-a2b8-0fad1b47919a" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
 </video>
 
+## Simulaiton in AI2THOR
+
+<video src="https://github.com/user-attachments/assets/d52152d0-2622-4db9-a8fc-1ba5a882ae21" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
+</video>
 
 # Citation
 ```
-@article{luo2024simultaneous,
+@article{luo2025simultaneous,
   title={Simultaneous Task Allocation and Planning for Multi-Robots under Hierarchical Temporal Logic Specifications},
   author={Luo, Xusheng and Liu, Changliu},
-  journal={arXiv preprint arXiv:2401.04003},
-  year={2024}
+  journal={IEEE Transaction on Robotics},
+  year={2025},
+  publisher={IEEE}
 }
 ```
 
@@ -137,5 +147,11 @@ python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=21 --heuristics --h
   journal={IEEE Robotics and Automation Letters},
   year={2024},
   publisher={IEEE}
+}
+@inproceedings{wei2025hierarchical,
+  title={Hierarchical Temporal Logic Task and Motion Planning for Multi-Robot Systems},
+  author={Wei, Zhongqi and Luo, Xusheng and Liu, Changliu},
+  booktitle={Robotics: Science and Systems},
+  year={2025}
 }
 ```
