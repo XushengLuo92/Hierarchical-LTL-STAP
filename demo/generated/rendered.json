@@ -1,0 +1,110 @@
+[
+  {
+    "scenario": 1,
+    "case": 12,
+    "cost_mode": "minmax",
+    "robots": 6,
+    "horizon": 36,
+    "video": "scenario_01.mp4",
+    "frames": 601,
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "replay_sha256": "5ab1b0ed15818fa725e17a66ecb7a66fa4431d94061ae310c40d171676a0b808",
+    "checks": {
+      "planner_accepted": true,
+      "hierarchy_satisfied": true,
+      "legal_grid_paths": true,
+      "action_model_valid": true,
+      "safety_valid": true
+    },
+    "collision_avoidance": false,
+    "collision_diagnostics": {
+      "collision_free": true,
+      "conflict_count": 0
+    }
+  },
+  {
+    "scenario": 2,
+    "case": 13,
+    "cost_mode": "minmax",
+    "robots": 6,
+    "horizon": 32,
+    "video": "scenario_02.mp4",
+    "frames": 541,
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "replay_sha256": "1b0f454d9cfd6493522550d86e6d537e25b573aae6f5116cd9a7170a12a01ec9",
+    "checks": {
+      "planner_accepted": true,
+      "hierarchy_satisfied": true,
+      "legal_grid_paths": true,
+      "action_model_valid": true,
+      "safety_valid": true
+    },
+    "collision_avoidance": false,
+    "collision_diagnostics": {
+      "collision_free": false,
+      "conflict_count": 1
+    }
+  },
+  {
+    "scenario": 3,
+    "case": 14,
+    "cost_mode": "minmax",
+    "robots": 6,
+    "horizon": 36,
+    "video": "scenario_03.mp4",
+    "frames": 601,
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "replay_sha256": "1cbc470e236c543b5a1fc8e23cdf9e97df777f5a0018d18c318617429f3d2df5",
+    "checks": {
+      "planner_accepted": true,
+      "hierarchy_satisfied": true,
+      "legal_grid_paths": true,
+      "action_model_valid": true,
+      "safety_valid": true
+    },
+    "collision_avoidance": false,
+    "collision_diagnostics": {
+      "collision_free": true,
+      "conflict_count": 0
+    }
+  },
+  {
+    "scenario": 4,
+    "case": 21,
+    "cost_mode": "minmax",
+    "robots": 6,
+    "horizon": 64,
+    "video": "scenario_04.mp4",
+    "frames": 1021,
+    "fps": 30,
+    "size": [
+      1920,
+      1080
+    ],
+    "replay_sha256": "958ff765290edd50618e8cb925637eaf1996d6655864d439ba86f3c9e4e34fe3",
+    "checks": {
+      "planner_accepted": true,
+      "hierarchy_satisfied": true,
+      "legal_grid_paths": true,
+      "action_model_valid": true,
+      "safety_valid": true
+    },
+    "collision_avoidance": false,
+    "collision_diagnostics": {
+      "collision_free": false,
+      "conflict_count": 4
+    }
+  }
+]

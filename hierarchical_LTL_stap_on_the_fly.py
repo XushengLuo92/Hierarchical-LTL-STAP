@@ -13,10 +13,13 @@ from hierarchical_ltl_stap.task_network import construct_task_network
 from hierarchical_ltl_stap.execution import generate_simultaneous_exec, event_based_execution
 
 import time
+import random
 
 def main(args=None):
     parser = create_parser()
-    args = parser.parse_known_args()[0]
+    args = parser.parse_known_args(args)[0]
+    if args.seed is not None:
+        random.seed(args.seed)
     if args.domain == "supermarket":
         from hierarchical_ltl_stap.workspace_supermarket import Workspace
     elif args.domain == "bosch":
@@ -154,6 +157,11 @@ def main(args=None):
         path_time = time.time() # Record the end time
         prGreen("Take {:.2f} secs to extract path".format(path_time - search_time))
     prGreen("The path cost {:.2f}".format(cost))
+    if args.replay_output:
+        from hierarchical_ltl_stap.replay import export_replay
+        export_replay(args.replay_output, args, workspace, specs, hierarchy_graph,
+                      task_hierarchy, optimal_path, robot_path, robot_phi, robot_act,
+                      cost, time.time() - start_time)
     if args.event:
         event_based_execution(robot_path, robot_phi, robot_act, leaf_spec_order, first_spec_candidates)
     if args.vis:
@@ -162,5 +170,5 @@ def main(args=None):
         prGreen("Take {:.2f} secs to visualize".format(vis_time - search_time))
         
         
-if __builtins__:
+if __name__ == '__main__':
     main()

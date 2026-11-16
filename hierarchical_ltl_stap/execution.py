@@ -7,11 +7,16 @@ def generate_simultaneous_exec(optimal_path, workspace, leaf_spec_order, args, s
         # Divide the optimal path into several segments corresponding to the phis
         # such that each segment only contains active robots that fulfill the phi.
         # it is possible that the path for a phi is interrupted 
-        non_essential_actions = ['default', 'in-spec', 'inter-spec-i', 'inter-spec-ii']
+        # A stationary default action can be the witness for X(default),
+        # X(!carry), or the end of an until obligation. Do not remove it.
+        non_essential_actions = ['in-spec', 'inter-spec-i', 'inter-spec-ii']
         robot_path_act_per_phi = [] 
         temp_robot_path_act = dict()
         pre_phi = ''
         for wpt_act in optimal_path:
+            # Search-space switches are not physical execution steps.
+            if wpt_act.action in non_essential_actions:
+                continue
             if args.print_path:
                 prRed(wpt_act)
             if pre_phi and wpt_act.phi != pre_phi:
@@ -430,4 +435,3 @@ class eventExec():
                     finished_robot = (int(finished_task_str[0]), int(finished_task_str[2]))
             finished_task_str = self.invalid_str
             self.event_based_execution_request_new([finished_robot])
-        

@@ -3,17 +3,17 @@ Research in robotic planning with temporal logic specifications, such as Linear 
 
 
 # Install
- The code is tesed using Python 3.10.12.
+ The code is tested using Python 3.10.12.
 ### Develop via Conda
  Following the instruction:
 ```bash
-cd /path/to/Hierarchical-LTL-Stap
+cd /path/to/Hierarchical-LTL-STAP
 conda env create -f environment.yml
 conda activate hierarchical_ltl_stap
 ```
 ### Import as package
 ```bash
-cd /path/to/Hierarchical-LTL-Stap
+cd /path/to/Hierarchical-LTL-STAP
 pip install -e .
 ```
 ### Install ltl2ba
@@ -23,13 +23,84 @@ Download the software `LTL2BA` from this [link](http://www.lsv.fr/~gastin/ltl2ba
 * Folder [domain](./domain) includes domain files that describe robot and environment action models.
 * Scripts [workspace](./hierarchical_ltl_stap/workspace_bosch.py) describes the environment that robots reside in.
 * Script [specification.py](./hierarchical_ltl_stap/specification.py) includes hierarchical task specifications.
+
 # Simulation
 The simulation environment and tasks are inspired by [Schillinger et al.](https://journals.sagepub.com/doi/abs/10.1177/0278364918774135)
 ### Environment 
 
-![](data/bosch.png)
+![Office environment in the new demo style, with six robots at their initial positions](demo/generated/environment.png)
 
-The office building is depicted using a grid-based layout, where areas $d_1$ to $d_{14}$ represent desks, $m_1$ to $m_6$ are meeting rooms, $e$ stands for the elevator, $g$ for the garbage room, $p$ for the printer room, and $k$ for the coffee kitchen. Areas marked as "public" indicate public spaces. Obstacles are illustrated in gray. The locations of robots are shown as numbered red dots.
+
+The office building is depicted using a grid-based layout, where areas $d_1$ to $d_{14}$ represent desks, $m_1$ to $m_6$ are meeting rooms, $e$ stands for the elevator, $g$ for the garbage room, $p$ for the printer room, and $k$ for the coffee kitchen. Areas marked as "PUBLIC" indicate public spaces. Obstacles are illustrated in gray. Colored numbered markers identify robots R1–R6 at their initial positions (seed 42), using the same map and colors as the new videos.
+
+### Planner-generated presentation demos
+
+The first four office scenarios are reproduced below with **six robots**, seed
+**42**, and the repository's heuristic search (`--cost=minmax`, heuristic weight
+100). Each preview links to a **1920 × 1080, 30 fps MP4**. These are newly run
+planner paths, with synchronized action and hierarchical-LTL progress.
+
+| Scenario | Planner case | Task | Video |
+| --- | --- | --- | --- |
+| [1](#scenario-1) | 12 | Bin service | [MP4](demo/generated/scenario_01.mp4) |
+| [2](#scenario-2) | 13 | Printed-document distribution | [MP4](demo/generated/scenario_02.mp4) |
+| [3](#scenario-3) | 14 | Photos, confidential delivery, and guidance | [MP4](demo/generated/scenario_03.mp4) |
+| [4](#scenario-4) | 21 | Combined four-level mission | [MP4](demo/generated/scenario_04.mp4) |
+
+The office map shows numbered robots, recent trails, and their current actions.
+Below it, task IDs connect the displayed progress to the formulas: `p0` is the
+root, its children summarize sub-missions, and leaf cards represent concrete
+robot tasks. Scenario 4 also shows the intermediate photo task `p301` above its
+three children. Amber means active, green means completed, and a dim outline
+means pending. The timeline marks recorded leaf-completion events.
+
+Public cells are hatched while a robot carries a document or bin. This is a
+**robot-specific restriction**: carrying robots must avoid those cells, while
+other robots may use them. The camera indicator distinguishes camera/photo
+actions in meeting rooms from periods when cameras are off. Leaf-card goal
+formulas are compact summaries; the complete formulas, including guards and
+next-step requirements, are in the specifications below and each replay JSON.
+
+### Run and replay the first four scenarios
+
+```bash
+cd /path/to/Hierarchical-LTL-STAP
+conda env create -f environment.yml
+conda activate hierarchical_ltl_stap
+# Planning requires the ltl2ba executable described above.
+python scripts/run_demo_batch.py --cost=minmax
+python scripts/render_demo_batch.py
+```
+
+The batch defaults to `--cost=minmax` for every scenario. The repository's
+`minmax` score emphasizes the maximum estimated per-robot cost using
+`0.9 × max(costs) + 0.1 × sum(costs)`; it is not a pure maximum-duration metric.
+The heuristic weight remains 100, so these results are not an optimality claim.
+
+The separate Conda environment is named **`hierarchical_ltl_stap`**. This
+search-based planner does not require Gurobi. Planner logs and generated outputs
+are saved in `data/first_four/`; rendering also copies the videos, GIFs, posters,
+portable replays, and validation reports to `demo/generated/` for the README.
+Only Scenarios 1–4 are generated. Use `--scenarios 1 3` on either script to rerun
+a subset. For a custom output location, pass `--output-dir /path/to/folder` to
+both scripts; the renderer also accepts `--publish-dir`.
+
+The included replays can be played without rerunning search or `ltl2ba`:
+
+```bash
+conda activate hierarchical_ltl_stap
+python -m hierarchical_ltl_stap.demo --replay demo/generated/scenario_01.json
+# Export a still or a video from any saved scenario.
+python -m hierarchical_ltl_stap.demo --replay demo/generated/scenario_04.json --step 32 --output data/scenario4.png
+python -m hierarchical_ltl_stap.demo --replay demo/generated/scenario_04.json --output data/scenario4.mp4
+```
+
+Playback controls: **Space** pauses, **Left/Right** step through the plan,
+**N/P** jump between task completions, and **R** restarts. Click the timeline to
+seek. Interactive playback needs a desktop Matplotlib backend; PNG/MP4 exports
+work without a display or LaTeX. Videos use two plan steps per second and hold
+the final frame for two seconds.
+
 ### Scenario 1 
 Empty a paper bin located at desk $d_5$. During this task, the robot must avoid the public area while transporting the bin.
 
@@ -42,17 +113,24 @@ $$
 $$
 
 ```bash
-python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=12 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json --cost=min --domain=bosch --num_robots=6 --vis --print_step 
+python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=12 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json --cost=minmax --domain=bosch --num_robots=6 --vis --print_step
 ```
 The explanation of arguments can be found in function [create_parser](hierarchical_ltl_stap/util.py).
-<video src="https://github.com/user-attachments/assets/bed12153-de0d-4153-bbaf-6717ad5f2868" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
-</video>
+[![Scenario 1: robot movement and hierarchical LTL progress](demo/generated/scenario_01.gif)](demo/generated/scenario_01.mp4)
 
-```bash
-python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=12 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json --cost=minmax --domain=bosch --num_robots=6 --vis --print_step 
-```
-<video src="https://github.com/user-attachments/assets/879d2485-acb8-4ec1-ab0c-74225fd1241a" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
-</video>
+[Watch MP4](demo/generated/scenario_01.mp4) · [Poster](demo/generated/scenario_01.png) · [Replay JSON](demo/generated/scenario_01.json) · [Validation report](demo/generated/scenario_01.validation.json)
+
+The two leaf cards correspond to `p100` (collect/carry/dispose/reset) and
+`p200` (empty at G and return/reset at D5). The root requires both to complete.
+With `minmax`, R5 completes `p200` at step **23**, while R1 completes `p100`
+at **35**. Watch R1 take
+the longer route around the public cells while carrying the bin.
+
+The repository combines these two children with conjunction and does not impose
+a pickup-before-empty ordering between them. Consequently, this run completes
+the empty/return child first. The replay preserves that specification rather
+than adding an unmodeled physical bin-handling order.
+
 
 ### Scenario 2
 Distribute printed copies of a document to desks $d_{10}$, $d_7$, and $d_5$, and avoid public areas while carrying the document. 
@@ -66,10 +144,17 @@ L_1: \quad &  \phi(1,1) =  \Diamond\phi(2,1) \wedge \Diamond\phi(2,2) \wedge \Di
 \end{align*}
 $$
 ```bash
-python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=13 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json  --domain=bosch --num_robots=6 --vis --print_step 
+python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=13 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json --cost=minmax --domain=bosch --num_robots=6 --vis --print_step
 ```
-<video src="https://github.com/user-attachments/assets/58236e50-5649-4185-b006-39f22f2da01e" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
-</video>
+[![Scenario 2: robot movement and hierarchical LTL progress](demo/generated/scenario_02.gif)](demo/generated/scenario_02.mp4)
+
+[Watch MP4](demo/generated/scenario_02.mp4) · [Poster](demo/generated/scenario_02.png) · [Replay JSON](demo/generated/scenario_02.json) · [Validation report](demo/generated/scenario_02.validation.json)
+
+Three leaf tasks deliver printed copies from **P** to **D10**, **D7**, and
+**D5**. Each requires carrying through the route and a following step without
+`carry` at delivery. R6 handles D10 and D7, while R4 handles D5. The root
+completes when all three leaves finish; the public-area restriction applies
+only while a robot is carrying.
 
 
 ### Scenario 3
@@ -89,10 +174,18 @@ $$
 \end{align*}
 $$
 ```bash
-python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=14 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json  --domain=bosch --num_robots=6 --vis --print_step 
+python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=14 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json --cost=minmax --domain=bosch --num_robots=6 --vis --print_step
 ```
-<video src="https://github.com/user-attachments/assets/41b4e1c8-5ac5-43ba-ab2e-04d490721bb4" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
-</video>
+[![Scenario 3: robot movement and hierarchical LTL progress](demo/generated/scenario_03.gif)](demo/generated/scenario_03.mp4)
+
+[Watch MP4](demo/generated/scenario_03.mp4) · [Poster](demo/generated/scenario_03.png) · [Replay JSON](demo/generated/scenario_03.json) · [Validation report](demo/generated/scenario_03.validation.json)
+
+The root has three children: the **photo mission**, **D5 → D3 confidential
+delivery**, and **D11 → M6 visitor guidance**. The photo mission itself contains
+three leaves, one for each of **M1, M4, and M6**. This makes the hierarchy visible:
+individual photo leaves complete the photo parent, which then contributes to
+completion of the root. Document carrying avoids public cells, and camera/photo
+actions remain inside meeting rooms.
 
 ### Scenario 4 
 Combinations of scenarios 1, 2 and 3
@@ -118,15 +211,28 @@ $$
  \end{align*}
  $$
  ```bash
-python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=21 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json  --domain=bosch --num_robots=6 --vis --print_step 
+python hierarchical_LTL_stap_on_the_fly.py --task=nav --case=21 --heuristics --heuristic_weight=100 --domain_file=./domain/domain_bosch.json --cost=minmax --domain=bosch --num_robots=6 --vis --print_step
 ```
-<video src="https://github.com/user-attachments/assets/d65a0b99-b74e-4095-a2b8-0fad1b47919a" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
-</video>
+[![Scenario 4: robot movement and hierarchical LTL progress](demo/generated/scenario_04.gif)](demo/generated/scenario_04.mp4)
 
-## Simulaiton in AI2THOR
+[Watch MP4](demo/generated/scenario_04.mp4) · [Poster](demo/generated/scenario_04.png) · [Replay JSON](demo/generated/scenario_04.json) · [Validation report](demo/generated/scenario_04.validation.json)
 
-<video src="https://github.com/user-attachments/assets/d52152d0-2622-4db9-a8fc-1ba5a882ae21" controls="controls" style="max-width: 730px; width: 100%; height: auto;">
-</video>
+All three missions run in one four-level hierarchy. The bin and printed-copy
+branches are shown beside the office-assistance branch. Within that branch,
+`p301` collects the three photo leaves `p401`, `p402`, and `p403`, while `p302`
+and `p303` track confidential delivery and guidance. Each parent turns green
+only after its required children complete. The root requires **all ten leaf
+tasks** and completes at step **64** in the recorded simultaneous execution.
+
+## Simulation in AI2THOR
+
+[![Original AI2THOR simulation — click to watch the video](demo/generated/ai2thor.gif)](demo/generated/ai2thor.mp4)
+
+[Watch MP4](demo/generated/ai2thor.mp4) · [Poster](demo/generated/ai2thor.png) · [Original recording](https://github.com/user-attachments/assets/d52152d0-2622-4db9-a8fc-1ba5a882ae21)
+
+This is the original AI2THOR demonstration, not a new simulation run. The local
+H.264 MP4 retains the original recording's frames, resolution, frame rate, and
+audio. Click the animated preview or the MP4 link to open it.
 
 # Citation
 ```
