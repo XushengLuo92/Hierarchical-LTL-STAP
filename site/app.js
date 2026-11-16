@@ -14,11 +14,9 @@
     document.getElementById('selected-title').textContent = item.title;
     document.getElementById('selected-description').textContent = item.description;
     document.getElementById('video-label').textContent = item.label + ' / ' + item.robots + ' robots';
-    document.getElementById('selected-meta').textContent = item.meta;
-    document.getElementById('selected-note').textContent = item.note;
+    document.getElementById('scenario-source').href = item.paper;
     const ul = document.getElementById('obligations');
     ul.replaceChildren(...item.obligations.map(text => {const li = document.createElement('li');li.textContent = text;return li;}));
-    ['video', 'replay', 'validation'].forEach(kind => document.getElementById('download-' + kind).href = item[kind]);
     links.forEach(link => link.setAttribute('aria-current', String(Number(link.dataset.id) === item.id)));
     if (updateURL) {const url = new URL(location.href);url.searchParams.set('demo', item.id);history.replaceState(null, '', url);}
   }

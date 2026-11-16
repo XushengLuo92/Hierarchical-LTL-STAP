@@ -1,74 +1,60 @@
 window.DEMOS = [
   {
     "id": 1,
-    "title": "Bin service",
-    "description": "Two subtasks coordinate collection, disposal, emptying, and return at desk D5.",
-    "note": "R5 completes p200 at step 23; R1 completes p100 at step 35. The specification does not impose a pickup-before-empty order between these children.",
+    "title": "Paper-bin collection and return",
+    "description": "Move the full paper bin from D5 to garbage room G, dispose of its contents, and return an empty bin to D5.",
     "obligations": [
-      "p100: collect the bin, carry it, dispose of it, and reset.",
-      "p200: empty at G, then return and reset at D5.",
-      "A robot carrying the bin must avoid public cells."
+      "Keep the full bin out of public areas.",
+      "Both transport tasks must finish."
     ],
     "robots": 6,
     "label": "Scenario 1",
-    "meta": "Planner case 12 · minmax · seed 42",
     "video": "demo/generated/scenario_01.mp4",
-    "replay": "demo/generated/scenario_01.json",
-    "validation": "demo/generated/scenario_01.validation.json",
-    "poster": "demo/generated/scenario_01.png"
+    "poster": "demo/generated/scenario_01.png",
+    "paper": "https://arxiv.org/html/2401.04003v4#S8.SS2.SSS1"
   },
   {
     "id": 2,
     "title": "Printed-document distribution",
-    "description": "Deliver printed copies from P to three desks, preserving the carrying and delivery requirements.",
-    "note": "R6 serves D10 and D7; R4 serves D5. The root completes at step 32.",
+    "description": "Collect printed documents at P and deliver them to D10, D7, and D5.",
     "obligations": [
-      "Deliver to D10, D7, and D5.",
-      "Each delivery must be followed by a step without carry.",
-      "Avoid public cells while carrying a document."
+      "Avoid public areas while carrying documents.",
+      "Leave each document at its destination."
     ],
     "robots": 6,
     "label": "Scenario 2",
-    "meta": "Planner case 13 · minmax · seed 42",
     "video": "demo/generated/scenario_02.mp4",
-    "replay": "demo/generated/scenario_02.json",
-    "validation": "demo/generated/scenario_02.validation.json",
-    "poster": "demo/generated/scenario_02.png"
+    "poster": "demo/generated/scenario_02.png",
+    "paper": "https://arxiv.org/html/2401.04003v4#S8.SS2.SSS2"
   },
   {
     "id": 3,
-    "title": "Photos, delivery, and guidance",
-    "description": "Three parent missions combine meeting-room photography, confidential delivery, and visitor guidance.",
-    "note": "Individual photo leaves complete their parent, which contributes to the root alongside delivery and guidance. The root completes at step 36.",
+    "title": "Photography, confidential delivery, and guidance",
+    "description": "Photograph M1, M4, and M6; deliver a confidential document from D5 to D3; escort the person at D11 to M6.",
     "obligations": [
-      "Take photos in M1, M4, and M6; use the camera only in meeting rooms.",
-      "Deliver the confidential document from D5 to D3 without carrying through public cells.",
-      "Guide the visitor from D11 to M6."
+      "Switch cameras off outside meeting rooms to protect privacy.",
+      "Keep the confidential document out of public areas.",
+      "Complete photography, delivery, and guidance."
     ],
     "robots": 6,
     "label": "Scenario 3",
-    "meta": "Planner case 14 · minmax · seed 42",
     "video": "demo/generated/scenario_03.mp4",
-    "replay": "demo/generated/scenario_03.json",
-    "validation": "demo/generated/scenario_03.validation.json",
-    "poster": "demo/generated/scenario_03.png"
+    "poster": "demo/generated/scenario_03.png",
+    "paper": "https://arxiv.org/html/2401.04003v4#S8.SS2.SSS3"
   },
   {
     "id": 4,
-    "title": "A combined four-level mission",
-    "description": "All three scenario families run together in a hierarchy with ten concrete leaf tasks.",
-    "note": "The photo task p301 groups p401, p402, and p403. All ten leaf tasks contribute to root completion at step 64.",
+    "title": "Combined office-service mission",
+    "description": "Combine all three scenarios: bin collection and return, printed-document distribution, photography, confidential delivery, and visitor guidance.",
     "obligations": [
-      "Complete the bin-service and printed-copy branches.",
-      "Complete the office-assistance branch: photos, delivery, and guidance.",
-      "Resolve child obligations before their parent completion is shown."
+      "Complete every task from Scenarios 1–3.",
+      "Preserve their carrying restrictions and camera-privacy rule.",
+      "Organize the combined mission in a four-level hierarchy."
     ],
     "robots": 6,
     "label": "Scenario 4",
-    "meta": "Planner case 21 · minmax · seed 42",
     "video": "demo/generated/scenario_04.mp4",
-    "replay": "demo/generated/scenario_04.json",
-    "validation": "demo/generated/scenario_04.validation.json",
-    "poster": "demo/generated/scenario_04.png"
+    "poster": "demo/generated/scenario_04.png",
+    "paper": "https://arxiv.org/html/2401.04003v4#S8.SS2.SSS4"
   }
 ];
