@@ -76,6 +76,8 @@ def create_parser():
     parser.add_argument('--heuristics_automaton',action='store_true', help='Enable heuristics of automaton when searching')
     parser.add_argument('--cost', default='min', type=str, help='types of cost representation, minimizine total cost or maximal individual cost')
     parser.add_argument('--run', default=-1, type=int, help='test instance for batch test')
+    parser.add_argument('--seed', type=int, default=None, help='Reproducible initial robot positions')
+    parser.add_argument('--replay-output', help='Save a portable planner replay without rendering')
     return parser
 
 def plot_workspace(workspace, ax):
@@ -253,5 +255,3 @@ def print_global_partial_order(primitive_subtasks_partial_order, task_hierarchy)
         print("parent {0}, element {1}, edge {2}, label {3} -> parent {4}, element {5}, edge {6}, label {7}".\
             format(pre.parent, pre.element, pre_element2edge[pre.element], pre_buchi_graph.edges[pre_element2edge[pre.element]]['label'],
                    suc.parent, suc.element, suc_element2edge[suc.element], suc_buchi_graph.edges[suc_element2edge[suc.element]]['label']))
-      
-            

@@ -1,0 +1,145 @@
+{
+  "scenario": 4,
+  "case": 21,
+  "robots": 6,
+  "horizon": 64,
+  "planner_accepted": true,
+  "hierarchy_satisfied": true,
+  "completion_steps": {
+    "p101": 41,
+    "p102": 23,
+    "p201": 13,
+    "p202": 64,
+    "p203": 35,
+    "p302": 48,
+    "p303": 16,
+    "p401": 23,
+    "p402": 4,
+    "p403": 3,
+    "p301": 23,
+    "p100": 41,
+    "p200": 64,
+    "p300": 48,
+    "p0": 64
+  },
+  "leaf_checks": {
+    "p101": [
+      {
+        "robot": "1:1",
+        "satisfied": true,
+        "steps": 37
+      }
+    ],
+    "p102": [
+      {
+        "robot": "1:1",
+        "satisfied": false,
+        "steps": 1
+      },
+      {
+        "robot": "1:5",
+        "satisfied": true,
+        "steps": 23
+      }
+    ],
+    "p201": [
+      {
+        "robot": "1:4",
+        "satisfied": true,
+        "steps": 13
+      }
+    ],
+    "p202": [
+      {
+        "robot": "1:4",
+        "satisfied": true,
+        "steps": 29
+      }
+    ],
+    "p203": [
+      {
+        "robot": "1:4",
+        "satisfied": true,
+        "steps": 22
+      }
+    ],
+    "p302": [
+      {
+        "robot": "1:5",
+        "satisfied": true,
+        "steps": 25
+      }
+    ],
+    "p303": [
+      {
+        "robot": "1:6",
+        "satisfied": true,
+        "steps": 16
+      }
+    ],
+    "p401": [
+      {
+        "robot": "1:6",
+        "satisfied": true,
+        "steps": 8
+      }
+    ],
+    "p402": [
+      {
+        "robot": "1:1",
+        "satisfied": true,
+        "steps": 4
+      }
+    ],
+    "p403": [
+      {
+        "robot": "1:2",
+        "satisfied": true,
+        "steps": 4
+      }
+    ]
+  },
+  "legal_grid_paths": true,
+  "action_model_valid": true,
+  "safety_valid": true,
+  "movement_errors": [],
+  "action_errors": [],
+  "safety_errors": [],
+  "collision_free": false,
+  "conflicts": [
+    {
+      "step": 15,
+      "robots": [
+        "1:2",
+        "1:6"
+      ],
+      "kind": "vertex"
+    },
+    {
+      "step": 16,
+      "robots": [
+        "1:2",
+        "1:6"
+      ],
+      "kind": "vertex"
+    },
+    {
+      "step": 23,
+      "robots": [
+        "1:1",
+        "1:4"
+      ],
+      "kind": "vertex"
+    },
+    {
+      "step": 29,
+      "robots": [
+        "1:4",
+        "1:5"
+      ],
+      "kind": "vertex"
+    }
+  ],
+  "semantics": "finite per-robot task-labelled leaf traces; parent formulas over child completion events",
+  "collision_note": "The upstream simultaneous execution scheduler does not enforce robot-robot collision avoidance."
+}

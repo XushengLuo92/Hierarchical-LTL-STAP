@@ -1,11 +1,12 @@
 # run: conda env create --file environment.yml
 name: hierarchical_ltl_stap
 channels:
-  - anaconda
-  - defaults
+  - conda-forge
+  - nodefaults
 dependencies:
   - python=3.10.12
   - pip
-  - anaconda::pygraphviz
+  - pygraphviz
   - pip:
     - -r requirements.txt
+    - imageio-ffmpeg==0.8.1

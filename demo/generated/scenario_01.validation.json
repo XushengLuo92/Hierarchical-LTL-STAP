@@ -1,0 +1,44 @@
+{
+  "scenario": 1,
+  "case": 12,
+  "robots": 6,
+  "horizon": 36,
+  "planner_accepted": true,
+  "hierarchy_satisfied": true,
+  "completion_steps": {
+    "p100": 35,
+    "p200": 23,
+    "p0": 35
+  },
+  "leaf_checks": {
+    "p100": [
+      {
+        "robot": "1:1",
+        "satisfied": true,
+        "steps": 35
+      }
+    ],
+    "p200": [
+      {
+        "robot": "1:1",
+        "satisfied": false,
+        "steps": 1
+      },
+      {
+        "robot": "1:5",
+        "satisfied": true,
+        "steps": 23
+      }
+    ]
+  },
+  "legal_grid_paths": true,
+  "action_model_valid": true,
+  "safety_valid": true,
+  "movement_errors": [],
+  "action_errors": [],
+  "safety_errors": [],
+  "collision_free": true,
+  "conflicts": [],
+  "semantics": "finite per-robot task-labelled leaf traces; parent formulas over child completion events",
+  "collision_note": "The upstream simultaneous execution scheduler does not enforce robot-robot collision avoidance."
+}

@@ -1,0 +1,14 @@
+{
+  "source_url": "https://github.com/user-attachments/assets/d52152d0-2622-4db9-a8fc-1ba5a882ae21",
+  "source_sha256": "3c2a50d38251ac5999a5d70a6af985bb4f745b764846e982f65cc8deffb8dcfa",
+  "video_sha256": "ff6013fbbe1e3c18910f8654ceab3c36f9b08e1985cd0e9497be3b901b7ca93a",
+  "source": "original AI2THOR demonstration, not a new planner run",
+  "video_codec": "H.264",
+  "frames": 588,
+  "fps": 24.0,
+  "size": [
+    960,
+    720
+  ],
+  "duration_seconds": 24.5
+}
