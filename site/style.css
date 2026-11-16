@@ -6,3 +6,7 @@
 .hero-title {display:block;padding:42px 0 28px}
 .hero-title h1 {max-width:1150px;margin:0 0 22px;font-size:clamp(30px,3.7vw,52px);line-height:1.14;letter-spacing:-.035em}
 .hero-title .lead {max-width:850px}
+
+.paper-byline {margin:0 0 24px}
+.paper-authors {margin:0 0 5px;font-size:18px;font-weight:500}
+.paper-venue {margin:0;color:var(--muted);font-size:15px}
